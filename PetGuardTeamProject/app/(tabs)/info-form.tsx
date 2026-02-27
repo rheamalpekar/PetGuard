@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,6 +9,7 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import * as ImagePicker from 'expo-image-picker';
@@ -18,9 +19,32 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+// Conditionally import MapView only on mobile platforms
+let MapView: any;
+let Marker: any;
+
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+}
+
+type MapRegion = {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+};
+
+
+type LocationData = {
+  latitude: number;
+  longitude: number;
+  address: string;
+};
 
 type InfoFormData = {
-  location: string;
+  location: LocationData | null;
   yourName: string;
   phoneNumber: string;
   emailAddress: string;
@@ -36,6 +60,7 @@ type PhotoAsset = {
 export default function InfoFormScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const isWeb = Platform.OS === 'web';
 
   const [hasTransportation, setHasTransportation] = useState<boolean | null>(null);
   const [transportationError, setTransportationError] = useState<string | null>(null);
@@ -43,22 +68,69 @@ export default function InfoFormScreen() {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [mapRegion, setMapRegion] = useState<MapRegion | null>(null);
+  const [markerPosition, setMarkerPosition] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locationAddress, setLocationAddress] = useState<string>('');
+  const mapRef = useRef<any>(null);
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<InfoFormData>({
     mode: 'onBlur',
     defaultValues: {
-      location: '',
+      location: null,
       yourName: '',
       phoneNumber: '',
       emailAddress: '',
       additionalDetails: '',
     },
   });
+
+  useEffect(() => {
+    // Skip map initialization on web
+    if (isWeb) {
+      return;
+    }
+
+    // Try to get user's location
+    (async () => {
+      setIsLoadingLocation(true);
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          const newRegion = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          };
+          setMapRegion(newRegion);
+        } else {
+          Alert.alert(
+            'Location Permission',
+            'Location permission is needed to use the map. Please enable it in settings or manually tap on the map to set a location.',
+            [{ text: 'OK' }]
+          );
+        }
+      } catch (error) {
+        console.log('Could not get initial location:', error);
+        Alert.alert(
+          'Location Error',
+          'Could not get your location. Please tap on the map to set a location manually.',
+          [{ text: 'OK' }]
+        );
+      } finally {
+        setIsLoadingLocation(false);
+      }
+    })();
+  }, [isWeb]);
 
   const getCurrentLocation = async () => {
     setIsLoadingLocation(true);
@@ -77,15 +149,55 @@ export default function InfoFormScreen() {
         accuracy: Location.Accuracy.Balanced,
       });
 
-      // Reverse geocode to get address
-      const reverseGeocode = await Location.reverseGeocodeAsync({
+      const newPosition = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-      });
+      };
 
-      if (reverseGeocode && reverseGeocode.length > 0) {
-        const address = reverseGeocode[0];
-        const formattedAddress = [
+      // Reverse geocode to get address
+      const address = await reverseGeocode(newPosition);
+      setLocationAddress(address);
+
+      // Update form
+      setValue('location', {
+        latitude: newPosition.latitude,
+        longitude: newPosition.longitude,
+        address,
+      }, { shouldValidate: true });
+
+      // Only update map on native platforms
+      if (!isWeb) {
+        setMarkerPosition(newPosition);
+        setMapRegion({
+          ...newPosition,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        });
+
+        // Animate map to new position
+        mapRef.current?.animateToRegion({
+          ...newPosition,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }, 500);
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Failed to get current location. Please try again.'
+      );
+      console.error('Location error:', error);
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  const reverseGeocode = async (coords: { latitude: number; longitude: number }): Promise<string> => {
+    try {
+      const result = await Location.reverseGeocodeAsync(coords);
+      if (result && result.length > 0) {
+        const address = result[0];
+        return [
           address.streetNumber,
           address.street,
           address.city,
@@ -94,29 +206,43 @@ export default function InfoFormScreen() {
         ]
           .filter(Boolean)
           .join(', ');
-
-        // Update the form field
-        control._formValues.location = formattedAddress;
-        control._subjects.state.next({
-          name: 'location',
-        });
-      } else {
-        // Fallback to coordinates if reverse geocoding fails
-        const coordsString = `${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)}`;
-        control._formValues.location = coordsString;
-        control._subjects.state.next({
-          name: 'location',
-        });
       }
     } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to get current location. Please enter manually.'
-      );
-      console.error('Location error:', error);
-    } finally {
-      setIsLoadingLocation(false);
+      console.error('Reverse geocode error:', error);
     }
+    return `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
+  };
+
+  const handleMapPress = async (event: any) => {
+    const { latitude, longitude } = event.nativeEvent.coordinate;
+    setMarkerPosition({ latitude, longitude });
+    
+    // Get address for the new position
+    const address = await reverseGeocode({ latitude, longitude });
+    setLocationAddress(address);
+    
+    // Update form
+    setValue('location', {
+      latitude,
+      longitude,
+      address,
+    }, { shouldValidate: true });
+  };
+
+  const handleMarkerDragEnd = async (event: any) => {
+    const { latitude, longitude } = event.nativeEvent.coordinate;
+    setMarkerPosition({ latitude, longitude });
+    
+    // Get address for the new position
+    const address = await reverseGeocode({ latitude, longitude });
+    setLocationAddress(address);
+    
+    // Update form
+    setValue('location', {
+      latitude,
+      longitude,
+      address,
+    }, { shouldValidate: true });
   };
 
   const pickImageFromCamera = async () => {
@@ -202,7 +328,14 @@ export default function InfoFormScreen() {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('location', data.location);
+      
+      // Append location data
+      if (data.location) {
+        formDataToSend.append('latitude', String(data.location.latitude));
+        formDataToSend.append('longitude', String(data.location.longitude));
+        formDataToSend.append('address', data.location.address);
+      }
+      
       formDataToSend.append('yourName', data.yourName);
       formDataToSend.append('phoneNumber', data.phoneNumber);
       formDataToSend.append('emailAddress', data.emailAddress);
@@ -218,8 +351,8 @@ export default function InfoFormScreen() {
         } as any);
       });
 
-      // Replace with your actual API endpoint
-      const response = await fetch('https://your-api.com/submit-report', {
+      // Replace with actual API endpoint
+      const response = await fetch('https://api.com/submit-report', {
         method: 'POST',
         body: formDataToSend,
         headers: {
@@ -243,6 +376,8 @@ export default function InfoFormScreen() {
             setTransportationError(null);
             setPhotos([]);
             setPhotoError(null);
+            setMarkerPosition(null);
+            setLocationAddress('');
           },
         },
       ]);
@@ -271,39 +406,138 @@ export default function InfoFormScreen() {
           <Text style={[styles.label, { color: colors.text }]}>Location</Text>
           <Text style={styles.requiredIndicator}>*</Text>
         </View>
-        <View style={styles.locationContainer}>
-          <Controller
-            control={control}
-            name="location"
-            rules={{ required: 'Location is required' }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={[
-                  styles.input,
-                  styles.multilineInput,
-                  styles.locationInput,
-                  { color: colors.text, borderColor: errors.location ? '#ff4444' : '#ddd' },
-                ]}
-                placeholder="Enter location or use GPS"
-                placeholderTextColor={colors.icon}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                multiline
-                numberOfLines={3}
-              />
+        
+        {isWeb ? (
+          // Web: Show text input with description (For dev purposes)
+          <>
+            <Text style={[styles.helpText, { color: colors.icon }]}>
+              Enter an address or use the button below to auto-detect your location
+            </Text>
+            <Controller
+              control={control}
+              name="location"
+              rules={{ required: 'Location is required' }}
+              render={({ field: { value } }) => (
+                <>
+                  <View style={styles.webLocationInputContainer}>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        styles.multilineInput,
+                        { 
+                          color: colors.text, 
+                          borderColor: errors.location ? '#ff4444' : '#ddd',
+                          backgroundColor: isLoadingLocation ? '#f8f8f8' : '#fff',
+                        },
+                      ]}
+                      placeholder="Enter address or coordinates"
+                      placeholderTextColor={colors.icon}
+                      value={locationAddress}
+                      onChangeText={(text) => {
+                        setLocationAddress(text);
+                        // For web, we'll just store the text as address
+                        setValue('location', {
+                          latitude: 0,
+                          longitude: 0,
+                          address: text,
+                        }, { shouldValidate: true });
+                      }}
+                      multiline
+                      numberOfLines={3}
+                      editable={!isLoadingLocation}
+                    />
+                    {isLoadingLocation && (
+                      <View style={styles.loadingOverlay}>
+                        <ActivityIndicator size="small" color="#3478f6" />
+                        <Text style={styles.loadingText}>Getting location...</Text>
+                      </View>
+                    )}
+                  </View>
+                  {value && (value.latitude !== 0 || value.longitude !== 0) && (
+                    <View style={styles.addressContainer}>
+                      <Ionicons name="checkmark-circle" size={16} color="#34c759" />
+                      <Text style={styles.addressText}>
+                        Location detected: {value.latitude.toFixed(6)}, {value.longitude.toFixed(6)}
+                      </Text>
+                    </View>
+                  )}
+                </>
+              )}
+            />
+          </>
+        ) : (
+          // Native: Show interactive map
+          <>
+            <Text style={[styles.helpText, { color: colors.icon }]}>
+              Tap on the map to set location, or use the button below to auto-detect
+            </Text>
+            <Controller
+              control={control}
+              name="location"
+              rules={{ required: 'Please select a location on the map' }}
+              render={({ field: { value } }) => (
+                <View style={[styles.mapContainer, errors.location && styles.mapContainerError]}>
+                  {mapRegion ? (
+                    <>
+                      <MapView
+                        ref={mapRef}
+                        style={styles.map}
+                        region={mapRegion}
+                        onPress={handleMapPress}
+                        showsUserLocation
+                        showsMyLocationButton={false}
+                      >
+                        {markerPosition && (
+                          <Marker
+                            coordinate={markerPosition}
+                            draggable
+                            onDragEnd={handleMarkerDragEnd}
+                          >
+                            <View style={styles.customMarker}>
+                              <Ionicons name="location" size={40} color="#ff4444" />
+                            </View>
+                          </Marker>
+                        )}
+                      </MapView>
+                      {isLoadingLocation && (
+                        <View style={styles.mapLoadingOverlay}>
+                          <View style={styles.mapLoadingContainer}>
+                            <ActivityIndicator size="large" color="#3478f6" />
+                            <Text style={styles.mapLoadingText}>Getting your location...</Text>
+                          </View>
+                        </View>
+                      )}
+                    </>
+                  ) : (
+                    <View style={styles.mapLoadingOverlay}>
+                      <View style={styles.mapLoadingContainer}>
+                        <ActivityIndicator size="large" color="#3478f6" />
+                        <Text style={styles.mapLoadingText}>Loading map...</Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              )}
+            />
+            {locationAddress !== '' && (
+              <View style={styles.addressContainer}>
+                <Ionicons name="location-outline" size={16} color="#666" />
+                <Text style={styles.addressText}>{locationAddress}</Text>
+              </View>
             )}
-          />
+          </>
+        )}
+        
+        <View style={styles.locationActions}>
           <TouchableOpacity
             style={[styles.gpsButton, isLoadingLocation && styles.gpsButtonDisabled]}
             onPress={getCurrentLocation}
             disabled={isLoadingLocation}
           >
-            {isLoadingLocation ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Ionicons name="location" size={20} color="#fff" />
-            )}
+            <Ionicons name="navigate" size={18} color="#fff" />
+            <Text style={styles.gpsButtonText}>
+              {isLoadingLocation ? 'Locating...' : 'Use My Location'}
+            </Text>
           </TouchableOpacity>
         </View>
         {errors.location && (
@@ -592,22 +826,106 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontWeight: '600',
   },
-  locationContainer: {
+  helpText: {
+    fontSize: 13,
+    marginBottom: 12,
+    lineHeight: 18,
+  },
+  webLocationInputContainer: {
     position: 'relative',
+    marginBottom: 12,
   },
-  locationInput: {
-    paddingRight: 60,
-  },
-  gpsButton: {
+  loadingOverlay: {
     position: 'absolute',
-    right: 8,
-    top: 8,
-    backgroundColor: '#3478f6',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 8,
+    gap: 8,
+  },
+  loadingText: {
+    color: '#3478f6',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  mapContainer: {
+    height: 300,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#ddd',
+    marginBottom: 12,
+  },
+  mapContainerError: {
+    borderColor: '#ff4444',
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  customMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mapLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mapLoadingContainer: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  mapLoadingText: {
+    marginTop: 12,
+    color: '#3478f6',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  addressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+    marginBottom: 12,
+  },
+  addressText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+  },
+  locationActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  gpsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#3478f6',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -616,6 +934,11 @@ const styles = StyleSheet.create({
   },
   gpsButtonDisabled: {
     opacity: 0.6,
+  },
+  gpsButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
   input: {
     borderWidth: 1,
