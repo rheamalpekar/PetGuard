@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import * as ImagePicker from 'expo-image-picker';
@@ -36,7 +37,9 @@ export default function InfoFormScreen() {
   const colors = Colors[colorScheme ?? 'light'];
 
   const [hasTransportation, setHasTransportation] = useState<boolean | null>(null);
+  const [transportationError, setTransportationError] = useState<string | null>(null);
   const [photos, setPhotos] = useState<PhotoAsset[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     control,
@@ -62,9 +65,9 @@ export default function InfoFormScreen() {
     }
 
     const result = await ImagePicker.launchCameraAsync({
+      quality: 0.6,
       mediaTypes: ['images'],
       allowsEditing: true,
-      quality: 0.8,
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -75,7 +78,7 @@ export default function InfoFormScreen() {
   const pickDocumentFromFiles = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['image/*', 'application/pdf'],
+        type: ['image/*'],
         copyToCacheDirectory: true,
       });
 
@@ -90,7 +93,7 @@ export default function InfoFormScreen() {
         ]);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to pick document');
+      Alert.alert('Error', 'Failed to pick image');
     }
   };
 
@@ -98,24 +101,71 @@ export default function InfoFormScreen() {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const onSubmit = (data: InfoFormData) => {
-    const formData = {
-      ...data,
-      hasTransportation,
-      photos,
-    };
+  const onSubmit = async (data: InfoFormData) => {
+    // Validate transportation selection
+    if (hasTransportation === null) {
+      setTransportationError('Please select a transportation option');
+      return;
+    }
 
-    console.log('Form submitted:', formData);
-    Alert.alert('Success', 'Report submitted successfully!', [
-      {
-        text: 'OK',
-        onPress: () => {
-          reset();
-          setHasTransportation(null);
-          setPhotos([]);
+    setIsSubmitting(true);
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('location', data.location);
+      formDataToSend.append('yourName', data.yourName);
+      formDataToSend.append('phoneNumber', data.phoneNumber);
+      formDataToSend.append('emailAddress', data.emailAddress);
+      formDataToSend.append('additionalDetails', data.additionalDetails);
+      formDataToSend.append('hasTransportation', String(hasTransportation));
+
+      // Append photos
+      photos.forEach((photo, index) => {
+        formDataToSend.append(`photos[${index}]`, {
+          uri: photo.uri,
+          type: 'image/jpeg',
+          name: photo.name || `photo_${index}.jpg`,
+        } as any);
+      });
+
+      // Replace with your actual API endpoint
+      const response = await fetch('https://your-api.com/submit-report', {
+        method: 'POST',
+        body: formDataToSend,
+        headers: {
+          'Accept': 'application/json',
         },
-      },
-    ]);
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit report');
+      }
+
+      const responseData = await response.json();
+      
+      Alert.alert('Success', 'Report submitted successfully!', [
+        {
+          text: 'OK',
+          onPress: () => {
+            reset();
+            setHasTransportation(null);
+            setTransportationError(null);
+            setPhotos([]);
+          },
+        },
+      ]);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred while submitting the report';
+      Alert.alert('Submission Failed', errorMessage, [
+        {
+          text: 'OK',
+        },
+      ]);
+      console.error('Form submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -182,7 +232,7 @@ export default function InfoFormScreen() {
                     <View style={styles.documentPreview}>
                       <Ionicons name="document" size={24} color="#666" />
                       <Text style={styles.documentName} numberOfLines={1}>
-                        {photo.name}
+                        {photo.name?.split('.').pop()?.toUpperCase()}
                       </Text>
                     </View>
                   )}
@@ -220,6 +270,12 @@ export default function InfoFormScreen() {
           <Controller
             control={control}
             name="phoneNumber"
+            rules={{
+              pattern: {
+                value: /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/,
+                message: 'Please enter a valid phone number',
+              },
+            }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 style={[styles.contactInput, { color: colors.text }]}
@@ -232,9 +288,18 @@ export default function InfoFormScreen() {
               />
             )}
           />
+          {errors.phoneNumber && (
+            <Text style={styles.errorText}>{errors.phoneNumber.message}</Text>
+          )}
           <Controller
             control={control}
             name="emailAddress"
+            rules={{
+              pattern: {
+                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: 'Please enter a valid email address',
+              },
+            }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 style={[styles.contactInput, { color: colors.text }]}
@@ -248,20 +313,26 @@ export default function InfoFormScreen() {
               />
             )}
           />
+          {errors.emailAddress && (
+            <Text style={styles.errorText}>{errors.emailAddress.message}</Text>
+          )}
         </View>
       </View>
 
       {/* Transportation Availability */}
       <View style={styles.section}>
         <Text style={[styles.label, { color: colors.text }]}>Transportation Availability</Text>
-        <View style={styles.transportSection}>
+        <View style={[styles.transportSection, transportationError && styles.transportSectionError]}>
           <View style={styles.transportButtons}>
             <TouchableOpacity
               style={[
                 styles.transportButton,
                 hasTransportation === true && styles.transportButtonActive,
               ]}
-              onPress={() => setHasTransportation(true)}
+              onPress={() => {
+                setHasTransportation(true);
+                setTransportationError(null);
+              }}
             >
               <Text
                 style={[
@@ -277,7 +348,10 @@ export default function InfoFormScreen() {
                 styles.transportButton,
                 hasTransportation === false && styles.transportButtonActive,
               ]}
-              onPress={() => setHasTransportation(false)}
+              onPress={() => {
+                setHasTransportation(false);
+                setTransportationError(null);
+              }}
             >
               <Text
                 style={[
@@ -290,6 +364,9 @@ export default function InfoFormScreen() {
             </TouchableOpacity>
           </View>
         </View>
+        {transportationError && (
+          <Text style={styles.errorText}>{transportationError}</Text>
+        )}
       </View>
 
       {/* Additional Details */}
@@ -319,10 +396,15 @@ export default function InfoFormScreen() {
 
       {/* Submit Button */}
       <TouchableOpacity
-        style={styles.submitButton}
+        style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
         onPress={handleSubmit(onSubmit)}
+        disabled={isSubmitting}
       >
-        <Text style={styles.submitButtonText}>Submit Report</Text>
+        {isSubmitting ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.submitButtonText}>Submit Report</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
@@ -451,6 +533,9 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
   },
+  transportSectionError: {
+    borderColor: '#ff4444',
+  },
   transportButtons: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -481,6 +566,9 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     marginTop: 10,
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
   },
   submitButtonText: {
     color: '#fff',
