@@ -13,6 +13,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -39,7 +40,9 @@ export default function InfoFormScreen() {
   const [hasTransportation, setHasTransportation] = useState<boolean | null>(null);
   const [transportationError, setTransportationError] = useState<string | null>(null);
   const [photos, setPhotos] = useState<PhotoAsset[]>([]);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   const {
     control,
@@ -47,6 +50,7 @@ export default function InfoFormScreen() {
     formState: { errors },
     reset,
   } = useForm<InfoFormData>({
+    mode: 'onBlur',
     defaultValues: {
       location: '',
       yourName: '',
@@ -55,6 +59,65 @@ export default function InfoFormScreen() {
       additionalDetails: '',
     },
   });
+
+  const getCurrentLocation = async () => {
+    setIsLoadingLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Location permission is needed to get your current location.'
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      // Reverse geocode to get address
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (reverseGeocode && reverseGeocode.length > 0) {
+        const address = reverseGeocode[0];
+        const formattedAddress = [
+          address.streetNumber,
+          address.street,
+          address.city,
+          address.region,
+          address.postalCode,
+        ]
+          .filter(Boolean)
+          .join(', ');
+
+        // Update the form field
+        control._formValues.location = formattedAddress;
+        control._subjects.state.next({
+          name: 'location',
+        });
+      } else {
+        // Fallback to coordinates if reverse geocoding fails
+        const coordsString = `${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)}`;
+        control._formValues.location = coordsString;
+        control._subjects.state.next({
+          name: 'location',
+        });
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Failed to get current location. Please enter manually.'
+      );
+      console.error('Location error:', error);
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
 
   const pickImageFromCamera = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -72,6 +135,7 @@ export default function InfoFormScreen() {
 
     if (!result.canceled && result.assets[0]) {
       setPhotos((prev) => [...prev, { uri: result.assets[0].uri, type: 'image' }]);
+      setPhotoError(null);
     }
   };
 
@@ -91,6 +155,7 @@ export default function InfoFormScreen() {
             name: result.assets[0].name,
           },
         ]);
+        setPhotoError(null);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick image');
@@ -101,10 +166,35 @@ export default function InfoFormScreen() {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const onSubmit = async (data: InfoFormData) => {
+  const validateCustomFields = () => {
+    let hasErrors = false;
+
+    // Validate photos
+    if (photos.length === 0) {
+      setPhotoError('Please upload at least one photo');
+      hasErrors = true;
+    }
+
     // Validate transportation selection
     if (hasTransportation === null) {
       setTransportationError('Please select a transportation option');
+      hasErrors = true;
+    }
+
+    return !hasErrors;
+  };
+
+  const handleFormSubmit = () => {
+    // Validate custom fields first
+    const customFieldsValid = validateCustomFields();
+    
+    // Trigger react-hook-form validation and submission
+    handleSubmit(onSubmit)();
+  };
+
+  const onSubmit = async (data: InfoFormData) => {
+    // Double-check custom fields in case form fields were already valid
+    if (!validateCustomFields()) {
       return;
     }
 
@@ -152,6 +242,7 @@ export default function InfoFormScreen() {
             setHasTransportation(null);
             setTransportationError(null);
             setPhotos([]);
+            setPhotoError(null);
           },
         },
       ]);
@@ -176,28 +267,45 @@ export default function InfoFormScreen() {
     >
       {/* Location */}
       <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.text }]}>Location</Text>
-        <Controller
-          control={control}
-          name="location"
-          rules={{ required: 'Location is required' }}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
-              style={[
-                styles.input,
-                styles.multilineInput,
-                { color: colors.text, borderColor: errors.location ? '#ff4444' : '#ddd' },
-              ]}
-              placeholder=""
-              placeholderTextColor={colors.icon}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-              multiline
-              numberOfLines={3}
-            />
-          )}
-        />
+        <View style={styles.labelContainer}>
+          <Text style={[styles.label, { color: colors.text }]}>Location</Text>
+          <Text style={styles.requiredIndicator}>*</Text>
+        </View>
+        <View style={styles.locationContainer}>
+          <Controller
+            control={control}
+            name="location"
+            rules={{ required: 'Location is required' }}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={[
+                  styles.input,
+                  styles.multilineInput,
+                  styles.locationInput,
+                  { color: colors.text, borderColor: errors.location ? '#ff4444' : '#ddd' },
+                ]}
+                placeholder="Enter location or use GPS"
+                placeholderTextColor={colors.icon}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                multiline
+                numberOfLines={3}
+              />
+            )}
+          />
+          <TouchableOpacity
+            style={[styles.gpsButton, isLoadingLocation && styles.gpsButtonDisabled]}
+            onPress={getCurrentLocation}
+            disabled={isLoadingLocation}
+          >
+            {isLoadingLocation ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="location" size={20} color="#fff" />
+            )}
+          </TouchableOpacity>
+        </View>
         {errors.location && (
           <Text style={styles.errorText}>{errors.location.message}</Text>
         )}
@@ -205,8 +313,11 @@ export default function InfoFormScreen() {
 
       {/* Photo Documentation */}
       <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.text }]}>Photo Documentation</Text>
-        <View style={styles.photoSection}>
+        <View style={styles.labelContainer}>
+          <Text style={[styles.label, { color: colors.text }]}>Photo Documentation</Text>
+          <Text style={styles.requiredIndicator}>*</Text>
+        </View>
+        <View style={[styles.photoSection, photoError && styles.photoSectionError]}>
           <View style={styles.photoButtons}>
             <TouchableOpacity
               style={[styles.photoButton, styles.cameraButton]}
@@ -247,30 +358,49 @@ export default function InfoFormScreen() {
             </View>
           )}
         </View>
+        {photoError && (
+          <Text style={styles.errorText}>{photoError}</Text>
+        )}
       </View>
 
       {/* Contact Details */}
       <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.text }]}>Contact details</Text>
+        <View style={styles.labelContainer}>
+          <Text style={[styles.label, { color: colors.text }]}>Contact details</Text>
+          <Text style={styles.requiredIndicator}>*</Text>
+        </View>
         <View style={styles.contactSection}>
           <Controller
             control={control}
             name="yourName"
+            rules={{ required: 'Name is required' }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                style={[styles.contactInput, { color: colors.text }]}
+                style={[
+                  styles.contactInput,
+                  { color: colors.text, borderBottomColor: errors.yourName ? '#ff4444' : '#eee' },
+                ]}
                 placeholder="Your name"
                 placeholderTextColor={colors.icon}
+                onFocus={() => {
+                  if (hasTransportation === null) {
+                    setTransportationError('Please select a transportation option');
+                  }
+                }}
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
               />
             )}
           />
+          {errors.yourName && (
+            <Text style={styles.errorText}>{errors.yourName.message}</Text>
+          )}
           <Controller
             control={control}
             name="phoneNumber"
             rules={{
+              required: 'Phone number is required',
               pattern: {
                 value: /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/,
                 message: 'Please enter a valid phone number',
@@ -278,9 +408,17 @@ export default function InfoFormScreen() {
             }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                style={[styles.contactInput, { color: colors.text }]}
+                style={[
+                  styles.contactInput,
+                  { color: colors.text, borderBottomColor: errors.phoneNumber ? '#ff4444' : '#eee' },
+                ]}
                 placeholder="Phone number"
                 placeholderTextColor={colors.icon}
+                onFocus={() => {
+                  if (hasTransportation === null) {
+                    setTransportationError('Please select a transportation option');
+                  }
+                }}
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
@@ -295,6 +433,7 @@ export default function InfoFormScreen() {
             control={control}
             name="emailAddress"
             rules={{
+              required: 'Email address is required',
               pattern: {
                 value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                 message: 'Please enter a valid email address',
@@ -302,9 +441,17 @@ export default function InfoFormScreen() {
             }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                style={[styles.contactInput, { color: colors.text }]}
+                style={[
+                  styles.contactInput,
+                  { color: colors.text, borderBottomColor: errors.emailAddress ? '#ff4444' : '#eee' },
+                ]}
                 placeholder="Email address"
                 placeholderTextColor={colors.icon}
+                onFocus={() => {
+                  if (hasTransportation === null) {
+                    setTransportationError('Please select a transportation option');
+                  }
+                }}
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
@@ -321,7 +468,10 @@ export default function InfoFormScreen() {
 
       {/* Transportation Availability */}
       <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.text }]}>Transportation Availability</Text>
+        <View style={styles.labelContainer}>
+          <Text style={[styles.label, { color: colors.text }]}>Transportation Availability</Text>
+          <Text style={styles.requiredIndicator}>*</Text>
+        </View>
         <View style={[styles.transportSection, transportationError && styles.transportSectionError]}>
           <View style={styles.transportButtons}>
             <TouchableOpacity
@@ -384,6 +534,11 @@ export default function InfoFormScreen() {
               ]}
               placeholder=""
               placeholderTextColor={colors.icon}
+              onFocus={() => {
+                if (hasTransportation === null) {
+                  setTransportationError('Please select a transportation option');
+                }
+              }}
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
@@ -397,7 +552,7 @@ export default function InfoFormScreen() {
       {/* Submit Button */}
       <TouchableOpacity
         style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-        onPress={handleSubmit(onSubmit)}
+        onPress={handleFormSubmit}
         disabled={isSubmitting}
       >
         {isSubmitting ? (
@@ -422,10 +577,45 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
   },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   label: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 8,
+  },
+  requiredIndicator: {
+    color: '#ff4444',
+    fontSize: 18,
+    marginLeft: 4,
+    fontWeight: '600',
+  },
+  locationContainer: {
+    position: 'relative',
+  },
+  locationInput: {
+    paddingRight: 60,
+  },
+  gpsButton: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    backgroundColor: '#3478f6',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  gpsButtonDisabled: {
+    opacity: 0.6,
   },
   input: {
     borderWidth: 1,
@@ -450,6 +640,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     backgroundColor: '#fff',
+  },
+  photoSectionError: {
+    borderColor: '#ff4444',
   },
   photoButtons: {
     flexDirection: 'row',
