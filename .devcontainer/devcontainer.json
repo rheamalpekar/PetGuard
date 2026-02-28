@@ -1,0 +1,11 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/expo-cli:1": {}
+  },
+  "hostRequirements": {
+    "cpus": 4
+  },
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/PetGuardTeamProject",
+  "postCreateCommand": "npm install"
+}
