@@ -45,9 +45,7 @@ export default function ReportEmergency() {
     if (analysis.isEmergency) {
       router.push(
         {
-          pathname: "/emergency-warning", // ✅ IMPORTANT: change to your warning route
-          // If you are NOT creating a separate warning route,
-          // change this back to: pathname: "/emergency"
+          pathname: "/emergency-warning",
           params: {
             analysis: JSON.stringify(analysis),
             emergencyType: trimmedType,
