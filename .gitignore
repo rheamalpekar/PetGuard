@@ -137,3 +137,26 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Expo files
+.expo/
+
+# Misc
+.DS_Store
+*.pem
+*.p12
+*.key
+*.crt
+*.cer
+*.der
+*.pfx
+*.p7b
+*.p7r
+*.log
+*.bak
+*.tmp
+*.swp
+*.swo
+*.swn
+*.swap
+.github/
