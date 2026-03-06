@@ -105,9 +105,27 @@ export default function LoginScreen() {
           </Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/auth/register")}>
+        <Pressable onPress={()=> router.push("/auth/register")}>
           <Text style={styles.link}>Create Account</Text>
         </Pressable>
+
+
+        <Pressable onPress={()=> router.push("/(tabs)/info-form")}>
+          <Text style={styles.link}>Go to Info Form</Text>
+        </Pressable>
+
+        <Pressable onPress={()=> router.push("/(tabs)/ConfirmationPage")}>
+          <Text style={styles.link}>Go to Confirmation screen</Text>
+        </Pressable>
+
+        <Pressable onPress={()=> router.push("/emergency")}>
+          <Text style={styles.link}>Go to Emergency screen</Text>
+        </Pressable>
+
+        <Pressable onPress={()=> router.push("/(tabs)/FirebaseTestScreen")}>
+          <Text style={styles.link}>Go to Firebase test screen</Text>
+        </Pressable>
+
       </KeyboardAvoidingView>
     </LinearGradient>
   );
