@@ -18,6 +18,7 @@ import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { submitInfoForm } from "@/services/ApiResponse";
 
 // Conditionally import MapView only on mobile platforms
 let MapView: any;
@@ -43,7 +44,7 @@ type LocationData = {
   address: string;
 };
 
-type InfoFormData = {
+export type InfoFormData = {
   location: LocationData | null;
   yourName: string;
   phoneNumber: string;
@@ -310,12 +311,37 @@ export default function InfoFormScreen() {
     return !hasErrors;
   };
 
-  const handleFormSubmit = () => {
-    // Validate custom fields first
-    const customFieldsValid = validateCustomFields();
-    
-    // Trigger react-hook-form validation and submission
-    handleSubmit(onSubmit)();
+  const handleFormSubmit = async (data: InfoFormData) => {
+    console.log("Form submission started", data);
+    if (photos.length === 0) {
+      console.log("Validation failed: No photos uploaded");
+      setPhotoError("Please upload at least one photo.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setPhotoError(null);
+
+    try {
+      // Ignore photo submission for now
+      const photoUris: string[] = [];
+      console.log("Submitting data to Firebase", { data, photoUris });
+      const response = await submitInfoForm(data, photoUris);
+
+      if (response.success) {
+        console.log("Form submitted successfully", response);
+        Alert.alert("Form submitted successfully!");
+        reset();
+        setPhotos([]);
+      }
+    } catch (error) {
+      console.error("Error during form submission", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit the form. Please try again.";
+      Alert.alert(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+      console.log("Form submission ended");
+    }
   };
 
   const onSubmit = async (data: InfoFormData) => {
@@ -382,12 +408,8 @@ export default function InfoFormScreen() {
         },
       ]);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while submitting the report';
-      Alert.alert('Submission Failed', errorMessage, [
-        {
-          text: 'OK',
-        },
-      ]);
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit the form. Please try again.";
+      Alert.alert(errorMessage);
       console.error('Form submission error:', error);
     } finally {
       setIsSubmitting(false);
@@ -786,7 +808,7 @@ export default function InfoFormScreen() {
       {/* Submit Button */}
       <TouchableOpacity
         style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-        onPress={handleFormSubmit}
+        onPress={handleSubmit(handleFormSubmit)}
         disabled={isSubmitting}
       >
         {isSubmitting ? (

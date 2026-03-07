@@ -2,7 +2,8 @@
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import {getAuth} from "firebase/auth"
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 // import { getAnalytics } from "firebase/analytics";
 
@@ -18,7 +19,7 @@ const firebaseConfig = {
   storageBucket: "cse5320-backend.firebasestorage.app",
   messagingSenderId: "504986615274",
   appId: "1:504986615274:web:72318fa43105fcb6698693",
-  measurementId: "G-PR9QQFTTPG"
+  measurementId: "G-PR9QQFTTPG",
 };
 
 // Initialize Firebase
@@ -26,3 +27,4 @@ const app = initializeApp(firebaseConfig);
 // const analytics = getAnalytics(app);
 
 export const auth = getAuth(app);
+export const db = getFirestore(app);
