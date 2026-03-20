@@ -5,7 +5,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { auth } from "../../src/services/firebase";
+import { auth } from "../../src/backendServices/firebase";
 
 export default function FirebaseTestScreen() {
   const [message, setMessage] = useState("");

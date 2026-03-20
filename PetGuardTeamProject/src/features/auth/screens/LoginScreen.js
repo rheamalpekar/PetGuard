@@ -12,7 +12,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
-import { login } from "../../../services/AuthService"; // Import the login function
+import { login } from "../../../backendServices/AuthService"; // Import the login function
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -111,7 +111,7 @@ export default function LoginScreen() {
           <Text style={styles.link}>Create Account</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/(tabs)/FirebaseTestScreen")} style={styles.navigation}>
+        <Pressable onPress={() => router.push("/formscreens/FirebaseTestScreen")} style={styles.navigation}>
           <Text style={styles.navigationText}>Go to Firebase test screen</Text>
         </Pressable>
 
@@ -119,11 +119,11 @@ export default function LoginScreen() {
           <Text style={styles.navigationText}>Go to Emergency/Home screen</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/(tabs)/info-form")} style={styles.navigation}>
+        <Pressable onPress={() => router.push("/formscreens/info-form")} style={styles.navigation}>
           <Text style={styles.navigationText}>Go to Info Form Screen</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/(tabs)/ConfirmationPage")} style={styles.navigation}>
+        <Pressable onPress={() => router.push("/formscreens/ConfirmationPage")} style={styles.navigation}>
           <Text style={styles.navigationText}>Go to Confirmation screen</Text>
         </Pressable>
 

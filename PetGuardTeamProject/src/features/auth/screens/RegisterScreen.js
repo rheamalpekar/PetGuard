@@ -13,7 +13,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
-import { register } from "../../../services/AuthService";
+import { register } from "../../../backendServices/AuthService";
 
 /* ---------------- Validation Helpers ---------------- */
 
@@ -109,7 +109,7 @@ export default function RegisterScreen() {
 
     try {
       // Call the register function from APIService
-      await register(email, password, fullName);
+      await register(email, password, fullName, phone);
 
       setSuccessMessage("Account created successfully.");
       Alert.alert("Success", "Account created successfully.");
