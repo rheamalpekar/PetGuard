@@ -66,7 +66,7 @@ export default function ConfirmationScreen() {
   }
 
   const handleReturnToDashboard = () => {
-    router.replace("/");
+    router.replace("/emergency");
   };
 
   const handleCancelRequest = () => {

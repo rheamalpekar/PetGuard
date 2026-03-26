@@ -51,10 +51,12 @@ export type InfoFormData = {
   phoneNumber: string;
   emailAddress: string;
   additionalDetails: string;
+  formId: string;
 };
 
 type PhotoAsset = {
-  uri: string;
+  uri?: string; // for mobile
+  file?: File;  // for web
   type: 'image' | 'document';
   name?: string;
 };
@@ -90,6 +92,7 @@ export default function InfoFormScreen() {
       phoneNumber: '',
       emailAddress: '',
       additionalDetails: '',
+      formId: '',
     },
   });
 
@@ -263,7 +266,19 @@ export default function InfoFormScreen() {
     });
 
     if (!result.canceled && result.assets[0]) {
-      setPhotos((prev) => [...prev, { uri: result.assets[0].uri, type: 'image' }]);
+      const asset = result.assets[0] as ImagePicker.ImagePickerAsset & { file?: File };
+
+      if (Platform.OS === "web") {
+        setPhotos((prev) => [...prev, {
+          file: asset.file,
+          uri: asset.uri,
+          type: 'image',
+          name: asset.file?.name,
+        }]);
+      } else {
+        setPhotos((prev) => [...prev, { uri: asset.uri, type: 'image', name: asset.fileName ?? undefined }]);
+      }
+
       setPhotoError(null);
     }
   };
@@ -276,12 +291,15 @@ export default function InfoFormScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0] as DocumentPicker.DocumentPickerAsset & { file?: File };
+
         setPhotos((prev) => [
           ...prev,
           {
-            uri: result.assets[0].uri,
+            uri: asset.uri,
+            file: asset.file,
             type: 'document',
-            name: result.assets[0].name,
+            name: asset.name,
           },
         ]);
         setPhotoError(null);
@@ -325,16 +343,13 @@ export default function InfoFormScreen() {
     setPhotoError(null);
 
     try {
-      // Ignore photo submission for now
-      const photoUris: string[] = [];
-      console.log("Submitting data to Firebase", { data, photoUris });
-      const response = await submitInfoForm(data, photoUris);
+      const photoInputs = photos.map((photo) => photo.file ?? photo.uri).filter(Boolean) as Array<File | string>;
+      const response = await submitInfoForm(data, photoInputs);
 
       if (response.success) {
         console.log("Form submitted successfully", response);
         reset();
         setPhotos([]);
-        // router.replace("/formscreens/ConfirmationPage");
         router.replace({
           pathname: "/formscreens/ConfirmationPage",
           params: { formId: response.formId }

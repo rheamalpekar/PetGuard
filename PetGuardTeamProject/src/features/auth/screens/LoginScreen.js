@@ -12,7 +12,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
-import { login } from "../../../backendServices/AuthService"; // Import the login function
+import { login } from "../../../backendServices/AuthService";
+import { useProtectedNavigation } from "../../../hooks/useProtectedNavigation";
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -20,6 +21,7 @@ function isValidEmail(email) {
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { protectedNavigate } = useProtectedNavigation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,7 +60,7 @@ export default function LoginScreen() {
       Alert.alert("Login successful");
       router.replace("/emergency");
     } catch (err) {
-      Alert.alert(err.message || "Login failed");
+      Alert.alert(err.message || "Login failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -111,19 +113,19 @@ export default function LoginScreen() {
           <Text style={styles.link}>Create Account</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/formscreens/FirebaseTestScreen")} style={styles.navigation}>
+        <Pressable onPress={() => protectedNavigate("/formscreens/FirebaseTestScreen")} style={styles.navigation}>
           <Text style={styles.navigationText}>Go to Firebase test screen</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/emergency")} style={styles.navigation}>
+        <Pressable onPress={() => protectedNavigate("/emergency")} style={styles.navigation}>
           <Text style={styles.navigationText}>Go to Emergency/Home screen</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/formscreens/info-form")} style={styles.navigation}>
+        <Pressable onPress={() => protectedNavigate("/formscreens/info-form")} style={styles.navigation}>
           <Text style={styles.navigationText}>Go to Info Form Screen</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/formscreens/ConfirmationPage")} style={styles.navigation}>
+        <Pressable onPress={() => protectedNavigate("/formscreens/ConfirmationPage")} style={styles.navigation}>
           <Text style={styles.navigationText}>Go to Confirmation screen</Text>
         </Pressable>
 
