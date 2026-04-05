@@ -1,20 +1,52 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Platform } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert } from "react-native";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
+import { logoutUser } from "@/backendServices/ApiService";
+import { useProtectedNavigation } from "@/hooks/useProtectedNavigation";
 
 export default function EmergencyHome() {
+  const { protectedNavigate } = useProtectedNavigation();
   const userName = "Alan";
   const userLocation = "Arlington, TX";
   const notifCount = 1;
 
   const goReport = (serviceLabel: string) => {
-    router.push(
-      {
-        pathname: "/emergency/report",
-        params: { prefillType: serviceLabel },
-      } as never
-    );
+    protectedNavigate({
+      pathname: "/emergency/report",
+      params: { prefillType: serviceLabel },
+    } as never);
+  };
+
+  const handleLogout = async () => {
+    const confirmed = Platform.OS === "web" 
+      ? window.confirm("Are you sure you want to logout?")
+      : await new Promise((resolve) => {
+          Alert.alert("Logout", "Are you sure you want to logout?", [
+            { text: "Cancel", onPress: () => resolve(false), style: "cancel" },
+            {
+              text: "Logout",
+              onPress: () => resolve(true),
+              style: "destructive",
+            },
+          ]);
+        });
+
+    if (confirmed) {
+      try {
+        console.log("Logout initiated...");
+        await logoutUser();
+        console.log("User logged out successfully");
+        router.replace("/auth/login" as never);
+      } catch (error) {
+        console.error("Logout error:", error);
+        if (Platform.OS !== "web") {
+          Alert.alert("Error", "Failed to logout. Please try again.");
+        } else {
+          alert("Error: Failed to logout. Please try again.");
+        }
+      }
+    }
   };
 
   return (
@@ -51,7 +83,7 @@ export default function EmergencyHome() {
           </View>
         </View>
 
-        <Pressable style={styles.logoutBtn} onPress={() => {}}>
+        <Pressable style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
         </Pressable>
       </View>
@@ -123,6 +155,22 @@ export default function EmergencyHome() {
           onPress={() => goReport("Spay / Neuter")}
         />
       </View>
+
+      <Pressable onPress={() => protectedNavigate("/formscreens/FirebaseTestScreen" as never)} style={styles.navigation}>
+        <Text style={styles.navigationText}>Go to Firebase test screen</Text>
+      </Pressable>
+
+      <Pressable onPress={() => router.push("/auth/login" as never)} style={styles.navigation}>
+        <Text style={styles.navigationText}>Go to Login Screen</Text>
+      </Pressable>
+
+      <Pressable onPress={() => protectedNavigate("/formscreens/info-form" as never)} style={styles.navigation}>
+        <Text style={styles.navigationText}>Go to Info Form Screen</Text>
+      </Pressable>
+
+      <Pressable onPress={() => protectedNavigate("/formscreens/ConfirmationPage" as never)} style={styles.navigation}>
+        <Text style={styles.navigationText}>Go to Confirmation screen</Text>
+      </Pressable>
 
       <View style={{ height: 14 }} />
       <Text style={styles.footerNote}>
@@ -286,5 +334,17 @@ const styles = StyleSheet.create({
     color: "#666",
     fontSize: 12,
     textAlign: "center",
+  },
+  navigation: {
+    backgroundColor: "#233244",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignSelf: "center",
+    marginTop: 12,
+  },
+  navigationText: {
+    color: "#ffffff",
+    fontSize: 14,
   },
 });

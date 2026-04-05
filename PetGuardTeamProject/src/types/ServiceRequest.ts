@@ -10,3 +10,9 @@ export interface ServiceRequest {
   status: "pending" | "in-progress" | "resolved";
   createdAt: Date;
 }
+
+
+// User model
+
+
+// Response model, etc

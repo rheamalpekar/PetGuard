@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/context/AuthContext";
 
 const REDIRECT_MS = 3000;
 
@@ -21,6 +22,7 @@ const EXIT_BUFFER_MS = 180;
 
 export default function SplashScreen() {
   const router = useRouter();
+  const { isLoggedIn, loading } = useAuth();
 
   // Logo entrance
   const logoScale = useRef(new Animated.Value(0.78)).current;
@@ -100,8 +102,13 @@ export default function SplashScreen() {
 
     // Redirect right after fade out completes
     const navTimer = setTimeout(() => {
-      // TODO: check session token
-      router.replace("/auth/login");
+      if (loading) {
+        return;
+      }
+      
+      const destination = isLoggedIn ? "/emergency" : "/auth/login";
+      console.log(`Redirecting to ${destination}`);
+      router.replace(destination);
     }, REDIRECT_MS);
 
     return () => {
@@ -117,6 +124,8 @@ export default function SplashScreen() {
     spinnerOpacity,
     screenOpacity,
     router,
+    isLoggedIn,
+    loading,
   ]);
 
   return (
