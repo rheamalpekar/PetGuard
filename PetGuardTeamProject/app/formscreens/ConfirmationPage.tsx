@@ -10,36 +10,96 @@ import {
   Alert,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import NetInfo from "@react-native-community/netinfo";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { getInfoFormDataById } from "@/backendServices/ApiService";
+import { useAuth } from "@/context/AuthContext";
+import {
+  getInfoFormDataById,
+  loadQueuedInfoForms,
+  subscribeToActiveReports,
+} from "@/backendServices/ApiService";
 
 const DEFAULT_REQUEST_ID = "xh4TG0RzYeqkCjnO0ETb";
 
 export default function ConfirmationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { justSynced } = useAuth();
   const [formData, setFormData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isOnline, setIsOnline] = useState(false);
+  const [activeCount, setActiveCount] = useState(0);
+  const { user } = useAuth();
 
   const formId =
     typeof params.formId === "string" ? params.formId : DEFAULT_REQUEST_ID;
   const requestId = formId || DEFAULT_REQUEST_ID;
+  const isQueuedRequest = requestId.startsWith("queued_");
+  const showVectorAssets = isOnline;
   console.log(requestId);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      setIsOnline(
+        Boolean(state.isConnected && state.isInternetReachable !== false),
+      );
+    });
+
+    NetInfo.fetch()
+      .then((state) => {
+        setIsOnline(
+          Boolean(state.isConnected && state.isInternetReachable !== false),
+        );
+      })
+      .catch(() => {
+        setIsOnline(false);
+      });
+
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
       try {
+        if (isQueuedRequest) {
+          const queue = await loadQueuedInfoForms();
+          const queuedItem = queue.find((item) => item.localId === requestId);
+          setFormData(queuedItem?.data ?? null);
+          return;
+        }
+
         const data = await getInfoFormDataById(formId);
         setFormData(data);
       } catch (error) {
-        Alert.alert("Error", error.message || "Could not load form data.");
+        const errorMessage =
+          error instanceof Error ? error.message : "Could not load form data.";
+        const lowered = errorMessage.toLowerCase();
+        const isOfflineError =
+          lowered.includes("offline") ||
+          lowered.includes("unreachable") ||
+          lowered.includes("failed to get document");
+
+        if (!isOfflineError) {
+          Alert.alert("Error", errorMessage);
+        }
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, [formId]);
+  }, [formId, isQueuedRequest, requestId]);
+
+  useEffect(() => {
+    if (justSynced && isQueuedRequest) {
+      Alert.alert("Uploaded", "Your request has been sent to the server.");
+    }
+  }, [justSynced, isQueuedRequest]);
+
+  useEffect(() => {
+    const unsub = subscribeToActiveReports(user.uid, setActiveCount);
+    return unsub;
+  }, [user]);
 
   if (loading) {
     return (
@@ -66,28 +126,13 @@ export default function ConfirmationScreen() {
   }
 
   const handleReturnToDashboard = () => {
-    router.replace("/emergency");
-  };
-
-  const handleCancelRequest = () => {
-    Alert.alert(
-      "Cancel Request",
-      "Are you sure you want to cancel this request?",
-      [
-        { text: "No", style: "cancel" },
-        {
-          text: "Yes, Cancel",
-          style: "destructive",
-          onPress: () => router.replace("/"),
-        },
-      ],
-    );
+    router.push("/emergency");
   };
 
   const handleShareRequest = async () => {
     try {
       await Share.share({
-        message: `PetGuard Non-Emergency Request\nRequest ID: ${requestId}\nEstimated Response Time: 54 Minutes\nContact: ${formData.yourName} | ${formData.mobileNumber}\nLocation: ${formData.location}`,
+        message: `PetGuard Non-Emergency Request\nRequest ID: ${requestId}\nEstimated Response Time: 1hrs 11mins\nContact: ${formData.yourName} | ${formData.phoneNumber}\nEmail: ${formData.emailAddress}\nDescription: ${formData.additionalDetails}\nLocation: ${formData.location.LocationData}`,
         title: "PetGuard Request Details",
       });
     } catch (error) {
@@ -107,13 +152,19 @@ export default function ConfirmationScreen() {
           </View>
 
           <View style={styles.iconWrapper}>
-            <MaterialCommunityIcons name="paw" size={64} color="white" />
-            <Ionicons
-              name="checkmark-circle"
-              size={34}
-              color="#3B82F6"
-              style={styles.checkIcon}
-            />
+            {showVectorAssets ? (
+              <>
+                <MaterialCommunityIcons name="paw" size={64} color="white" />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={34}
+                  color="#3B82F6"
+                  style={styles.checkIcon}
+                />
+              </>
+            ) : (
+              <Text style={styles.offlineVisualFallback}>Offline</Text>
+            )}
           </View>
         </View>
 
@@ -128,7 +179,11 @@ export default function ConfirmationScreen() {
                 Alert.alert("Copied!", "Request ID copied to clipboard.");
               }}
             >
-              <Feather name="copy" size={34} color="#2563EB" />
+              {showVectorAssets ? (
+                <Feather name="copy" size={34} color="#2563EB" />
+              ) : (
+                <Text style={styles.offlineIconText}>Copy</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -139,14 +194,17 @@ export default function ConfirmationScreen() {
           <Text style={styles.label}>Estimated Response Time</Text>
 
           <View style={styles.timeRow}>
-            <Text style={styles.timeNumber}>54</Text>
-            <Text style={styles.timeText}> Minutes</Text>
+            <Text style={styles.timeNumber}>1</Text>
+            <Text style={styles.timeText}>hr</Text>
+            <Text style={styles.timeNumber}> 11</Text>
+            <Text style={styles.timeText}>min</Text>
           </View>
 
           <View style={styles.activeReportSection}>
             <Text style={styles.label}>Active Reports</Text>
             <Text style={styles.infoText}>
-              You have <Text style={styles.blueText}>1</Text> active report.
+              You have <Text style={styles.blueText}>{activeCount}</Text> active
+              report.
             </Text>
           </View>
         </View>
@@ -157,36 +215,42 @@ export default function ConfirmationScreen() {
           <Text style={styles.contactHeading}>Contact Details</Text>
 
           <View style={styles.infoRow}>
-            <Ionicons
-              name="person"
-              size={28}
-              color="#2563EB"
-              style={styles.infoIcon}
-            />
+            {showVectorAssets ? (
+              <Ionicons
+                name="person"
+                size={28}
+                color="#2563EB"
+                style={styles.infoIcon}
+              />
+            ) : null}
             <Text style={styles.infoText}>
               <Text style={styles.bold}>Name:</Text> {formData.yourName}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Ionicons
-              name="mail"
-              size={28}
-              color="#2563EB"
-              style={styles.infoIcon}
-            />
+            {showVectorAssets ? (
+              <Ionicons
+                name="mail"
+                size={28}
+                color="#2563EB"
+                style={styles.infoIcon}
+              />
+            ) : null}
             <Text style={styles.infoText}>
               <Text style={styles.bold}>Email:</Text> {formData.emailAddress}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Ionicons
-              name="call"
-              size={28}
-              color="#2563EB"
-              style={styles.infoIcon}
-            />
+            {showVectorAssets ? (
+              <Ionicons
+                name="call"
+                size={28}
+                color="#2563EB"
+                style={styles.infoIcon}
+              />
+            ) : null}
             <Text style={styles.infoText}>
               <Text style={styles.bold}>Phone number:</Text>{" "}
               {formData.phoneNumber}
@@ -194,12 +258,14 @@ export default function ConfirmationScreen() {
           </View>
 
           <View style={styles.infoRow}>
-            <Ionicons
-              name="location"
-              size={28}
-              color="#2563EB"
-              style={styles.infoIcon}
-            />
+            {showVectorAssets ? (
+              <Ionicons
+                name="location"
+                size={28}
+                color="#2563EB"
+                style={styles.infoIcon}
+              />
+            ) : null}
             <Text style={styles.infoText}>
               <Text style={styles.bold}>Location:</Text>{" "}
               {typeof formData.location === "object" &&
@@ -214,8 +280,8 @@ export default function ConfirmationScreen() {
 
         <View style={styles.bottomMessageWrapper}>
           <Text style={styles.bottomMessage}>
-            While you wait, please ensure that the animal is safe.{"\n"}We will
-            be with you shortly.
+            While you wait, please stay calm. We will be with you shortly.{"\n"}
+            We will be with you shortly.
           </Text>
         </View>
 
@@ -231,20 +297,22 @@ export default function ConfirmationScreen() {
         <View style={styles.bottomButtonsRow}>
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={handleCancelRequest}
+            onPress={() => router.push("/requests")}
           >
-            <Text style={styles.cancelButtonText}>Cancel Request</Text>
+            <Text style={styles.cancelButtonText}>View All Requests</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.shareButton}
             onPress={handleShareRequest}
           >
-            <Feather
-              name="share-2"
-              size={22}
-              color="#60A5FA"
-              style={styles.shareIcon}
-            />
+            {showVectorAssets ? (
+              <Feather
+                name="share-2"
+                size={22}
+                color="#60A5FA"
+                style={styles.shareIcon}
+              />
+            ) : null}
             <Text style={styles.shareButtonText}>Share Request</Text>
           </TouchableOpacity>
         </View>
@@ -304,6 +372,18 @@ const styles = StyleSheet.create({
     bottom: 12,
   },
 
+  offlineVisualFallback: {
+    color: "#D1D5DB",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+
+  offlineIconText: {
+    color: "#2563EB",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
   section: {
     marginBottom: 18,
   },
@@ -341,9 +421,9 @@ const styles = StyleSheet.create({
 
   timeNumber: {
     color: "#3B82F6",
-    fontSize: 58,
+    fontSize: 30,
     fontWeight: "700",
-    lineHeight: 62,
+    lineHeight: 45,
   },
 
   timeText: {

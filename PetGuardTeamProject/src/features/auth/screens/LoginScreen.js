@@ -55,7 +55,7 @@ export default function LoginScreen() {
     setSubmitting(true);
 
     try {
-      await login(email, password);
+      await login(email, password, rememberMe);
 
       Alert.alert("Login successful");
       router.replace("/emergency");

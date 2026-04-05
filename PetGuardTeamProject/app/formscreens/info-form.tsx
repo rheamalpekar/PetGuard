@@ -15,10 +15,16 @@ import { useForm, Controller } from 'react-hook-form';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Location from 'expo-location';
+import NetInfo from '@react-native-community/netinfo';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { submitInfoForm } from "@/backendServices/ApiService";
+import {
+  enqueueInfoForm,
+  loadQueuedInfoForms,
+  submitInfoForm,
+} from "@/backendServices/ApiService";
+import { auth } from "@/backendServices/firebase";
 import { useRouter } from "expo-router";
 
 // Conditionally import MapView only on mobile platforms
@@ -343,6 +349,50 @@ export default function InfoFormScreen() {
     setPhotoError(null);
 
     try {
+      const netState = await NetInfo.fetch();
+      const isOnline = Boolean(
+        netState.isConnected && netState.isInternetReachable !== false,
+      );
+
+      if (!isOnline) {
+        const user = auth.currentUser;
+        if (!user) {
+          throw new Error("Not authenticated");
+        }
+
+        const localId = `queued_${Date.now()}`;
+        const photoUris = photos
+          .map((photo) => photo.uri)
+          .filter((uri): uri is string => Boolean(uri));
+
+        await enqueueInfoForm({
+          localId,
+          uid: user.uid,
+          data: {
+            ...data,
+            formId: localId,
+          },
+          photoUris,
+          createdAt: Date.now(),
+          retryCount: 0,
+        });
+
+        const queueNow = await loadQueuedInfoForms();
+        console.log("Asyncstorage output:", queueNow);
+
+        reset();
+        setPhotos([]);
+        Alert.alert(
+          "Saved Offline",
+          "Form has been saved on this phone and will upload it when back online.",
+        );
+        router.replace({
+          pathname: "/formscreens/ConfirmationPage",
+          params: { formId: localId },
+        });
+        return;
+      }
+
       const photoInputs = photos.map((photo) => photo.file ?? photo.uri).filter(Boolean) as Array<File | string>;
       const response = await submitInfoForm(data, photoInputs);
 

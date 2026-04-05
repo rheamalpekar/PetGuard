@@ -5,14 +5,57 @@ import {
   getDoc,
   doc,
   updateDoc,
+  query,
+  where,
+  onSnapshot,
 } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db, auth } from "./firebase";
 // import { ServiceRequest } from "../types/ServiceRequest";
 import { InfoFormData } from "../../app/formscreens/info-form";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "./firebase";
 
+let isSyncing = false;
+
 type UploadablePhoto = string | Blob | File;
+
+const INFO_FORM_QUEUE_KEY = "petguard:infoFormQueue:v1";
+
+type QueuedInfoForm = {
+  localId: string;
+  uid: string;
+  data: InfoFormData;
+  photoUris: string[];
+  createdAt: number;
+  retryCount: number;
+};
+
+export const loadQueuedInfoForms = async (): Promise<QueuedInfoForm[]> => {
+  const raw = await AsyncStorage.getItem(INFO_FORM_QUEUE_KEY);
+  if (!raw) return [];
+
+  try {
+    return JSON.parse(raw) as QueuedInfoForm[];
+  } catch {
+    return [];
+  }
+};
+
+export const saveQueuedInfoForms = async (
+  queue: QueuedInfoForm[],
+): Promise<void> => {
+  await AsyncStorage.setItem(INFO_FORM_QUEUE_KEY, JSON.stringify(queue));
+};
+
+export const enqueueInfoForm = async (
+  item: QueuedInfoForm,
+): Promise<QueuedInfoForm[]> => {
+  const queue = await loadQueuedInfoForms();
+  const updatedQueue = [...queue, item];
+  await saveQueuedInfoForms(updatedQueue);
+  return updatedQueue;
+};
 
 export const submitInfoForm = async (
   data: InfoFormData,
@@ -26,6 +69,7 @@ export const submitInfoForm = async (
     formId: "",
     uid: user.uid,
     photos: [],
+    status: "pending",
     createdAt: Timestamp.now(),
   });
   const formId = docRef.id;
@@ -89,8 +133,14 @@ export const uploadImage = async (
   } else if (photo instanceof Blob) {
     blob = photo;
   } else {
-    const response = await fetch(photo);
-    blob = await response.blob();
+    blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = () => resolve(xhr.response);
+      xhr.onerror = () => reject(new TypeError("Image fetch failed"));
+      xhr.responseType = "blob";
+      xhr.open("GET", photo as string, true);
+      xhr.send(null);
+    });
   }
 
   const filename = `infoForms/${user.uid}/${formId}/${Date.now()}.jpg`;
@@ -98,6 +148,41 @@ export const uploadImage = async (
   await uploadBytes(storageRef, blob);
   const downloadURL = await getDownloadURL(storageRef);
   return downloadURL;
+  // return "";
+};
+
+export const syncQueuedInfoForms = async (): Promise<void> => {
+  if (isSyncing) {
+    console.log("Sync already running so skipping");
+    return;
+  }
+
+  isSyncing = true;
+
+  const user = auth.currentUser;
+  if (!user) {
+    isSyncing = false;
+    return;
+  }
+
+  try {
+    let queue = await loadQueuedInfoForms();
+
+    for (const item of queue) {
+      try {
+        await submitInfoForm(item.data, item.photoUris);
+
+        queue = queue.filter((q) => q.localId !== item.localId);
+        await saveQueuedInfoForms(queue);
+
+        console.log("Synced:", item.localId);
+      } catch (err) {
+        console.log("Still failed:", item.localId, err);
+      }
+    }
+  } finally {
+    isSyncing = false;
+  }
 };
 
 export const logoutUser = async (): Promise<void> => {
@@ -105,4 +190,19 @@ export const logoutUser = async (): Promise<void> => {
   console.log("Backend: logging out user..");
   await signOut(auth);
   console.log("Backend: user logged out successfully");
+};
+
+export const subscribeToActiveReports = (
+  uid: string,
+  callback: (count: number) => void,
+) => {
+  const q = query(
+    collection(db, "infoForms"),
+    where("uid", "==", uid),
+    where("status", "in", ["pending"]),
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.size);
+  });
 };
