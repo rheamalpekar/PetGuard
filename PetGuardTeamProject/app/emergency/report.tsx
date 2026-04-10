@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { detectEmergency } from "./core/EmergencyAlertSystem";
-import { submitEmergencyReport } from "@/services/ApiResponse";
-import { addEmergencyReport } from "@/services/ApiResponse";
+// import { submitEmergencyReport } from "@/services/ApiResponse";
+import { addEmergencyReport } from "@/backendServices/ApiService";
 
 type SeverityUI = "Low" | "Medium" | "High";
 
