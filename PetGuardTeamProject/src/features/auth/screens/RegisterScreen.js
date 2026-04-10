@@ -13,6 +13,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
+import { register } from "../../../backendServices/AuthService";
 
 /* ---------------- Validation Helpers ---------------- */
 
@@ -107,14 +108,14 @@ export default function RegisterScreen() {
     setSubmitting(true);
 
     try {
-      // TODO: Replace with AuthService.register(...)
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // Call the register function from APIService
+      await register(email, password, fullName, phone);
 
       setSuccessMessage("Account created successfully.");
       Alert.alert("Success", "Account created successfully.");
       router.replace("/auth/login");
     } catch (err) {
-      setFormError("Registration failed. Please try again.");
+      setFormError(err.message || "Registration failed. Please try again.");
     } finally {
       setSubmitting(false);
     }

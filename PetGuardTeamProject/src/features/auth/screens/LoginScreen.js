@@ -12,6 +12,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
+import { login } from "../../../backendServices/AuthService";
+import { useProtectedNavigation } from "../../../hooks/useProtectedNavigation";
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -19,6 +21,7 @@ function isValidEmail(email) {
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { protectedNavigate } = useProtectedNavigation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,11 +55,12 @@ export default function LoginScreen() {
     setSubmitting(true);
 
     try {
-      // TODO: AuthService.login(...)
-      await new Promise((r) => setTimeout(r, 600));
-      Alert.alert("Login successful (stub)");
+      await login(email, password, rememberMe);
+
+      Alert.alert("Login successful");
+      router.replace("/emergency");
     } catch (err) {
-      Alert.alert("Login failed");
+      Alert.alert(err.message || "Login failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -109,21 +113,20 @@ export default function LoginScreen() {
           <Text style={styles.link}>Create Account</Text>
         </Pressable>
 
-
-        <Pressable onPress={()=> router.push("/(tabs)/info-form")}>
-          <Text style={styles.link}>Go to Info Form</Text>
+        <Pressable onPress={() => protectedNavigate("/formscreens/FirebaseTestScreen")} style={styles.navigation}>
+          <Text style={styles.navigationText}>Go to Firebase test screen</Text>
         </Pressable>
 
-        <Pressable onPress={()=> router.push("/(tabs)/ConfirmationPage")}>
-          <Text style={styles.link}>Go to Confirmation screen</Text>
+        <Pressable onPress={() => protectedNavigate("/emergency")} style={styles.navigation}>
+          <Text style={styles.navigationText}>Go to Emergency/Home screen</Text>
         </Pressable>
 
-        <Pressable onPress={()=> router.push("/emergency")}>
-          <Text style={styles.link}>Go to Emergency screen</Text>
+        <Pressable onPress={() => protectedNavigate("/formscreens/info-form")} style={styles.navigation}>
+          <Text style={styles.navigationText}>Go to Info Form Screen</Text>
         </Pressable>
 
-        <Pressable onPress={()=> router.push("/(tabs)/FirebaseTestScreen")}>
-          <Text style={styles.link}>Go to Firebase test screen</Text>
+        <Pressable onPress={() => protectedNavigate("/formscreens/ConfirmationPage")} style={styles.navigation}>
+          <Text style={styles.navigationText}>Go to Confirmation screen</Text>
         </Pressable>
 
       </KeyboardAvoidingView>
@@ -155,4 +158,16 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "#000", fontWeight: "bold" },
   link: { color: "#4da6ff", marginTop: 16, textAlign: "center" },
+  navigation: {
+    backgroundColor: "#233244",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignSelf: "center",
+    marginTop: 12,
+  },
+  navigationText: {
+    color: "#ffffff",
+    fontSize: 14,
+  },
 });
