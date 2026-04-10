@@ -43,7 +43,7 @@ export const AccuracyLevel = {
  * @returns {string} - Accuracy level
  */
 export const getAccuracyLevel = (accuracy) => {
-  if (!accuracy || accuracy < 0) return AccuracyLevel.UNKNOWN;
+  if (accuracy == null || accuracy < 0) return AccuracyLevel.UNKNOWN;
   if (accuracy < 10) return AccuracyLevel.HIGH;
   if (accuracy < 50) return AccuracyLevel.MEDIUM;
   if (accuracy < 100) return AccuracyLevel.LOW;
@@ -250,7 +250,7 @@ export const getCurrentPosition = async (options = {}) => {
           distanceInterval: 0,
         });
 
-        const accuracy = location.coords.accuracy || null;
+        const accuracy = location.coords.accuracy ?? null;
         const accuracyLevel = getAccuracyLevel(accuracy);
         
         const position = {
@@ -266,7 +266,8 @@ export const getCurrentPosition = async (options = {}) => {
         // Update cache
         updateLocationCache(position, accuracy);
         
-        console.log(`Location acquired: ${accuracyLevel} accuracy (${accuracy?.toFixed(1)}m)`);
+        const accuracySuffix = accuracy != null ? ` (${accuracy.toFixed(1)}m)` : '';
+        console.log(`Location acquired: ${accuracyLevel} accuracy${accuracySuffix}`);
         return position;
         
       } catch (err) {
@@ -345,34 +346,27 @@ export const initializeLocation = async ({ setMapRegion, setIsLoadingLocation },
 
   setIsLoadingLocation(true);
   try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status === 'granted') {
-      // Try to get location with retry and caching
-      const position = await getCurrentPosition({ 
-        useCache: true, 
-        showAlert: false,
-        maxRetries: 2,
-      });
-      
-      if (position) {
-        const newRegion = {
-          latitude: position.latitude,
-          longitude: position.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        };
-        setMapRegion(newRegion);
-        console.log(`Map initialized with ${position.accuracyDescription}`);
-      } else {
-        // Fallback to default location or show message
-        console.log('Could not get initial location');
-      }
+    // Try to get location with retry and caching. Permission handling is
+    // delegated to getCurrentPosition / requestLocationPermission to avoid
+    // duplicate permission prompts.
+    const position = await getCurrentPosition({
+      useCache: true,
+      showAlert: false,
+      maxRetries: 2,
+    });
+
+    if (position) {
+      const newRegion = {
+        latitude: position.latitude,
+        longitude: position.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+      setMapRegion(newRegion);
+      console.log(`Map initialized with ${position.accuracyDescription}`);
     } else {
-      Alert.alert(
-        'Location Permission',
-        'Location permission is needed to use the map. Please enable it in settings or manually tap on the map to set a location.',
-        [{ text: 'OK' }]
-      );
+      // Fallback to default location or show message
+      console.log('Could not get initial location');
     }
   } catch (error) {
     console.log('Could not get initial location:', error);
@@ -411,7 +405,6 @@ export const getCurrentLocationWithAddress = async ({
     });
     
     if (!position) {
-      setIsLoadingLocation(false);
       return null;
     }
 

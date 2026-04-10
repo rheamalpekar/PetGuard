@@ -118,6 +118,9 @@ export default function InfoFormScreen() {
   };
 
   const handleMapPress = (event: any) => {
+    // Clear GPS-derived location accuracy when user manually selects a location
+    setLocationAccuracy(null);
+
     LocationService.handleMapPress(event, {
       setMarkerPosition,
       setLocationAddress,
@@ -131,6 +134,8 @@ export default function InfoFormScreen() {
       setLocationAddress,
       setValue
     });
+    // Clear any previous GPS-based accuracy when the user manually adjusts the marker
+    setLocationAccuracy(null);
   };
 
   const pickImageFromCamera = async () => {
@@ -434,7 +439,7 @@ export default function InfoFormScreen() {
                 />
                 <Text style={styles.accuracyText}>
                   {locationAccuracy.description}
-                  {locationAccuracy.meters && ` (±${Math.round(locationAccuracy.meters)}m)`}
+                  {locationAccuracy.meters != null && ` (±${Math.round(locationAccuracy.meters)}m)`}
                 </Text>
               </View>
             )}
