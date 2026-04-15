@@ -13,7 +13,9 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 import * as LocationService from '../../services/LocationService';
+import * as LocationService from '../../services/LocationService';
 import { Colors } from '@/constants/theme';
+import { AccuracyLevel } from '../../services/LocationService';
 import { AccuracyLevel } from '../../services/LocationService';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import PhotoUploadComponent from '@/components/PhotoUploadComponent';
@@ -43,6 +45,7 @@ type LocationData = {
 };
 
 type InfoFormData = {
+type InfoFormData = {
   location: LocationData | null;
   yourName: string;
   phoneNumber: string;
@@ -51,6 +54,7 @@ type InfoFormData = {
 };
 
 type PhotoAsset = {
+  uri: string;
   uri: string;
   type: 'image' | 'document';
   name?: string;
@@ -81,6 +85,11 @@ export default function InfoFormScreen() {
   const [mapRegion, setMapRegion] = useState<MapRegion | null>(null);
   const [markerPosition, setMarkerPosition] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationAddress, setLocationAddress] = useState<string>('');
+  const [locationAccuracy, setLocationAccuracy] = useState<{
+    level: string;
+    description: string;
+    meters: number | null;
+  } | null>(null);
   const [locationAccuracy, setLocationAccuracy] = useState<{
     level: string;
     description: string;
@@ -268,6 +277,12 @@ export default function InfoFormScreen() {
         },
       ]);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred while submitting the report';
+      Alert.alert('Submission Failed', errorMessage, [
+        {
+          text: 'OK',
+        },
+      ]);
       const errorMessage = error instanceof Error ? error.message : 'An error occurred while submitting the report';
       Alert.alert('Submission Failed', errorMessage, [
         {
