@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -51,11 +52,27 @@ const PhotoUploadComponent = forwardRef(function PhotoUploadComponent(
             }
           );
 
-          return {
+          const fileName = ensureJpgName(asset.name, Date.now() + index);
+          const photo = {
             uri: compressed.uri,
             type: photoType,
-            name: ensureJpgName(asset.name, Date.now() + index),
+            name: fileName,
           };
+
+          if (Platform.OS === 'web') {
+            try {
+              const response = await fetch(compressed.uri);
+              if (!response.ok) {
+                throw new Error(`Failed to fetch compressed image: ${response.status}`);
+              }
+              // Always use 'image/jpeg' MIME type since we compress to JPEG regardless of source.
+              photo.blob = new File([await response.blob()], fileName, { type: 'image/jpeg' });
+            } catch (blobError) {
+              throw new Error('Could not convert image for upload. Please try again.');
+            }
+          }
+
+          return photo;
         })
       );
 
