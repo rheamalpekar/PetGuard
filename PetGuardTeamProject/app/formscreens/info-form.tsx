@@ -7,18 +7,16 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  Image,
   ActivityIndicator,
   Platform,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons';
 import * as LocationService from '../../services/LocationService';
 import { Colors } from '@/constants/theme';
 import { AccuracyLevel } from '../../services/LocationService';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import PhotoUploadComponent from '@/components/PhotoUploadComponent';
 
 // Conditionally import MapView only on mobile platforms
 let MapView: any;
@@ -58,6 +56,18 @@ type PhotoAsset = {
   name?: string;
 };
 
+type PhotoUploadHandle = {
+  getPhotos: () => PhotoAsset[];
+  validate: () => boolean;
+  reset: () => void;
+};
+
+type PhotoUploadProps = {
+  colors: { text: string; icon: string };
+  isUploading?: boolean;
+  uploadProgress?: number;
+};
+
 export default function InfoFormScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -65,9 +75,8 @@ export default function InfoFormScreen() {
 
   const [hasTransportation, setHasTransportation] = useState<boolean | null>(null);
   const [transportationError, setTransportationError] = useState<string | null>(null);
-  const [photos, setPhotos] = useState<PhotoAsset[]>([]);
-  const [photoError, setPhotoError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [mapRegion, setMapRegion] = useState<MapRegion | null>(null);
   const [markerPosition, setMarkerPosition] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -78,6 +87,11 @@ export default function InfoFormScreen() {
     meters: number | null;
   } | null>(null);
   const mapRef = useRef<any>(null);
+  const photoUploadRef = useRef<PhotoUploadHandle>(null);
+  const TypedPhotoUploadComponent =
+    PhotoUploadComponent as React.ForwardRefExoticComponent<
+      PhotoUploadProps & React.RefAttributes<PhotoUploadHandle>
+    >;
 
   const {
     control,
@@ -138,59 +152,11 @@ export default function InfoFormScreen() {
     setLocationAccuracy(null);
   };
 
-  const pickImageFromCamera = async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
-    if (!permissionResult.granted) {
-      Alert.alert('Permission Required', 'Camera access is needed to take photos.');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      quality: 0.6,
-      mediaTypes: ['images'],
-      allowsEditing: true,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setPhotos((prev) => [...prev, { uri: result.assets[0].uri, type: 'image' }]);
-      setPhotoError(null);
-    }
-  };
-
-  const pickDocumentFromFiles = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['image/*'],
-        copyToCacheDirectory: true,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setPhotos((prev) => [
-          ...prev,
-          {
-            uri: result.assets[0].uri,
-            type: 'document',
-            name: result.assets[0].name,
-          },
-        ]);
-        setPhotoError(null);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick image');
-    }
-  };
-
-  const removePhoto = (index: number) => {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const validateCustomFields = () => {
     let hasErrors = false;
 
-    // Validate photos
-    if (photos.length === 0) {
-      setPhotoError('Please upload at least one photo');
+    const photosValid = photoUploadRef.current?.validate() ?? false;
+    if (!photosValid) {
       hasErrors = true;
     }
 
@@ -203,9 +169,47 @@ export default function InfoFormScreen() {
     return !hasErrors;
   };
 
+  const submitFormWithProgress = (formData: FormData): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', 'https://api.com/submit-report');
+      xhr.setRequestHeader('Accept', 'application/json');
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          setUploadProgress(Math.round((event.loaded / event.total) * 100));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error('Network request failed'));
+      };
+
+      xhr.onload = () => {
+        let parsedResponse: any = {};
+
+        try {
+          parsedResponse = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+        } catch {
+          parsedResponse = {};
+        }
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setUploadProgress(100);
+          resolve(parsedResponse);
+          return;
+        }
+
+        reject(new Error(parsedResponse.message || 'Failed to submit report'));
+      };
+
+      xhr.send(formData);
+    });
+  };
+
   const handleFormSubmit = () => {
     // Validate custom fields first
-    const customFieldsValid = validateCustomFields();
+    validateCustomFields();
     
     // Trigger react-hook-form validation and submission
     handleSubmit(onSubmit)();
@@ -218,8 +222,10 @@ export default function InfoFormScreen() {
     }
 
     setIsSubmitting(true);
+    setUploadProgress(0);
 
     try {
+      const selectedPhotos = photoUploadRef.current?.getPhotos() ?? [];
       const formDataToSend = new FormData();
       
       // Append location data
@@ -236,7 +242,7 @@ export default function InfoFormScreen() {
       formDataToSend.append('hasTransportation', String(hasTransportation));
 
       // Append photos
-      photos.forEach((photo, index) => {
+      selectedPhotos.forEach((photo, index) => {
         formDataToSend.append(`photos[${index}]`, {
           uri: photo.uri,
           type: 'image/jpeg',
@@ -244,21 +250,7 @@ export default function InfoFormScreen() {
         } as any);
       });
 
-      // Replace with actual API endpoint
-      const response = await fetch('https://api.com/submit-report', {
-        method: 'POST',
-        body: formDataToSend,
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit report');
-      }
-
-      const responseData = await response.json();
+      await submitFormWithProgress(formDataToSend);
       
       Alert.alert('Success', 'Report submitted successfully!', [
         {
@@ -267,11 +259,11 @@ export default function InfoFormScreen() {
             reset();
             setHasTransportation(null);
             setTransportationError(null);
-            setPhotos([]);
-            setPhotoError(null);
+            photoUploadRef.current?.reset();
             setMarkerPosition(null);
             setLocationAddress('');
             setLocationAccuracy(null);
+            setUploadProgress(0);
           },
         },
       ]);
@@ -285,6 +277,7 @@ export default function InfoFormScreen() {
       console.error('Form submission error:', error);
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -463,57 +456,12 @@ export default function InfoFormScreen() {
         )}
       </View>
 
-      {/* Photo Documentation */}
-      <View style={styles.section}>
-        <View style={styles.labelContainer}>
-          <Text style={[styles.label, { color: colors.text }]}>Photo Documentation</Text>
-          <Text style={styles.requiredIndicator}>*</Text>
-        </View>
-        <View style={[styles.photoSection, photoError && styles.photoSectionError]}>
-          <View style={styles.photoButtons}>
-            <TouchableOpacity
-              style={[styles.photoButton, styles.cameraButton]}
-              onPress={pickImageFromCamera}
-            >
-              <Text style={styles.cameraButtonText}>Camera</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.photoButton, styles.filesButton]}
-              onPress={pickDocumentFromFiles}
-            >
-              <Ionicons name="document-outline" size={16} color="#333" />
-              <Text style={styles.filesButtonText}>Files</Text>
-            </TouchableOpacity>
-          </View>
-          {photos.length > 0 && (
-            <View style={styles.photoPreviewContainer}>
-              {photos.map((photo, index) => (
-                <View key={index} style={styles.photoPreview}>
-                  {photo.type === 'image' ? (
-                    <Image source={{ uri: photo.uri }} style={styles.previewImage} />
-                  ) : (
-                    <View style={styles.documentPreview}>
-                      <Ionicons name="document" size={24} color="#666" />
-                      <Text style={styles.documentName} numberOfLines={1}>
-                        {photo.name?.split('.').pop()?.toUpperCase()}
-                      </Text>
-                    </View>
-                  )}
-                  <TouchableOpacity
-                    style={styles.removePhotoButton}
-                    onPress={() => removePhoto(index)}
-                  >
-                    <Ionicons name="close-circle" size={20} color="#ff4444" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-        {photoError && (
-          <Text style={styles.errorText}>{photoError}</Text>
-        )}
-      </View>
+      <TypedPhotoUploadComponent
+        ref={photoUploadRef}
+        colors={colors}
+        isUploading={isSubmitting}
+        uploadProgress={uploadProgress}
+      />
 
       {/* Contact Details */}
       <View style={styles.section}>
@@ -908,77 +856,6 @@ const styles = StyleSheet.create({
     color: '#ff4444',
     fontSize: 12,
     marginTop: 4,
-  },
-  photoSection: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  photoSectionError: {
-    borderColor: '#ff4444',
-  },
-  photoButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  photoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 20,
-    gap: 6,
-  },
-  cameraButton: {
-    backgroundColor: '#3478f6',
-  },
-  cameraButtonText: {
-    color: '#fff',
-    fontWeight: '500',
-  },
-  filesButton: {
-    backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  filesButtonText: {
-    color: '#333',
-    fontWeight: '500',
-  },
-  photoPreviewContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 16,
-    gap: 8,
-  },
-  photoPreview: {
-    position: 'relative',
-  },
-  previewImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-  },
-  documentPreview: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  documentName: {
-    fontSize: 8,
-    color: '#666',
-    maxWidth: 50,
-  },
-  removePhotoButton: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
   },
   contactSection: {
     borderWidth: 1,
