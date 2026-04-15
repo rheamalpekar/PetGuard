@@ -14,18 +14,11 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import * as Location from 'expo-location';
-import NetInfo from '@react-native-community/netinfo';
 import { Ionicons } from '@expo/vector-icons';
+import * as LocationService from '../../services/LocationService';
 import { Colors } from '@/constants/theme';
+import { AccuracyLevel } from '../../services/LocationService';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import {
-  enqueueInfoForm,
-  loadQueuedInfoForms,
-  submitInfoForm,
-} from "@/backendServices/ApiService";
-import { auth } from "@/backendServices/firebase";
-import { useRouter } from "expo-router";
 
 // Conditionally import MapView only on mobile platforms
 let MapView: any;
@@ -51,18 +44,16 @@ type LocationData = {
   address: string;
 };
 
-export type InfoFormData = {
+type InfoFormData = {
   location: LocationData | null;
   yourName: string;
   phoneNumber: string;
   emailAddress: string;
   additionalDetails: string;
-  formId: string;
 };
 
 type PhotoAsset = {
-  uri?: string; // for mobile
-  file?: File;  // for web
+  uri: string;
   type: 'image' | 'document';
   name?: string;
 };
@@ -81,8 +72,12 @@ export default function InfoFormScreen() {
   const [mapRegion, setMapRegion] = useState<MapRegion | null>(null);
   const [markerPosition, setMarkerPosition] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationAddress, setLocationAddress] = useState<string>('');
+  const [locationAccuracy, setLocationAccuracy] = useState<{
+    level: string;
+    description: string;
+    meters: number | null;
+  } | null>(null);
   const mapRef = useRef<any>(null);
-  const router = useRouter();
 
   const {
     control,
@@ -98,163 +93,49 @@ export default function InfoFormScreen() {
       phoneNumber: '',
       emailAddress: '',
       additionalDetails: '',
-      formId: '',
     },
   });
 
   useEffect(() => {
-    // Skip map initialization on web
-    if (isWeb) {
-      return;
-    }
-
-    // Try to get user's location
-    (async () => {
-      setIsLoadingLocation(true);
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status === 'granted') {
-          const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
-          const newRegion = {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          };
-          setMapRegion(newRegion);
-        } else {
-          Alert.alert(
-            'Location Permission',
-            'Location permission is needed to use the map. Please enable it in settings or manually tap on the map to set a location.',
-            [{ text: 'OK' }]
-          );
-        }
-      } catch (error) {
-        console.log('Could not get initial location:', error);
-        Alert.alert(
-          'Location Error',
-          'Could not get your location. Please tap on the map to set a location manually.',
-          [{ text: 'OK' }]
-        );
-      } finally {
-        setIsLoadingLocation(false);
-      }
-    })();
+    // Initialize location on mount
+    LocationService.initializeLocation(
+      { setMapRegion, setIsLoadingLocation },
+      isWeb
+    );
   }, [isWeb]);
 
-  const getCurrentLocation = async () => {
-    setIsLoadingLocation(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permission Required',
-          'Location permission is needed to get your current location.'
-        );
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
-      const newPosition = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-
-      // Reverse geocode to get address
-      const address = await reverseGeocode(newPosition);
-      setLocationAddress(address);
-
-      // Update form
-      setValue('location', {
-        latitude: newPosition.latitude,
-        longitude: newPosition.longitude,
-        address,
-      }, { shouldValidate: true });
-
-      // Only update map on native platforms
-      if (!isWeb) {
-        setMarkerPosition(newPosition);
-        setMapRegion({
-          ...newPosition,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        });
-
-        // Animate map to new position
-        mapRef.current?.animateToRegion({
-          ...newPosition,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }, 500);
-      }
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to get current location. Please try again.'
-      );
-      console.error('Location error:', error);
-    } finally {
-      setIsLoadingLocation(false);
-    }
+  const getCurrentLocation = () => {
+    LocationService.getCurrentLocationWithAddress({
+      setIsLoadingLocation,
+      setLocationAddress,
+      setValue,
+      setMarkerPosition,
+      setMapRegion,
+      mapRef,
+      isWeb,
+      setLocationAccuracy
+    });
   };
 
-  const reverseGeocode = async (coords: { latitude: number; longitude: number }): Promise<string> => {
-    try {
-      const result = await Location.reverseGeocodeAsync(coords);
-      if (result && result.length > 0) {
-        const address = result[0];
-        return [
-          address.streetNumber,
-          address.street,
-          address.city,
-          address.region,
-          address.postalCode,
-        ]
-          .filter(Boolean)
-          .join(', ');
-      }
-    } catch (error) {
-      console.error('Reverse geocode error:', error);
-    }
-    return `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
+  const handleMapPress = (event: any) => {
+    // Clear GPS-derived location accuracy when user manually selects a location
+    setLocationAccuracy(null);
+
+    LocationService.handleMapPress(event, {
+      setMarkerPosition,
+      setLocationAddress,
+      setValue
+    });
   };
 
-  const handleMapPress = async (event: any) => {
-    const { latitude, longitude } = event.nativeEvent.coordinate;
-    setMarkerPosition({ latitude, longitude });
-    
-    // Get address for the new position
-    const address = await reverseGeocode({ latitude, longitude });
-    setLocationAddress(address);
-    
-    // Update form
-    setValue('location', {
-      latitude,
-      longitude,
-      address,
-    }, { shouldValidate: true });
-  };
-
-  const handleMarkerDragEnd = async (event: any) => {
-    const { latitude, longitude } = event.nativeEvent.coordinate;
-    setMarkerPosition({ latitude, longitude });
-    
-    // Get address for the new position
-    const address = await reverseGeocode({ latitude, longitude });
-    setLocationAddress(address);
-    
-    // Update form
-    setValue('location', {
-      latitude,
-      longitude,
-      address,
-    }, { shouldValidate: true });
+  const handleMarkerDragEnd = (event: any) => {
+    LocationService.handleMarkerDragEnd(event, {
+      setMarkerPosition,
+      setLocationAddress,
+      setValue
+    });
+    // Clear any previous GPS-based accuracy when the user manually adjusts the marker
+    setLocationAccuracy(null);
   };
 
   const pickImageFromCamera = async () => {
@@ -272,19 +153,7 @@ export default function InfoFormScreen() {
     });
 
     if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0] as ImagePicker.ImagePickerAsset & { file?: File };
-
-      if (Platform.OS === "web") {
-        setPhotos((prev) => [...prev, {
-          file: asset.file,
-          uri: asset.uri,
-          type: 'image',
-          name: asset.file?.name,
-        }]);
-      } else {
-        setPhotos((prev) => [...prev, { uri: asset.uri, type: 'image', name: asset.fileName ?? undefined }]);
-      }
-
+      setPhotos((prev) => [...prev, { uri: result.assets[0].uri, type: 'image' }]);
       setPhotoError(null);
     }
   };
@@ -297,15 +166,12 @@ export default function InfoFormScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0] as DocumentPicker.DocumentPickerAsset & { file?: File };
-
         setPhotos((prev) => [
           ...prev,
           {
-            uri: asset.uri,
-            file: asset.file,
+            uri: result.assets[0].uri,
             type: 'document',
-            name: asset.name,
+            name: result.assets[0].name,
           },
         ]);
         setPhotoError(null);
@@ -337,82 +203,12 @@ export default function InfoFormScreen() {
     return !hasErrors;
   };
 
-  const handleFormSubmit = async (data: InfoFormData) => {
-    console.log("Form submission started", data);
-    if (photos.length === 0) {
-      console.log("Validation failed: No photos uploaded");
-      setPhotoError("Please upload at least one photo.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setPhotoError(null);
-
-    try {
-      const netState = await NetInfo.fetch();
-      const isOnline = Boolean(
-        netState.isConnected && netState.isInternetReachable !== false,
-      );
-
-      if (!isOnline) {
-        const user = auth.currentUser;
-        if (!user) {
-          throw new Error("Not authenticated");
-        }
-
-        const localId = `queued_${Date.now()}`;
-        const photoUris = photos
-          .map((photo) => photo.uri)
-          .filter((uri): uri is string => Boolean(uri));
-
-        await enqueueInfoForm({
-          localId,
-          uid: user.uid,
-          data: {
-            ...data,
-            formId: localId,
-          },
-          photoUris,
-          createdAt: Date.now(),
-          retryCount: 0,
-        });
-
-        const queueNow = await loadQueuedInfoForms();
-        console.log("Asyncstorage output:", queueNow);
-
-        reset();
-        setPhotos([]);
-        Alert.alert(
-          "Saved Offline",
-          "Form has been saved on this phone and will upload it when back online.",
-        );
-        router.replace({
-          pathname: "/formscreens/ConfirmationPage",
-          params: { formId: localId },
-        });
-        return;
-      }
-
-      const photoInputs = photos.map((photo) => photo.file ?? photo.uri).filter(Boolean) as Array<File | string>;
-      const response = await submitInfoForm(data, photoInputs);
-
-      if (response.success) {
-        console.log("Form submitted successfully", response);
-        reset();
-        setPhotos([]);
-        router.replace({
-          pathname: "/formscreens/ConfirmationPage",
-          params: { formId: response.formId }
-        });
-      }
-    } catch (error) {
-      console.error("Error during form submission", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to submit the form. Please try again.";
-      Alert.alert(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-      console.log("Form submission ended");
-    }
+  const handleFormSubmit = () => {
+    // Validate custom fields first
+    const customFieldsValid = validateCustomFields();
+    
+    // Trigger react-hook-form validation and submission
+    handleSubmit(onSubmit)();
   };
 
   const onSubmit = async (data: InfoFormData) => {
@@ -475,12 +271,17 @@ export default function InfoFormScreen() {
             setPhotoError(null);
             setMarkerPosition(null);
             setLocationAddress('');
+            setLocationAccuracy(null);
           },
         },
       ]);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to submit the form. Please try again.";
-      Alert.alert(errorMessage);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred while submitting the report';
+      Alert.alert('Submission Failed', errorMessage, [
+        {
+          text: 'OK',
+        },
+      ]);
       console.error('Form submission error:', error);
     } finally {
       setIsSubmitting(false);
@@ -616,6 +417,30 @@ export default function InfoFormScreen() {
               <View style={styles.addressContainer}>
                 <Ionicons name="location-outline" size={16} color="#666" />
                 <Text style={styles.addressText}>{locationAddress}</Text>
+              </View>
+            )}
+            {locationAccuracy && (
+              <View style={[
+                styles.accuracyContainer,
+                locationAccuracy.level === AccuracyLevel.HIGH && styles.accuracyHigh,
+                locationAccuracy.level === AccuracyLevel.MEDIUM && styles.accuracyMedium,
+                locationAccuracy.level === AccuracyLevel.LOW && styles.accuracyLow,
+                locationAccuracy.level === AccuracyLevel.VERY_LOW && styles.accuracyVeryLow,
+              ]}>
+                <Ionicons 
+                  name="radio" 
+                  size={16} 
+                  color={
+                    locationAccuracy.level === AccuracyLevel.HIGH ? '#34c759' :
+                    locationAccuracy.level === AccuracyLevel.MEDIUM ? '#5ac8fa' :
+                    locationAccuracy.level === AccuracyLevel.LOW ? '#ff9500' :
+                    '#ff3b30'
+                  } 
+                />
+                <Text style={styles.accuracyText}>
+                  {locationAccuracy.description}
+                  {locationAccuracy.meters != null && ` (±${Math.round(locationAccuracy.meters)}m)`}
+                </Text>
               </View>
             )}
           </>
@@ -879,7 +704,7 @@ export default function InfoFormScreen() {
       {/* Submit Button */}
       <TouchableOpacity
         style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-        onPress={handleSubmit(handleFormSubmit)}
+        onPress={handleFormSubmit}
         disabled={isSubmitting}
       >
         {isSubmitting ? (
@@ -1005,6 +830,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     lineHeight: 20,
+  },
+  accuracyContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 8,
+    gap: 8,
+    marginBottom: 12,
+  },
+  accuracyHigh: {
+    backgroundColor: '#e8f9ef',
+    borderWidth: 1,
+    borderColor: '#c3f1d1',
+  },
+  accuracyMedium: {
+    backgroundColor: '#e6f7fc',
+    borderWidth: 1,
+    borderColor: '#b8e8f9',
+  },
+  accuracyLow: {
+    backgroundColor: '#fff4e6',
+    borderWidth: 1,
+    borderColor: '#ffe0b8',
+  },
+  accuracyVeryLow: {
+    backgroundColor: '#ffe6e6',
+    borderWidth: 1,
+    borderColor: '#ffcccc',
+  },
+  accuracyText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#333',
+    fontWeight: '500',
   },
   locationActions: {
     flexDirection: 'row',
