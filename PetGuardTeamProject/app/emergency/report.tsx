@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { detectEmergency } from "./core/EmergencyAlertSystem";
+import { detectEmergency } from "../../src/emergency/core/EmergencyAlertSystem";
 // import { submitEmergencyReport } from "@/services/ApiResponse";
 import { addEmergencyReport } from "@/backendServices/ApiService";
 
