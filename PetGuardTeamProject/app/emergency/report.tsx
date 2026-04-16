@@ -18,6 +18,8 @@ import NetInfo from "@react-native-community/netinfo";
 import { useAudioPlayer } from "expo-audio";
 import { detectEmergency } from "./core/EmergencyAlertSystem";
 import { queueEmergency } from "../../utils/offlineQueue";
+// import { submitEmergencyReport } from "@/services/ApiResponse";
+import { addEmergencyReport } from "@/backendServices/ApiService";
 
 type SeverityUI = "Low" | "Medium" | "High";
 
