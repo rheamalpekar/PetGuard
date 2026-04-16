@@ -7,18 +7,28 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  Image,
   ActivityIndicator,
   Platform,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Location from 'expo-location';
+import NetInfo from '@react-native-community/netinfo';
 import { Ionicons } from '@expo/vector-icons';
 import * as LocationService from '../../services/LocationService';
 import { Colors } from '@/constants/theme';
 import { AccuracyLevel } from '../../services/LocationService';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import PhotoUploadComponent from '@/components/PhotoUploadComponent';
+import { auth } from "@/backendServices/firebase";
+import {
+  enqueueInfoForm,
+  loadQueuedInfoForms,
+  submitInfoForm,
+} from "@/backendServices/ApiService";
+import { useRouter } from "expo-router";
+
 
 // Conditionally import MapView only on mobile platforms
 let MapView: any;
@@ -58,16 +68,28 @@ type PhotoAsset = {
   name?: string;
 };
 
+type PhotoUploadHandle = {
+  getPhotos: () => PhotoAsset[];
+  validate: () => boolean;
+  reset: () => void;
+};
+
+type PhotoUploadProps = {
+  colors: { text: string; icon: string };
+  isUploading?: boolean;
+  uploadProgress?: number;
+};
+
 export default function InfoFormScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const isWeb = Platform.OS === 'web';
+  const router = useRouter();
 
   const [hasTransportation, setHasTransportation] = useState<boolean | null>(null);
   const [transportationError, setTransportationError] = useState<string | null>(null);
-  const [photos, setPhotos] = useState<PhotoAsset[]>([]);
-  const [photoError, setPhotoError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [mapRegion, setMapRegion] = useState<MapRegion | null>(null);
   const [markerPosition, setMarkerPosition] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -78,6 +100,11 @@ export default function InfoFormScreen() {
     meters: number | null;
   } | null>(null);
   const mapRef = useRef<any>(null);
+  const photoUploadRef = useRef<PhotoUploadHandle>(null);
+  const TypedPhotoUploadComponent =
+    PhotoUploadComponent as React.ForwardRefExoticComponent<
+      PhotoUploadProps & React.RefAttributes<PhotoUploadHandle>
+    >;
 
   const {
     control,
@@ -138,59 +165,11 @@ export default function InfoFormScreen() {
     setLocationAccuracy(null);
   };
 
-  const pickImageFromCamera = async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
-    if (!permissionResult.granted) {
-      Alert.alert('Permission Required', 'Camera access is needed to take photos.');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      quality: 0.6,
-      mediaTypes: ['images'],
-      allowsEditing: true,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setPhotos((prev) => [...prev, { uri: result.assets[0].uri, type: 'image' }]);
-      setPhotoError(null);
-    }
-  };
-
-  const pickDocumentFromFiles = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['image/*'],
-        copyToCacheDirectory: true,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setPhotos((prev) => [
-          ...prev,
-          {
-            uri: result.assets[0].uri,
-            type: 'document',
-            name: result.assets[0].name,
-          },
-        ]);
-        setPhotoError(null);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick image');
-    }
-  };
-
-  const removePhoto = (index: number) => {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const validateCustomFields = () => {
     let hasErrors = false;
 
-    // Validate photos
-    if (photos.length === 0) {
-      setPhotoError('Please upload at least one photo');
+    const photosValid = photoUploadRef.current?.validate() ?? false;
+    if (!photosValid) {
       hasErrors = true;
     }
 
@@ -203,86 +182,149 @@ export default function InfoFormScreen() {
     return !hasErrors;
   };
 
-  const handleFormSubmit = () => {
-    // Validate custom fields first
-    const customFieldsValid = validateCustomFields();
-    
-    // Trigger react-hook-form validation and submission
-    handleSubmit(onSubmit)();
+  const submitFormWithProgress = (formData: FormData): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', 'https://api.com/submit-report');
+      xhr.setRequestHeader('Accept', 'application/json');
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          setUploadProgress(Math.round((event.loaded / event.total) * 100));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error('Network request failed'));
+      };
+
+      xhr.onload = () => {
+        let parsedResponse: any = {};
+
+        try {
+          parsedResponse = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+        } catch {
+          parsedResponse = {};
+        }
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setUploadProgress(100);
+          resolve(parsedResponse);
+          return;
+        }
+
+        reject(new Error(parsedResponse.message || 'Failed to submit report'));
+      };
+
+      xhr.send(formData);
+    });
   };
 
-  const onSubmit = async (data: InfoFormData) => {
-    // Double-check custom fields in case form fields were already valid
-    if (!validateCustomFields()) {
+  const handleFormSubmit = async (data: InfoFormData) => {
+    // console.log("1 start");
+
+    if (!validateCustomFields()) return;
+
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert("Error", "User not authenticated");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const formDataToSend = new FormData();
-      
-      // Append location data
-      if (data.location) {
-        formDataToSend.append('latitude', String(data.location.latitude));
-        formDataToSend.append('longitude', String(data.location.longitude));
-        formDataToSend.append('address', data.location.address);
-      }
-      
-      formDataToSend.append('yourName', data.yourName);
-      formDataToSend.append('phoneNumber', data.phoneNumber);
-      formDataToSend.append('emailAddress', data.emailAddress);
-      formDataToSend.append('additionalDetails', data.additionalDetails);
-      formDataToSend.append('hasTransportation', String(hasTransportation));
+      const netState = await NetInfo.fetch();
 
-      // Append photos
-      photos.forEach((photo, index) => {
-        formDataToSend.append(`photos[${index}]`, {
-          uri: photo.uri,
-          type: 'image/jpeg',
-          name: photo.name || `photo_${index}.jpg`,
-        } as any);
-      });
+      const isOnline = netState.isConnected === true && netState.isInternetReachable === true;
+      console.log("isOnline FIXED:", isOnline, netState);
 
-      // Replace with actual API endpoint
-      const response = await fetch('https://api.com/submit-report', {
-        method: 'POST',
-        body: formDataToSend,
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
+      if (!isOnline) {
+        const localId = `queued_${Date.now()}`;
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit report');
-      }
+        const photos = photoUploadRef.current?.getPhotos() ?? [];
 
-      const responseData = await response.json();
-      
-      Alert.alert('Success', 'Report submitted successfully!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            reset();
-            setHasTransportation(null);
-            setTransportationError(null);
-            setPhotos([]);
-            setPhotoError(null);
-            setMarkerPosition(null);
-            setLocationAddress('');
-            setLocationAccuracy(null);
+        const photoUris = photos
+          .map((p) => p.uri)
+          .filter((uri): uri is string => Boolean(uri));
+
+        await enqueueInfoForm({
+          localId,
+          uid: user.uid,
+          data: {
+            ...data,
+            formId: localId,
           },
-        },
+          photoUris,
+          createdAt: Date.now(),
+          retryCount: 0,
+        });
+
+        reset();
+        photoUploadRef.current?.reset();
+        setIsSubmitting(false);
+
+        router.replace({
+          pathname: "/formscreens/ConfirmationPage",
+          params: { formId: localId },
+        });
+
+        return;
+      }
+
+      const photos = photoUploadRef.current?.getPhotos() ?? [];
+
+      const photoInputs = photos
+        .map((p: any) => p.file ?? p.uri)
+        .filter(Boolean);
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 8000)
+      );
+
+      const response: any = await Promise.race([
+        submitInfoForm(data, photoInputs),
+        timeoutPromise,
       ]);
+
+      if (response.success) {
+        reset();
+        photoUploadRef.current?.reset();
+
+        router.replace({
+          pathname: "/formscreens/ConfirmationPage",
+          params: { formId: response.formId },
+        });
+      }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while submitting the report';
-      Alert.alert('Submission Failed', errorMessage, [
-        {
-          text: 'OK',
+      console.log("FORCED OFFLINE FALLBACK", error);
+
+      const localId = `queued_${Date.now()}`;
+      const photos = photoUploadRef.current?.getPhotos() ?? [];
+
+      const photoUris = photos
+        .map((p: any) => p.uri)
+        .filter((uri: any): uri is string => Boolean(uri));
+
+      await enqueueInfoForm({
+        localId,
+        uid: user.uid,
+        data: {
+          ...data,
+          formId: localId,
         },
-      ]);
-      console.error('Form submission error:', error);
+        photoUris,
+        createdAt: Date.now(),
+        retryCount: 0,
+      });
+
+      reset();
+      photoUploadRef.current?.reset();
+
+      router.replace({
+        pathname: "/formscreens/ConfirmationPage",
+        params: { formId: localId },
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -463,57 +505,12 @@ export default function InfoFormScreen() {
         )}
       </View>
 
-      {/* Photo Documentation */}
-      <View style={styles.section}>
-        <View style={styles.labelContainer}>
-          <Text style={[styles.label, { color: colors.text }]}>Photo Documentation</Text>
-          <Text style={styles.requiredIndicator}>*</Text>
-        </View>
-        <View style={[styles.photoSection, photoError && styles.photoSectionError]}>
-          <View style={styles.photoButtons}>
-            <TouchableOpacity
-              style={[styles.photoButton, styles.cameraButton]}
-              onPress={pickImageFromCamera}
-            >
-              <Text style={styles.cameraButtonText}>Camera</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.photoButton, styles.filesButton]}
-              onPress={pickDocumentFromFiles}
-            >
-              <Ionicons name="document-outline" size={16} color="#333" />
-              <Text style={styles.filesButtonText}>Files</Text>
-            </TouchableOpacity>
-          </View>
-          {photos.length > 0 && (
-            <View style={styles.photoPreviewContainer}>
-              {photos.map((photo, index) => (
-                <View key={index} style={styles.photoPreview}>
-                  {photo.type === 'image' ? (
-                    <Image source={{ uri: photo.uri }} style={styles.previewImage} />
-                  ) : (
-                    <View style={styles.documentPreview}>
-                      <Ionicons name="document" size={24} color="#666" />
-                      <Text style={styles.documentName} numberOfLines={1}>
-                        {photo.name?.split('.').pop()?.toUpperCase()}
-                      </Text>
-                    </View>
-                  )}
-                  <TouchableOpacity
-                    style={styles.removePhotoButton}
-                    onPress={() => removePhoto(index)}
-                  >
-                    <Ionicons name="close-circle" size={20} color="#ff4444" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-        {photoError && (
-          <Text style={styles.errorText}>{photoError}</Text>
-        )}
-      </View>
+      <TypedPhotoUploadComponent
+        ref={photoUploadRef}
+        colors={colors}
+        isUploading={isSubmitting}
+        uploadProgress={uploadProgress}
+      />
 
       {/* Contact Details */}
       <View style={styles.section}>
@@ -704,7 +701,10 @@ export default function InfoFormScreen() {
       {/* Submit Button */}
       <TouchableOpacity
         style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-        onPress={handleFormSubmit}
+        onPress={() => {
+          console.log("BUTTON PRESSED");
+          handleSubmit(handleFormSubmit)();
+        }}
         disabled={isSubmitting}
       >
         {isSubmitting ? (
@@ -908,77 +908,6 @@ const styles = StyleSheet.create({
     color: '#ff4444',
     fontSize: 12,
     marginTop: 4,
-  },
-  photoSection: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  photoSectionError: {
-    borderColor: '#ff4444',
-  },
-  photoButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  photoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 20,
-    gap: 6,
-  },
-  cameraButton: {
-    backgroundColor: '#3478f6',
-  },
-  cameraButtonText: {
-    color: '#fff',
-    fontWeight: '500',
-  },
-  filesButton: {
-    backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  filesButtonText: {
-    color: '#333',
-    fontWeight: '500',
-  },
-  photoPreviewContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 16,
-    gap: 8,
-  },
-  photoPreview: {
-    position: 'relative',
-  },
-  previewImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-  },
-  documentPreview: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  documentName: {
-    fontSize: 8,
-    color: '#666',
-    maxWidth: 50,
-  },
-  removePhotoButton: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
   },
   contactSection: {
     borderWidth: 1,

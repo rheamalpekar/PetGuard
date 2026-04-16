@@ -14,6 +14,8 @@ interface AuthContextType {
   justSynced: boolean;
   isOnline: boolean;
   hadPendingQueue: boolean;
+  isGuest: boolean;
+  setIsGuest: (value: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [justSynced, setJustSynced] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [hadPendingQueue, setHadPendingQueue] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -77,6 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     justSynced,
     isOnline,
     hadPendingQueue,
+    isGuest,
+    setIsGuest,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

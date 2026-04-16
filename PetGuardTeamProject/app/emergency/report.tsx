@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { detectEmergency } from "./core/EmergencyAlertSystem";
+import { detectEmergency } from "../../src/emergency/core/EmergencyAlertSystem";
 // import { submitEmergencyReport } from "@/services/ApiResponse";
 import { addEmergencyReport } from "@/backendServices/ApiService";
 
@@ -24,7 +24,8 @@ export default function ReportEmergency() {
   const [description, setDescription] = useState<string>("");
   const [location, setLocation] = useState<string>("");
 
-  // If user comes again with different tile selection while screen is mounted
+
+  
   useEffect(() => {
     if (prefillType) setType(prefillType);
   }, [prefillType]);
@@ -72,7 +73,7 @@ export default function ReportEmergency() {
       });
       if (result && result.success) {
         Alert.alert(
-          "Submitted ✅",
+          "Submitted",
           `Type: ${trimmedType}\nSeverity: ${severity}\nLocation: ${trimmedLoc || "N/A"}\n\nDescription:\n${trimmedDesc}`
         );
         router.back();

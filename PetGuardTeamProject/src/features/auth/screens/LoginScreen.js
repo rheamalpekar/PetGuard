@@ -14,6 +14,7 @@ import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
 import { login } from "../../../backendServices/AuthService";
 import { useProtectedNavigation } from "../../../hooks/useProtectedNavigation";
+import { useAuth } from "../../../context/AuthContext";
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -22,6 +23,7 @@ function isValidEmail(email) {
 export default function LoginScreen() {
   const router = useRouter();
   const { protectedNavigate } = useProtectedNavigation();
+  const { setIsGuest } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -109,8 +111,18 @@ export default function LoginScreen() {
           </Text>
         </Pressable>
 
-        <Pressable onPress={()=> router.push("/auth/register")}>
+        <Pressable onPress={() => router.push("/auth/register")}>
           <Text style={styles.link}>Create Account</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => {
+            setIsGuest(true);
+            router.replace("/emergency");
+          }}
+          style={[styles.button, { backgroundColor: "#666" }]}
+        >
+          <Text style={styles.buttonText}>Continue as Guest</Text>
         </Pressable>
 
         <Pressable onPress={() => protectedNavigate("/formscreens/FirebaseTestScreen")} style={styles.navigation}>
@@ -119,6 +131,10 @@ export default function LoginScreen() {
 
         <Pressable onPress={() => protectedNavigate("/emergency")} style={styles.navigation}>
           <Text style={styles.navigationText}>Go to Emergency/Home screen</Text>
+        </Pressable>
+
+        <Pressable onPress={() => router.push("/screens/UserProfileScreen")} style={styles.navigation}>
+          <Text style={styles.navigationText}>Go to Profile Screen</Text>
         </Pressable>
 
         <Pressable onPress={() => protectedNavigate("/formscreens/info-form")} style={styles.navigation}>
