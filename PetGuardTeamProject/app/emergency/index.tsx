@@ -108,19 +108,19 @@ export default function EmergencyHome() {
           title="Vaccination"
           bg="#1e78ff"
           icon={<MaterialCommunityIcons name="syringe" size={30} color="#fff" />}
-          onPress={() => goReport("Vaccination")}
+          onPress={() => router.push("/non-emergency/vaccination")}
         />
         <ServiceTile
           title="Adopt / Surrender"
           bg="#2e7d32"
           icon={<Ionicons name="heart" size={30} color="#fff" />}
-          onPress={() => goReport("Adopt / Surrender")}
+          onPress={() => router.push("/non-emergency/adopt")}
         />
         <ServiceTile
           title="Spay / Neuter"
           bg="#7e57c2"
           icon={<MaterialCommunityIcons name="scissors-cutting" size={30} color="#fff" />}
-          onPress={() => goReport("Spay / Neuter")}
+          onPress={() => router.push("/non-emergency/spay")}
         />
       </View>
 
