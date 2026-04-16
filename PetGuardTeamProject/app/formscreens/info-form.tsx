@@ -11,12 +11,24 @@ import {
   Platform,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as Location from 'expo-location';
+import NetInfo from '@react-native-community/netinfo';
 import { Ionicons } from '@expo/vector-icons';
 import * as LocationService from '../../services/LocationService';
 import { Colors } from '@/constants/theme';
 import { AccuracyLevel } from '../../services/LocationService';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import PhotoUploadComponent from '@/components/PhotoUploadComponent';
+import { auth } from "@/backendServices/firebase";
+import {
+  enqueueInfoForm,
+  loadQueuedInfoForms,
+  submitInfoForm,
+} from "@/backendServices/ApiService";
+import { useRouter } from "expo-router";
+
 
 // Conditionally import MapView only on mobile platforms
 let MapView: any;
@@ -72,6 +84,7 @@ export default function InfoFormScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const isWeb = Platform.OS === 'web';
+  const router = useRouter();
 
   const [hasTransportation, setHasTransportation] = useState<boolean | null>(null);
   const [transportationError, setTransportationError] = useState<string | null>(null);
@@ -207,77 +220,113 @@ export default function InfoFormScreen() {
     });
   };
 
-  const handleFormSubmit = () => {
-    // Validate custom fields first
-    validateCustomFields();
-    
-    // Trigger react-hook-form validation and submission
-    handleSubmit(onSubmit)();
-  };
+  const handleFormSubmit = async (data: InfoFormData) => {
+    // console.log("1 start");
 
-  const onSubmit = async (data: InfoFormData) => {
-    // Double-check custom fields in case form fields were already valid
-    if (!validateCustomFields()) {
+    if (!validateCustomFields()) return;
+
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert("Error", "User not authenticated");
       return;
     }
 
     setIsSubmitting(true);
-    setUploadProgress(0);
 
     try {
-      const selectedPhotos = photoUploadRef.current?.getPhotos() ?? [];
-      const formDataToSend = new FormData();
-      
-      // Append location data
-      if (data.location) {
-        formDataToSend.append('latitude', String(data.location.latitude));
-        formDataToSend.append('longitude', String(data.location.longitude));
-        formDataToSend.append('address', data.location.address);
-      }
-      
-      formDataToSend.append('yourName', data.yourName);
-      formDataToSend.append('phoneNumber', data.phoneNumber);
-      formDataToSend.append('emailAddress', data.emailAddress);
-      formDataToSend.append('additionalDetails', data.additionalDetails);
-      formDataToSend.append('hasTransportation', String(hasTransportation));
+      const netState = await NetInfo.fetch();
 
-      // Append photos
-      selectedPhotos.forEach((photo, index) => {
-        formDataToSend.append(`photos[${index}]`, {
-          uri: photo.uri,
-          type: 'image/jpeg',
-          name: photo.name || `photo_${index}.jpg`,
-        } as any);
+      const isOnline = netState.isConnected === true && netState.isInternetReachable === true;
+      console.log("isOnline FIXED:", isOnline, netState);
+
+      if (!isOnline) {
+        const localId = `queued_${Date.now()}`;
+
+        const photos = photoUploadRef.current?.getPhotos() ?? [];
+
+        const photoUris = photos
+          .map((p) => p.uri)
+          .filter((uri): uri is string => Boolean(uri));
+
+        await enqueueInfoForm({
+          localId,
+          uid: user.uid,
+          data: {
+            ...data,
+            formId: localId,
+          },
+          photoUris,
+          createdAt: Date.now(),
+          retryCount: 0,
+        });
+
+        reset();
+        photoUploadRef.current?.reset();
+        setIsSubmitting(false);
+
+        router.replace({
+          pathname: "/formscreens/ConfirmationPage",
+          params: { formId: localId },
+        });
+
+        return;
+      }
+
+      const photos = photoUploadRef.current?.getPhotos() ?? [];
+
+      const photoInputs = photos
+        .map((p: any) => p.file ?? p.uri)
+        .filter(Boolean);
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 8000)
+      );
+
+      const response: any = await Promise.race([
+        submitInfoForm(data, photoInputs),
+        timeoutPromise,
+      ]);
+
+      if (response.success) {
+        reset();
+        photoUploadRef.current?.reset();
+
+        router.replace({
+          pathname: "/formscreens/ConfirmationPage",
+          params: { formId: response.formId },
+        });
+      }
+    } catch (error) {
+      console.log("FORCED OFFLINE FALLBACK", error);
+
+      const localId = `queued_${Date.now()}`;
+      const photos = photoUploadRef.current?.getPhotos() ?? [];
+
+      const photoUris = photos
+        .map((p: any) => p.uri)
+        .filter((uri: any): uri is string => Boolean(uri));
+
+      await enqueueInfoForm({
+        localId,
+        uid: user.uid,
+        data: {
+          ...data,
+          formId: localId,
+        },
+        photoUris,
+        createdAt: Date.now(),
+        retryCount: 0,
       });
 
-      await submitFormWithProgress(formDataToSend);
-      
-      Alert.alert('Success', 'Report submitted successfully!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            reset();
-            setHasTransportation(null);
-            setTransportationError(null);
-            photoUploadRef.current?.reset();
-            setMarkerPosition(null);
-            setLocationAddress('');
-            setLocationAccuracy(null);
-            setUploadProgress(0);
-          },
-        },
-      ]);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while submitting the report';
-      Alert.alert('Submission Failed', errorMessage, [
-        {
-          text: 'OK',
-        },
-      ]);
-      console.error('Form submission error:', error);
+      reset();
+      photoUploadRef.current?.reset();
+
+      router.replace({
+        pathname: "/formscreens/ConfirmationPage",
+        params: { formId: localId },
+      });
     } finally {
       setIsSubmitting(false);
-      setUploadProgress(0);
     }
   };
 
@@ -652,7 +701,10 @@ export default function InfoFormScreen() {
       {/* Submit Button */}
       <TouchableOpacity
         style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-        onPress={handleFormSubmit}
+        onPress={() => {
+          console.log("BUTTON PRESSED");
+          handleSubmit(handleFormSubmit)();
+        }}
         disabled={isSubmitting}
       >
         {isSubmitting ? (
