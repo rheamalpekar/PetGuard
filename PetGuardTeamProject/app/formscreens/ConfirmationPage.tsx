@@ -19,6 +19,7 @@ import {
   loadQueuedInfoForms,
   subscribeToActiveReports,
 } from "@/backendServices/ApiService";
+import DisclaimerText from '@/components/DisclaimerText';
 
 const DEFAULT_REQUEST_ID = "xh4TG0RzYeqkCjnO0ETb";
 
@@ -316,6 +317,7 @@ export default function ConfirmationScreen() {
             <Text style={styles.shareButtonText}>Share Request</Text>
           </TouchableOpacity>
         </View>
+        <DisclaimerText />
       </ScrollView>
     </SafeAreaView>
   );

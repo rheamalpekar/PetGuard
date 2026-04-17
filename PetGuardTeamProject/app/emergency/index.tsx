@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { logoutUser, getUserProfile } from "@/backendServices/ApiService";
 import { useProtectedNavigation } from "@/hooks/useProtectedNavigation";
+import { useAuth } from "@/context/AuthContext";
 import { auth } from "@/backendServices/firebase";
+import DisclaimerText from "@/components/DisclaimerText";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EmergencyHome() {
   const { protectedNavigate } = useProtectedNavigation();
-  const [fullName, setFullName] = useState("");
+    const [fullName, setFullName] = useState("");
 
   useEffect(() => {
     const fetchName = async () => {
@@ -26,7 +29,7 @@ export default function EmergencyHome() {
     fetchName();
   }, []);
 
-  const userName = fullName || "—" ;
+  const userName = fullName || "Guest User" ;
   const notifCount = 1;
 
   const goReport = (serviceLabel: string) => {
@@ -68,133 +71,131 @@ export default function EmergencyHome() {
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-      <View style={styles.topBar}>
-        <View style={styles.brandRow}>
-          <View style={styles.logoCircle}>
-            <Ionicons name="shield-checkmark" size={20} color="#fff" />
-          </View>
-          <Text style={styles.brandText}>PetGuard</Text>
-        </View>
-
-        <Pressable style={styles.bellWrap} onPress={() => {}}>
-          <Ionicons name="notifications-outline" size={26} color="#fff" />
-          {notifCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{notifCount}</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0B1220" }}>
+      <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
+        <View style={styles.topBar}>
+          <View style={styles.brandRow}>
+            <View style={styles.logoCircle}>
+              <Ionicons name="shield-checkmark" size={20} color="#fff" />
             </View>
-          )}
-        </Pressable>
-      </View>
+            <Text style={styles.brandText}>PetGuard</Text>
+          </View>
 
-      <View style={styles.welcomeRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.welcomeText}>Welcome, {userName}!</Text>
+          <Pressable style={styles.bellWrap} onPress={() => {}}>
+            <Ionicons name="notifications-outline" size={26} color="#fff" />
+            {notifCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{notifCount}</Text>
+              </View>
+            )}
+          </Pressable>
         </View>
 
-        <Pressable
-          style={styles.profileBtn}
-          onPress={() => router.push("/screens/UserProfileScreen")}
-        >
-          <Ionicons name="person-circle-outline" size={18} color="#fff" />
-          <Text style={styles.profileBtnText}>Profile</Text>
+        <View style={styles.welcomeRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.welcomeText}>Welcome, {userName}!</Text>
+          </View>
+
+          <Pressable
+            style={styles.profileBtn}
+            onPress={() => router.push("/screens/UserProfileScreen")}
+          >
+            <Ionicons name="person-circle-outline" size={18} color="#fff" />
+            <Text style={styles.profileBtnText}>Profile</Text>
+          </Pressable>
+
+          <Pressable style={styles.logoutBtn} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Select a Service Option</Text>
+          <Text style={styles.sectionSub}>How can we help your animal today?</Text>
+        </View>
+
+        <View style={styles.divider} />
+
+        <Pressable style={styles.bannerEmergency} onPress={() => goReport("Emergency Services")}>
+          <MaterialCommunityIcons name="alarm-light" size={20} color="#fff" />
+          <Text style={styles.bannerText}>EMERGENCY SERVICES</Text>
         </Pressable>
 
-        <Pressable style={styles.logoutBtn} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
+        <View style={styles.tileRow}>
+          <ServiceTile
+            title="Sick Animal"
+            bg="#e53935"
+            icon={<FontAwesome5 name="first-aid" size={28} color="#fff" />}
+            onPress={() => goReport("Sick Animal")}
+          />
+          <ServiceTile
+            title="Car Accident"
+            bg="#f39c12"
+            icon={<FontAwesome5 name="car-crash" size={28} color="#fff" />}
+            onPress={() => goReport("Car Accident")}
+          />
+          <ServiceTile
+            title="Animal Cruelty"
+            bg="#d32f2f"
+            icon={<MaterialCommunityIcons name="hand-heart" size={30} color="#fff" />}
+            onPress={() => goReport("Animal Cruelty")}
+          />
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.bannerNonEmergency}>
+          <Ionicons name="paw" size={20} color="#fff" />
+          <Text style={styles.bannerText}>NON-EMERGENCY SERVICES</Text>
+        </View>
+
+        <View style={styles.tileRow}>
+          <ServiceTile
+            title="Vaccination"
+            bg="#1e78ff"
+            icon={<MaterialCommunityIcons name="syringe" size={30} color="#fff" />}
+            onPress={() => goReport("Vaccination")}
+          />
+          <ServiceTile
+            title="Adopt / Surrender"
+            bg="#2e7d32"
+            icon={<Ionicons name="heart" size={30} color="#fff" />}
+            onPress={() => goReport("Adopt / Surrender")}
+          />
+          <ServiceTile
+            title="Spay / Neuter"
+            bg="#7e57c2"
+            icon={<MaterialCommunityIcons name="scissors-cutting" size={30} color="#fff" />}
+            onPress={() => goReport("Spay / Neuter")}
+          />
+        </View>
+
+        <Pressable onPress={() => protectedNavigate("/formscreens/FirebaseTestScreen" as never)} style={styles.navigation}>
+          <Text style={styles.navigationText}>Go to Firebase test screen</Text>
         </Pressable>
-      </View>
 
-      <View style={styles.divider} />
+        <Pressable onPress={() => router.push("/auth/login" as never)} style={styles.navigation}>
+          <Text style={styles.navigationText}>Go to Login Screen</Text>
+        </Pressable>
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Select a Service Option</Text>
-        <Text style={styles.sectionSub}>How can we help your animal today?</Text>
-      </View>
+        <Pressable onPress={() => router.push("/screens/UserProfileScreen" as never)} style={styles.navigation}>
+          <Text style={styles.navigationText}>Go to Profile Screen</Text>
+        </Pressable>
 
-      <View style={styles.divider} />
+        <Pressable onPress={() => protectedNavigate("/formscreens/info-form" as never)} style={styles.navigation}>
+          <Text style={styles.navigationText}>Go to Info Form Screen</Text>
+        </Pressable>
 
-      <Pressable style={styles.bannerEmergency} onPress={() => goReport("Emergency Services")}>
-        <MaterialCommunityIcons name="alarm-light" size={20} color="#fff" />
-        <Text style={styles.bannerText}>EMERGENCY SERVICES</Text>
-      </Pressable>
+        <Pressable onPress={() => protectedNavigate("/formscreens/ConfirmationPage" as never)} style={styles.navigation}>
+          <Text style={styles.navigationText}>Go to Confirmation screen</Text>
+        </Pressable>
 
-      <View style={styles.tileRow}>
-        <ServiceTile
-          title="Sick Animal"
-          bg="#e53935"
-          icon={<FontAwesome5 name="first-aid" size={28} color="#fff" />}
-          onPress={() => goReport("Sick Animal")}
-        />
-        <ServiceTile
-          title="Car Accident"
-          bg="#f39c12"
-          icon={<FontAwesome5 name="car-crash" size={28} color="#fff" />}
-          onPress={() => goReport("Car Accident")}
-        />
-        <ServiceTile
-          title="Animal Cruelty"
-          bg="#d32f2f"
-          icon={<MaterialCommunityIcons name="hand-heart" size={30} color="#fff" />}
-          onPress={() => goReport("Animal Cruelty")}
-        />
-      </View>
-
-      <View style={styles.divider} />
-
-      <View style={styles.bannerNonEmergency}>
-        <Ionicons name="paw" size={20} color="#fff" />
-        <Text style={styles.bannerText}>NON-EMERGENCY SERVICES</Text>
-      </View>
-
-      <View style={styles.tileRow}>
-        <ServiceTile
-          title="Vaccination"
-          bg="#1e78ff"
-          icon={<MaterialCommunityIcons name="syringe" size={30} color="#fff" />}
-          onPress={() => goReport("Vaccination")}
-        />
-        <ServiceTile
-          title="Adopt / Surrender"
-          bg="#2e7d32"
-          icon={<Ionicons name="heart" size={30} color="#fff" />}
-          onPress={() => goReport("Adopt / Surrender")}
-        />
-        <ServiceTile
-          title="Spay / Neuter"
-          bg="#7e57c2"
-          icon={<MaterialCommunityIcons name="scissors-cutting" size={30} color="#fff" />}
-          onPress={() => goReport("Spay / Neuter")}
-        />
-      </View>
-
-      <Pressable onPress={() => protectedNavigate("/formscreens/FirebaseTestScreen" as never)} style={styles.navigation}>
-        <Text style={styles.navigationText}>Go to Firebase test screen</Text>
-      </Pressable>
-
-      <Pressable onPress={() => router.push("/auth/login" as never)} style={styles.navigation}>
-        <Text style={styles.navigationText}>Go to Login Screen</Text>
-      </Pressable>
-
-      <Pressable onPress={() => router.push("/screens/UserProfileScreen" as never)} style={styles.navigation}>
-        <Text style={styles.navigationText}>Go to Profile Screen</Text>
-      </Pressable>
-
-      <Pressable onPress={() => protectedNavigate("/formscreens/info-form" as never)} style={styles.navigation}>
-        <Text style={styles.navigationText}>Go to Info Form Screen</Text>
-      </Pressable>
-
-      <Pressable onPress={() => protectedNavigate("/formscreens/ConfirmationPage" as never)} style={styles.navigation}>
-        <Text style={styles.navigationText}>Go to Confirmation screen</Text>
-      </Pressable>
-
-      <View style={{ height: 14 }} />
-      <Text style={styles.footerNote}>
-        {Platform.OS === "web"
-          ? "Web mode: responsive layout (same UI as mobile)."
-          : "Mobile mode: same UI and spacing as web."}
-      </Text>
-    </ScrollView>
+        <View style={{ height: 14 }} />
+        <DisclaimerText />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
