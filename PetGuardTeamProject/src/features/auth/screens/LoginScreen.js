@@ -31,9 +31,10 @@ export default function LoginScreen() {
 
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState(null);
 
   const canSubmit = useMemo(() => {
-    return isValidEmail(email) && password.length >= 8 && !submitting;
+    return isValidEmail(email) && password.length >= 0 && !submitting;
   }, [email, password, submitting]);
 
   function validate() {
@@ -49,6 +50,8 @@ export default function LoginScreen() {
   }
 
   async function handleLogin() {
+    setLoginError(null);
+
     const validationErrors = validate();
     setErrors(validationErrors);
 
@@ -58,11 +61,23 @@ export default function LoginScreen() {
 
     try {
       await login(email, password, rememberMe);
-
-      Alert.alert("Login successful");
       router.replace("/emergency");
     } catch (err) {
-      Alert.alert(err.message || "Login failed. Please try again.");
+      let message = "Login failed. Please try again.";
+
+      if (err.code === "auth/invalid-credential") {
+        message = "Invalid email or password.";
+      } else if (err.code === "auth/user-not-found") {
+        message = "Invalid email or password.";
+      } else if (err.code === "auth/wrong-password") {
+        message = "Invalid email or password.";
+      } else if (err.code === "auth/too-many-requests") {
+        message = "Too many failed attempts. Please try again later.";
+      } else if (err.code === "auth/network-request-failed") {
+        message = "Network error. Please check your connection.";
+      }
+
+      Alert.alert("Sign In Failed", message);
     } finally {
       setSubmitting(false);
     }
@@ -81,7 +96,10 @@ export default function LoginScreen() {
           placeholder="Email"
           placeholderTextColor="#888"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            setEmail(text);
+            setLoginError(null);
+          }}
           autoCapitalize="none"
         />
         {errors.email && <Text style={styles.error}>{errors.email}</Text>}
@@ -91,10 +109,15 @@ export default function LoginScreen() {
           placeholder="Password"
           placeholderTextColor="#888"
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(text) => {
+            setPassword(text);
+            setLoginError(null);
+          }}
           secureTextEntry
         />
         {errors.password && <Text style={styles.error}>{errors.password}</Text>}
+
+        {loginError && <Text style={styles.error}>{loginError}</Text>}
 
         <View style={styles.row}>
           <Checkbox value={rememberMe} onValueChange={setRememberMe} />
