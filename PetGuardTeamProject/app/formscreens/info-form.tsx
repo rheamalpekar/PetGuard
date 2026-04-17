@@ -28,7 +28,8 @@ import {
   submitInfoForm,
 } from "@/backendServices/ApiService";
 import { useRouter } from "expo-router";
-
+import { useAuth } from "@/context/AuthContext";
+import DisclaimerText from '@/components/DisclaimerText';
 
 // Conditionally import MapView only on mobile platforms
 let MapView: any;
@@ -264,7 +265,7 @@ export default function InfoFormScreen() {
         photoUploadRef.current?.reset();
         setIsSubmitting(false);
 
-        router.replace({
+        router.push({
           pathname: "/formscreens/ConfirmationPage",
           params: { formId: localId },
         });
@@ -291,7 +292,7 @@ export default function InfoFormScreen() {
         reset();
         photoUploadRef.current?.reset();
 
-        router.replace({
+        router.push({
           pathname: "/formscreens/ConfirmationPage",
           params: { formId: response.formId },
         });
@@ -321,7 +322,7 @@ export default function InfoFormScreen() {
       reset();
       photoUploadRef.current?.reset();
 
-      router.replace({
+      router.push({
         pathname: "/formscreens/ConfirmationPage",
         params: { formId: localId },
       });
@@ -713,6 +714,7 @@ export default function InfoFormScreen() {
           <Text style={styles.submitButtonText}>Submit Report</Text>
         )}
       </TouchableOpacity>
+      <DisclaimerText />
     </ScrollView>
   );
 }
