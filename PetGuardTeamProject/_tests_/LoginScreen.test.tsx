@@ -1,12 +1,18 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { Alert } from "react-native";
 import LoginScreen from "../app/auth/login";
 import { login } from "../src/backendServices/AuthService";
 
+const mockReplace = jest.fn();
+const mockPush = jest.fn();
+const mockSetIsGuest = jest.fn();
+const mockProtectedNavigate = jest.fn();
+
 jest.mock("expo-router", () => ({
   useRouter: () => ({
-    replace: jest.fn(),
-    push: jest.fn(),
+    replace: mockReplace,
+    push: mockPush,
   }),
 }));
 
@@ -18,13 +24,13 @@ jest.mock("expo-checkbox", () => "Checkbox");
 
 jest.mock("../src/hooks/useProtectedNavigation", () => ({
   useProtectedNavigation: () => ({
-    protectedNavigate: jest.fn(),
+    protectedNavigate: mockProtectedNavigate,
   }),
 }));
 
 jest.mock("../src/context/AuthContext", () => ({
   useAuth: () => ({
-    setIsGuest: jest.fn(),
+    setIsGuest: mockSetIsGuest,
   }),
 }));
 
@@ -33,14 +39,19 @@ jest.mock("../src/backendServices/AuthService", () => ({
 }));
 
 describe("LoginScreen", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(Alert, "alert").mockImplementation(jest.fn());
+    (login as jest.Mock).mockResolvedValue({ uid: "user-1" });
+  });
+
   test("renders inputs", () => {
     const { getByPlaceholderText } = render(<LoginScreen />);
-
     expect(getByPlaceholderText("Email")).toBeTruthy();
     expect(getByPlaceholderText("Password")).toBeTruthy();
   });
 
-  test("successful login flow", async () => {
+  test("valid input calls Firebase login and navigates", async () => {
     const { getByPlaceholderText, getByText } = render(<LoginScreen />);
 
     fireEvent.changeText(getByPlaceholderText("Email"), "test@gmail.com");
@@ -49,15 +60,33 @@ describe("LoginScreen", () => {
     fireEvent.press(getByText("Sign In"));
 
     await waitFor(() => {
-      expect(login).toHaveBeenCalledWith(
-        "test@gmail.com",
-        "Password1!",
-        false
-      );
+      expect(login).toHaveBeenCalledWith("test@gmail.com", "Password1!", false);
+      expect(mockReplace).toHaveBeenCalledWith("/emergency");
     });
   });
 
-  test("login failure shows alert", async () => {
+  test("invalid email disables submit and blocks Firebase login", () => {
+    const { getByPlaceholderText, getByText } = render(<LoginScreen />);
+
+    fireEvent.changeText(getByPlaceholderText("Email"), "not-an-email");
+    fireEvent.changeText(getByPlaceholderText("Password"), "Password1!");
+    fireEvent.press(getByText("Sign In"));
+
+    expect(login).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  test("empty password disables submit and blocks Firebase login", () => {
+    const { getByPlaceholderText, getByText } = render(<LoginScreen />);
+
+    fireEvent.changeText(getByPlaceholderText("Email"), "test@gmail.com");
+    fireEvent.press(getByText("Sign In"));
+
+    expect(login).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  test("failed login shows the expected error alert", async () => {
     (login as jest.Mock).mockRejectedValueOnce({
       code: "auth/invalid-credential",
     });
@@ -71,16 +100,19 @@ describe("LoginScreen", () => {
 
     await waitFor(() => {
       expect(login).toHaveBeenCalled();
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Sign In Failed",
+        "Invalid email or password.",
+      );
     });
   });
 
-  test("guest button works", async () => {
+  test("guest button stores guest state and navigates", async () => {
     const { getByText } = render(<LoginScreen />);
 
     fireEvent.press(getByText("Continue as Guest"));
 
-    await waitFor(() => {
-      expect(getByText("Continue as Guest")).toBeTruthy();
-    });
+    expect(mockSetIsGuest).toHaveBeenCalledWith(true);
+    expect(mockReplace).toHaveBeenCalledWith("/emergency");
   });
 });

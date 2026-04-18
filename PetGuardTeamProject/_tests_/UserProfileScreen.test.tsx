@@ -1,6 +1,7 @@
 import React from "react";
-import { render } from "@testing-library/react-native";
+import { render, waitFor } from "@testing-library/react-native";
 import UserProfileScreen from "../app/screens/UserProfileScreen";
+import { getUserProfile } from "../src/backendServices/ApiService";
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -33,7 +34,7 @@ jest.mock("../src/backendServices/ApiService", () => ({
       fullName: "Test User",
       email: "test@test.com",
       phoneNumber: "123",
-    })
+    }),
   ),
   updateUserProfile: jest.fn(),
   getUserRequests: jest.fn(() => Promise.resolve([])),
@@ -48,9 +49,25 @@ jest.mock("../src/context/AuthContext", () => ({
 }));
 
 describe("UserProfileScreen", () => {
-  test("renders basic profile screen", async () => {
-    const { getByText } = render(<UserProfileScreen />);
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (getUserProfile as jest.Mock).mockResolvedValue({
+      fullName: "Test User",
+      email: "test@test.com",
+      phoneNumber: "123",
+    });
+  });
+
+  test("fetches profile on mount and renders user info", async () => {
+    const { getByText, getAllByText } = render(<UserProfileScreen />);
 
     expect(getByText("PetGuard")).toBeTruthy();
+
+    await waitFor(() => {
+      expect(getUserProfile).toHaveBeenCalledWith("123");
+      expect(getAllByText("Test User").length).toBeGreaterThan(0);
+      expect(getAllByText("test@test.com").length).toBeGreaterThan(0);
+      expect(getByText("123")).toBeTruthy();
+    });
   });
 });

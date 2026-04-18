@@ -24,7 +24,7 @@ jest.mock("@/hooks/useProtectedNavigation", () => ({
 
 jest.mock("@/backendServices/ApiService", () => ({
   logoutUser: jest.fn(),
-  getUserProfile: jest.fn(),
+  getUserProfile: jest.fn(() => Promise.resolve({ fullName: "Test User" })),
 }));
 
 jest.mock("@/backendServices/firebase", () => ({
@@ -57,7 +57,7 @@ describe("EmergencyHome", () => {
   it("renders welcome text", async () => {
     const { getByText } = render(<EmergencyHome />);
     await waitFor(() => {
-      expect(getByText(/Welcome/)).toBeTruthy();
+      expect(getByText("Welcome, Test User!")).toBeTruthy();
     });
   });
 
@@ -72,12 +72,26 @@ describe("EmergencyHome", () => {
     expect(getByText("Spay / Neuter")).toBeTruthy();
   });
 
-  it("navigates when service tile pressed", () => {
+  it("navigates with selected emergency service when tile pressed", () => {
     const { getByText } = render(<EmergencyHome />);
 
     fireEvent.press(getByText("Sick Animal"));
 
-    expect(mockProtectedNavigate).toHaveBeenCalled();
+    expect(mockProtectedNavigate).toHaveBeenCalledWith({
+      pathname: "/emergency/report",
+      params: { prefillType: "Sick Animal" },
+    });
+  });
+
+  it("navigates with selected non-emergency service when tile pressed", () => {
+    const { getByText } = render(<EmergencyHome />);
+
+    fireEvent.press(getByText("Vaccination"));
+
+    expect(mockProtectedNavigate).toHaveBeenCalledWith({
+      pathname: "/emergency/report",
+      params: { prefillType: "Vaccination" },
+    });
   });
 
   it("navigates to profile screen", () => {
