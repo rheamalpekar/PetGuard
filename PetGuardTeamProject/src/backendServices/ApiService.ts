@@ -171,14 +171,17 @@ export const syncQueuedInfoForms = async (): Promise<void> => {
 
     for (const item of queue) {
       try {
-        await submitInfoForm(item.data, item.photoUris);
-
         queue = queue.filter((q) => q.localId !== item.localId);
         await saveQueuedInfoForms(queue);
+
+        await submitInfoForm(item.data, item.photoUris);
 
         console.log("Synced:", item.localId);
       } catch (err) {
         console.log("Still failed:", item.localId, err);
+        queue = await loadQueuedInfoForms();
+        queue.push(item);
+        await saveQueuedInfoForms(queue);
       }
     }
   } finally {

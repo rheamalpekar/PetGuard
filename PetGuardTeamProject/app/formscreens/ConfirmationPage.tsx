@@ -34,11 +34,28 @@ export default function ConfirmationScreen() {
   const { user } = useAuth();
 
   const formId =
-    typeof params.formId === "string" ? params.formId : DEFAULT_REQUEST_ID;
-  const requestId = formId || DEFAULT_REQUEST_ID;
-  const isQueuedRequest = requestId.startsWith("queued_");
+    typeof params.formId === "string" ? params.formId : null;
+
+  const isQueuedRequest = formId?.startsWith("queued_") ?? false;
+
+  const isDemo = !formId && !isQueuedRequest;
+
+  const requestId = isDemo
+    ? "DEMO-REQUEST"
+    : formId ?? "UNKNOWN";
+
   const showVectorAssets = isOnline;
   console.log(requestId);
+
+  const dummyData = {
+    yourName: "Demo User",
+    emailAddress: "demo@petguard.app",
+    phoneNumber: "123-456-7890",
+    additionalDetails: "This is a sample request for demonstration purposes.",
+    location: "Arlington, TX",
+  };
+
+  const displayData = formData || dummyData;
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
@@ -70,24 +87,20 @@ export default function ConfirmationScreen() {
           return;
         }
 
-        const data = await getInfoFormDataById(formId);
-        setFormData(data);
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Could not load form data.";
-        const lowered = errorMessage.toLowerCase();
-        const isOfflineError =
-          lowered.includes("offline") ||
-          lowered.includes("unreachable") ||
-          lowered.includes("failed to get document");
-
-        if (!isOfflineError) {
-          Alert.alert("Error", errorMessage);
+        if (formId) {
+          const data = await getInfoFormDataById(formId);
+          setFormData(data);
+          return;
         }
+
+        setFormData(null);
+      } catch (error) {
+        setFormData(null);
       } finally {
         setLoading(false);
       }
     }
+
     fetchData();
   }, [formId, isQueuedRequest, requestId]);
 
@@ -98,6 +111,8 @@ export default function ConfirmationScreen() {
   }, [justSynced, isQueuedRequest]);
 
   useEffect(() => {
+    if (!user) return;
+
     const unsub = subscribeToActiveReports(user.uid, setActiveCount);
     return unsub;
   }, [user]);
@@ -114,7 +129,7 @@ export default function ConfirmationScreen() {
     );
   }
 
-  if (!formData) {
+  if (!displayData) {
     return (
       <SafeAreaView style={styles.container}>
         <View
@@ -132,8 +147,13 @@ export default function ConfirmationScreen() {
 
   const handleShareRequest = async () => {
     try {
+      const location =
+        typeof displayData.location === "object"
+          ? displayData.location.address
+          : displayData.location;
+
       await Share.share({
-        message: `PetGuard Non-Emergency Request\nRequest ID: ${requestId}\nEstimated Response Time: 1hrs 11mins\nContact: ${formData.yourName} | ${formData.phoneNumber}\nEmail: ${formData.emailAddress}\nDescription: ${formData.additionalDetails}\nLocation: ${formData.location.LocationData}`,
+        message: `PetGuard Non-Emergency Request\nRequest ID: ${requestId}\nEstimated Response Time: 1hrs 11mins\nContact: ${displayData.yourName} | ${displayData.phoneNumber}\nEmail: ${displayData.emailAddress}\nDescription: ${displayData.additionalDetails}\nLocation: ${location}`,
         title: "PetGuard Request Details",
       });
     } catch (error) {
@@ -225,7 +245,7 @@ export default function ConfirmationScreen() {
               />
             ) : null}
             <Text style={styles.infoText}>
-              <Text style={styles.bold}>Name:</Text> {formData.yourName}
+              <Text style={styles.bold}>Name:</Text> {displayData.yourName}
             </Text>
           </View>
 
@@ -239,7 +259,7 @@ export default function ConfirmationScreen() {
               />
             ) : null}
             <Text style={styles.infoText}>
-              <Text style={styles.bold}>Email:</Text> {formData.emailAddress}
+              <Text style={styles.bold}>Email:</Text> {displayData.emailAddress}
             </Text>
           </View>
 
@@ -254,7 +274,7 @@ export default function ConfirmationScreen() {
             ) : null}
             <Text style={styles.infoText}>
               <Text style={styles.bold}>Phone number:</Text>{" "}
-              {formData.phoneNumber}
+              {displayData.phoneNumber}
             </Text>
           </View>
 
@@ -269,10 +289,10 @@ export default function ConfirmationScreen() {
             ) : null}
             <Text style={styles.infoText}>
               <Text style={styles.bold}>Location:</Text>{" "}
-              {typeof formData.location === "object" &&
-              formData.location !== null
-                ? formData.location.address
-                : formData.location}
+              {typeof displayData.location === "object" &&
+              displayData.location !== null
+                ? displayData.location.address
+                : displayData.location}
             </Text>
           </View>
         </View>
