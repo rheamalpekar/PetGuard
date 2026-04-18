@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -13,6 +13,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { register } from "../../../backendServices/AuthService";
 
 /* ---------------- Validation Helpers ---------------- */
@@ -26,20 +27,29 @@ function isValidPhone(phone) {
   return digits.length === 10 || digits.length === 11;
 }
 
-function passwordScore(password) {
-  let score = 0;
-  if (password.length >= 8) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
-  if (password.length >= 12) score++;
-  return score; // 0-5
+function hasUppercase(password) {
+  return /[A-Z]/.test(password);
 }
 
-function passwordLabel(score) {
-  if (score >= 4) return "Strong";
-  if (score >= 2) return "Medium";
-  return "Weak";
+function hasNumber(password) {
+  return /[0-9]/.test(password);
+}
+
+function hasSpecialChar(password) {
+  return /[^A-Za-z0-9]/.test(password);
+}
+
+function hasValidLength(password) {
+  return password.length >= 8 && password.length <= 16;
+}
+
+function isStrongPassword(password) {
+  return (
+    hasUppercase(password) &&
+    hasNumber(password) &&
+    hasSpecialChar(password) &&
+    hasValidLength(password)
+  );
 }
 
 /* ---------------- Component ---------------- */
@@ -59,16 +69,21 @@ export default function RegisterScreen() {
   const [successMessage, setSuccessMessage] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const score = useMemo(() => passwordScore(password), [password]);
-
   const canSubmit =
     fullName.trim().length > 1 &&
     isValidEmail(email) &&
     isValidPhone(phone) &&
-    password.length >= 8 &&
+    isStrongPassword(password) &&
     password === confirmPassword &&
     acceptTerms &&
     !submitting;
+
+  const passwordRules = {
+    length: hasValidLength(password),
+    uppercase: hasUppercase(password),
+    number: hasNumber(password),
+    special: hasSpecialChar(password),
+  };
 
   function validate() {
     const next = {};
@@ -81,9 +96,12 @@ export default function RegisterScreen() {
     if (!phone.trim()) next.phone = "Phone number is required.";
     else if (!isValidPhone(phone)) next.phone = "Invalid phone number.";
 
-    if (!password) next.password = "Password is required.";
-    else if (password.length < 8)
-      next.password = "Password must be at least 8 characters.";
+    if (!password) {
+      next.password = "Password is required.";
+    } else if (!isStrongPassword(password)) {
+      next.password =
+        "Password must be 8–16 characters and include a capital letter, number, and special character.";
+    }
 
     if (!confirmPassword)
       next.confirmPassword = "Please confirm your password.";
@@ -123,136 +141,172 @@ export default function RegisterScreen() {
 
   return (
     <LinearGradient colors={["#0B1220", "#111C33"]} style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
-        <ScrollView contentContainerStyle={styles.inner}>
-          <Text style={styles.title}>Create Account</Text>
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.keyboard}
+        >
+          <ScrollView
+            contentContainerStyle={styles.inner}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <Text style={styles.title}>Create Account</Text>
 
-          {/* Full Name */}
-          <TextInput
-            style={[styles.input, errors.fullName && styles.inputError]}
-            placeholder="Full Name"
-            placeholderTextColor="#888"
-            value={fullName}
-            onChangeText={setFullName}
-            accessibilityLabel="Full name input"
-          />
-          {errors.fullName && (
-            <Text style={styles.errorText}>{errors.fullName}</Text>
-          )}
-
-          {/* Email */}
-          <TextInput
-            style={[styles.input, errors.email && styles.inputError]}
-            placeholder="Email"
-            placeholderTextColor="#888"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            accessibilityLabel="Email input"
-          />
-          {errors.email && (
-            <Text style={styles.errorText}>{errors.email}</Text>
-          )}
-
-          {/* Phone */}
-          <TextInput
-            style={[styles.input, errors.phone && styles.inputError]}
-            placeholder="Phone Number"
-            placeholderTextColor="#888"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            accessibilityLabel="Phone number input"
-          />
-          {errors.phone && (
-            <Text style={styles.errorText}>{errors.phone}</Text>
-          )}
-
-          {/* Password */}
-          <TextInput
-            style={[styles.input, errors.password && styles.inputError]}
-            placeholder="Password"
-            placeholderTextColor="#888"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            accessibilityLabel="Password input"
-          />
-          {errors.password && (
-            <Text style={styles.errorText}>{errors.password}</Text>
-          )}
-
-          <Text style={styles.passwordStrength}>
-            Strength: {passwordLabel(score)} ({score}/5)
-          </Text>
-
-          {/* Confirm Password */}
-          <TextInput
-            style={[
-              styles.input,
-              errors.confirmPassword && styles.inputError,
-            ]}
-            placeholder="Confirm Password"
-            placeholderTextColor="#888"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            accessibilityLabel="Confirm password input"
-          />
-          {errors.confirmPassword && (
-            <Text style={styles.errorText}>
-              {errors.confirmPassword}
-            </Text>
-          )}
-
-          {/* Terms */}
-          <View style={styles.checkboxRow}>
-            <Checkbox
-              value={acceptTerms}
-              onValueChange={setAcceptTerms}
+            {/* Full Name */}
+            <TextInput
+              style={[styles.input, errors.fullName && styles.inputError]}
+              placeholder="Full Name"
+              placeholderTextColor="#888"
+              value={fullName}
+              onChangeText={setFullName}
+              accessibilityLabel="Full name input"
             />
-            <Text style={styles.checkboxText}>
-              I accept the Terms & Conditions
-            </Text>
-          </View>
-          {errors.terms && (
-            <Text style={styles.errorText}>{errors.terms}</Text>
-          )}
+            {errors.fullName && (
+              <Text style={styles.errorText}>{errors.fullName}</Text>
+            )}
 
-          {formError && (
-            <Text style={styles.errorText}>{formError}</Text>
-          )}
-          {successMessage && (
-            <Text style={styles.successText}>{successMessage}</Text>
-          )}
+            {/* Email */}
+            <TextInput
+              style={[styles.input, errors.email && styles.inputError]}
+              placeholder="Email"
+              placeholderTextColor="#888"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              accessibilityLabel="Email input"
+            />
+            {errors.email && (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            )}
 
-          <Pressable
-            onPress={handleRegister}
-            disabled={!canSubmit}
-            style={[
-              styles.button,
-              !canSubmit && { opacity: 0.5 },
-            ]}
-            accessibilityRole="button"
-          >
-            <Text style={styles.buttonText}>
-              {submitting ? "Creating..." : "Create Account"}
-            </Text>
-          </Pressable>
+            {/* Phone */}
+            <TextInput
+              style={[styles.input, errors.phone && styles.inputError]}
+              placeholder="Phone Number"
+              placeholderTextColor="#888"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              accessibilityLabel="Phone number input"
+            />
+            {errors.phone && (
+              <Text style={styles.errorText}>{errors.phone}</Text>
+            )}
 
-          <Pressable
-            onPress={() => router.replace("/auth/login")}
-          >
-            <Text style={styles.link}>
-              Already have an account? Sign In
-            </Text>
-          </Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            {/* Password */}
+              <TextInput
+                style={[styles.input, errors.password && styles.inputError]}
+                placeholder="Password"
+                placeholderTextColor="#888"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                accessibilityLabel="Password input"
+              />
+              {errors.password && (
+                <Text style={styles.errorText}>{errors.password}</Text>
+              )}
+
+            {/* Password Rules */}
+            <View style={styles.passwordRules}>
+              <Text
+                style={[
+                  styles.ruleText,
+                  passwordRules.length ? styles.ruleMet : styles.ruleUnmet,
+                ]}
+              >
+                {passwordRules.length ? "✓" : "○"} 8–16 characters
+              </Text>
+              <Text
+                style={[
+                  styles.ruleText,
+                  passwordRules.uppercase ? styles.ruleMet : styles.ruleUnmet,
+                ]}
+              >
+                {passwordRules.uppercase ? "✓" : "○"} At least 1 uppercase letter
+              </Text>
+              <Text
+                style={[
+                  styles.ruleText,
+                  passwordRules.number ? styles.ruleMet : styles.ruleUnmet,
+                ]}
+              >
+                {passwordRules.number ? "✓" : "○"} At least 1 number
+              </Text>
+              <Text
+                style={[
+                  styles.ruleText,
+                  passwordRules.special ? styles.ruleMet : styles.ruleUnmet,
+                ]}
+              >
+                {passwordRules.special ? "✓" : "○"} At least 1 special character
+              </Text>
+            </View>
+
+            {/* Confirm Password */}
+              <TextInput
+                style={[
+                  styles.input,
+                  errors.confirmPassword && styles.inputError,
+                ]}
+                placeholder="Confirm Password"
+                placeholderTextColor="#888"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                accessibilityLabel="Confirm password input"
+              />
+              {errors.confirmPassword && (
+                <Text style={styles.errorText}>
+                  {errors.confirmPassword}
+                </Text>
+              )}
+
+            {/* Terms */}
+            <View style={styles.checkboxRow}>
+              <Checkbox
+                value={acceptTerms}
+                onValueChange={setAcceptTerms}
+              />
+              <Text style={styles.checkboxText}>
+                I accept the Terms & Conditions
+              </Text>
+            </View>
+            {errors.terms && (
+              <Text style={styles.errorText}>{errors.terms}</Text>
+            )}
+
+            {formError && (
+              <Text style={styles.errorText}>{formError}</Text>
+            )}
+            {successMessage && (
+              <Text style={styles.successText}>{successMessage}</Text>
+            )}
+
+            <Pressable
+              onPress={handleRegister}
+              disabled={!canSubmit}
+              style={[
+                styles.button,
+                !canSubmit && { opacity: 0.5 },
+              ]}
+              accessibilityRole="button"
+            >
+              <Text style={styles.buttonText}>
+                {submitting ? "Creating..." : "Create Account"}
+              </Text>
+            </Pressable>
+
+            <Pressable onPress={() => router.replace("/auth/login")}>
+              <Text style={styles.link}>
+                Already have an account? Sign In
+              </Text>
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }
@@ -260,9 +314,20 @@ export default function RegisterScreen() {
 /* ---------------- Styles ---------------- */
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  keyboard: {
+    flex: 1,
+  },
   inner: {
-    padding: 24,
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
     justifyContent: "center",
   },
   title: {
@@ -290,9 +355,18 @@ const styles = StyleSheet.create({
     color: "lightgreen",
     marginBottom: 8,
   },
-  passwordStrength: {
-    color: "#bbb",
+  passwordRules: {
     marginBottom: 12,
+  },
+  ruleText: {
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  ruleMet: {
+    color: "lightgreen",
+  },
+  ruleUnmet: {
+    color: "#bbb",
   },
   checkboxRow: {
     flexDirection: "row",
@@ -302,6 +376,7 @@ const styles = StyleSheet.create({
   checkboxText: {
     color: "#FFF",
     marginLeft: 8,
+    flex: 1,
   },
   button: {
     backgroundColor: "#4da6ff",

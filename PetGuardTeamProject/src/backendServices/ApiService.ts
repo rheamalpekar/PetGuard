@@ -8,6 +8,7 @@ import {
   query,
   where,
   onSnapshot,
+  deleteDoc,
 } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db, auth } from "./firebase";
@@ -205,4 +206,94 @@ export const subscribeToActiveReports = (
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.size);
   });
+};
+
+export const getUserProfile = async (uid: string) => {
+  if (!uid) throw new Error("Missing uid");
+
+  const userRef = doc(db, "users", uid);
+  const snapshot = await getDoc(userRef);
+
+  if (!snapshot.exists()) throw new Error("User not found");
+
+  return snapshot.data();
+};
+
+export const updateUserProfile = async (
+  uid: string,
+  updates: {
+    fullName?: string;
+    phoneNumber?: number;
+    dateOfBirth?: string;
+  },
+) => {
+  if (!uid) throw new Error("Missing uid");
+
+  const userRef = doc(db, "users", uid);
+
+  await updateDoc(userRef, {
+    ...updates,
+    updatedAt: Timestamp.now(),
+  });
+
+  return { success: true };
+};
+
+export const getUserRequests = async (uid: string) => {
+  if (!uid) throw new Error("Missing uid");
+
+  const q = query(collection(db, "infoForms"), where("uid", "==", uid));
+
+  return new Promise<any[]>((resolve, reject) => {
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const results = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        resolve(results);
+        unsubscribe();
+      },
+      reject,
+    );
+  });
+};
+
+export const deleteUserAccount = async () => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Not authenticated");
+
+  const uid = user.uid;
+
+  try {
+    await user.delete();
+
+    await deleteDoc(doc(db, "users", uid));
+
+    const q = query(collection(db, "infoForms"), where("uid", "==", uid));
+
+    const snapshot = await new Promise<any>((resolve) => {
+      const unsub = onSnapshot(q, (snap) => {
+        resolve(snap);
+        unsub();
+      });
+    });
+
+    await Promise.all(
+      snapshot.docs.map((d: any) => deleteDoc(doc(db, "infoForms", d.id))),
+    );
+
+    return { success: true };
+  } catch (e: any) {
+    console.log("DELETE ERROR:", e);
+
+    if (e.code === "auth/requires-recent-login") {
+      throw new Error(
+        "Please log out and log back in before deleting account.",
+      );
+    }
+
+    throw e;
+  }
 };

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
-import { detectEmergency } from "./core/EmergencyAlertSystem";
+import { detectEmergency } from "../../src/emergency/core/EmergencyAlertSystem";
 
 type SeverityUI = "Low" | "Medium" | "High";
 
@@ -27,7 +27,7 @@ type AnalysisResult = {
   matchedKeywords?: string[];
 };
 
-const TARGET_FORM_PATH = "/formscreens/request";
+const TARGET_FORM_PATH = "/formscreens/info-form";
 
 export default function ReportEmergency() {
   const params = useLocalSearchParams();
@@ -43,6 +43,12 @@ export default function ReportEmergency() {
   const [enableDetection, setEnableDetection] = useState<boolean>(true);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [showChecklist, setShowChecklist] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (prefillType) {
+      setType(prefillType);
+    }
+  }, [prefillType]);
 
   const previewAnalysis = useMemo(() => {
     const trimmedType = type.trim();
@@ -123,7 +129,7 @@ export default function ReportEmergency() {
       params: {
         emergencyType: trimmedType,
         description: trimmedDesc,
-        severity,
+        severity: finalAnalysis?.severity ?? severity,
         location: trimmedLoc,
         gpsLocation,
         detectionEnabled: enableDetection ? "true" : "false",
