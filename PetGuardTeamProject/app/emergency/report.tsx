@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -7,19 +7,11 @@ import {
   Pressable,
   ScrollView,
   Alert,
-  Vibration,
-  AccessibilityInfo,
   Switch,
-  Platform,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
-import NetInfo from "@react-native-community/netinfo";
-import { useAudioPlayer } from "expo-audio";
 import { detectEmergency } from "./core/EmergencyAlertSystem";
-import { queueEmergency } from "../../utils/offlineQueue";
-// import { submitEmergencyReport } from "@/services/ApiResponse";
-import { addEmergencyReport } from "@/backendServices/ApiService";
 
 type SeverityUI = "Low" | "Medium" | "High";
 
@@ -35,6 +27,8 @@ type AnalysisResult = {
   matchedKeywords?: string[];
 };
 
+const TARGET_FORM_PATH = "/formscreens/request";
+
 export default function ReportEmergency() {
   const params = useLocalSearchParams();
   const prefillType = String(params.prefillType ?? "");
@@ -43,32 +37,30 @@ export default function ReportEmergency() {
   const [severity, setSeverity] = useState<SeverityUI>("Medium");
   const [description, setDescription] = useState<string>("");
   const [location, setLocation] = useState<string>("");
-
   const [gpsLocation, setGpsLocation] = useState<string>("");
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
 
+  const [enableDetection, setEnableDetection] = useState<boolean>(true);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [showChecklist, setShowChecklist] = useState<boolean>(false);
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [dispatchNotified, setDispatchNotified] = useState<boolean>(false);
-  const [submitting, setSubmitting] = useState<boolean>(false);
 
-  const [enableVibration, setEnableVibration] = useState<boolean>(true);
-  const [enableSoundAlert, setEnableSoundAlert] = useState<boolean>(true);
-  const [autoNotifyDispatch, setAutoNotifyDispatch] = useState<boolean>(true);
+  const previewAnalysis = useMemo(() => {
+    const trimmedType = type.trim();
+    const trimmedDesc = description.trim();
 
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
-  const emergencyPlayer = useAudioPlayer(require("../../assets/emergency.mp3"));
+    if (!enableDetection || (!trimmedType && !trimmedDesc)) {
+      return null;
+    }
 
-  useEffect(() => {
-    if (prefillType) setType(prefillType);
-  }, [prefillType]);
-
-  useEffect(() => {
-    return () => {
-      if (countdownRef.current) clearInterval(countdownRef.current);
-    };
-  }, []);
+    try {
+      return detectEmergency({
+        emergencyType: trimmedType,
+        description: trimmedDesc,
+      }) as AnalysisResult;
+    } catch {
+      return null;
+    }
+  }, [type, description, enableDetection]);
 
   const getCurrentLocation = async () => {
     try {
@@ -96,102 +88,7 @@ export default function ReportEmergency() {
     }
   };
 
-  const previewAnalysis = useMemo(() => {
-    const trimmedType = type.trim();
-    const trimmedDesc = description.trim();
-
-    if (!trimmedType || !trimmedDesc) return null;
-
-    try {
-      return detectEmergency({
-        emergencyType: trimmedType,
-        description: trimmedDesc,
-      }) as AnalysisResult;
-    } catch {
-      return null;
-    }
-  }, [type, description]);
-
-  const playEmergencySound = () => {
-    try {
-      emergencyPlayer.seekTo(0);
-      emergencyPlayer.play();
-    } catch (error) {
-      console.log("Error playing emergency sound:", error);
-    }
-  };
-
-  const runEmergencyFeedback = (result: AnalysisResult) => {
-    AccessibilityInfo.announceForAccessibility?.(
-      `Emergency detected. Severity ${result.severity}. Classification ${result.classification}.`
-    );
-
-    if (enableVibration) {
-      if (result.severity === "critical") {
-        Vibration.vibrate([0, 600, 200, 600, 200, 900]);
-      } else if (result.severity === "high") {
-        Vibration.vibrate([0, 400, 150, 400]);
-      } else if (result.severity === "medium") {
-        Vibration.vibrate([0, 250, 150, 250]);
-      } else {
-        Vibration.vibrate(150);
-      }
-    }
-
-    if (enableSoundAlert) {
-      playEmergencySound();
-    }
-  };
-
-  const simulateDispatchNotification = (
-    result: AnalysisResult,
-    formData: {
-      type: string;
-      severity: SeverityUI;
-      description: string;
-      location: string;
-      gpsLocation: string;
-    }
-  ) => {
-    const payload = {
-      timestamp: new Date().toISOString(),
-      emergencyType: formData.type,
-      selectedSeverity: formData.severity,
-      detectedSeverity: result.severity,
-      classification: result.classification,
-      dispatchProtocol: result.dispatchProtocol,
-      location: formData.location || "N/A",
-      gpsLocation: formData.gpsLocation || "N/A",
-      description: formData.description,
-      scenarioId: result.scenarioId,
-      checklist: result.checklist,
-      detectionMs: result.detectionMs,
-      source: Platform.OS,
-    };
-
-    console.log("🚨 Admin/Dispatch Notification Sent:", payload);
-    setDispatchNotified(true);
-  };
-
-  const startCountdown = (seconds: number, onDone: () => void) => {
-    if (countdownRef.current) clearInterval(countdownRef.current);
-
-    setCountdown(seconds);
-
-    countdownRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev === null) return null;
-        if (prev <= 1) {
-          if (countdownRef.current) clearInterval(countdownRef.current);
-          onDone();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const submit = async () => {
+  const submit = () => {
     const trimmedType = type.trim();
     const trimmedDesc = description.trim();
     const trimmedLoc = location.trim();
@@ -201,150 +98,43 @@ export default function ReportEmergency() {
       return;
     }
 
-    setSubmitting(true);
+    let finalAnalysis: AnalysisResult | null = null;
 
-    let result: AnalysisResult;
-    try {
-      result = detectEmergency({
-        emergencyType: trimmedType,
-        description: trimmedDesc,
-      }) as AnalysisResult;
-    } catch {
-      setSubmitting(false);
-      Alert.alert("Error", "Unable to analyze this emergency right now.");
-      return;
+    if (enableDetection) {
+      try {
+        finalAnalysis = detectEmergency({
+          emergencyType: trimmedType,
+          description: trimmedDesc,
+        }) as AnalysisResult;
+
+        setAnalysis(finalAnalysis);
+        setShowChecklist(true);
+      } catch {
+        Alert.alert("Error", "Unable to analyze this emergency right now.");
+        return;
+      }
+    } else {
+      setAnalysis(null);
+      setShowChecklist(false);
     }
 
-    setAnalysis(result);
-    setShowChecklist(true);
-
-    const networkState = await NetInfo.fetch();
-
-    if (!networkState.isConnected) {
-      await queueEmergency({
-        id: Date.now().toString(),
+    router.push({
+      pathname: TARGET_FORM_PATH as never,
+      params: {
         emergencyType: trimmedType,
-        severity,
         description: trimmedDesc,
+        severity,
         location: trimmedLoc,
         gpsLocation,
-        createdAt: new Date().toISOString(),
-      });
-
-      setSubmitting(false);
-
-      if (result.isEmergency) {
-        runEmergencyFeedback(result);
-      }
-
-      Alert.alert(
-        "Offline Mode",
-        "Emergency saved locally. It will sync when internet returns."
-      );
-
-      router.push(
-        {
-          pathname: "/emergency/warning",
-          params: {
-            analysis: JSON.stringify(result),
-            emergencyType: trimmedType,
-            description: trimmedDesc,
-            severity,
-            location: trimmedLoc,
-            gpsLocation,
-            dispatchNotified: "false",
-          },
-        } as never
-      );
-
-      return;
-    }
-
-    if (result.isEmergency) {
-      runEmergencyFeedback(result);
-    }
-
-    if (!result.isEmergency) {
-      setSubmitting(false);
-      Alert.alert(
-        "Submitted ✅",
-        `Type: ${trimmedType}\nSeverity: ${severity}\nLocation: ${trimmedLoc || "N/A"}\nGPS: ${
-          gpsLocation || "N/A"
-        }\n\nDescription:\n${trimmedDesc}`
-      );
-      return;
-    }
-
-    const doDispatch = () => {
-      if (autoNotifyDispatch) {
-        simulateDispatchNotification(result, {
-          type: trimmedType,
-          severity,
-          description: trimmedDesc,
-          location: trimmedLoc,
-          gpsLocation,
-        });
-      }
-
-      setSubmitting(false);
-
-      router.push(
-        {
-          pathname: "/emergency/warning",
-          params: {
-            analysis: JSON.stringify(result),
-            emergencyType: trimmedType,
-            description: trimmedDesc,
-            severity,
-            location: trimmedLoc,
-            gpsLocation,
-            dispatchNotified: autoNotifyDispatch ? "true" : "false",
-          },
-        } as never
-      );
-    };
-
-    if ((result.countdownSeconds ?? 0) > 0) {
-      startCountdown(result.countdownSeconds, doDispatch);
-
-      setTimeout(() => {
-        Alert.alert(
-          "Emergency Detected 🚨",
-          `Classification: ${result.classification}\nSeverity: ${result.severity}\n\nDispatch countdown started.`,
-          [
-            {
-              text: "Send Now",
-              onPress: () => {
-                if (countdownRef.current) clearInterval(countdownRef.current);
-                setCountdown(0);
-                doDispatch();
-              },
-            },
-            {
-              text: "Review Checklist",
-              style: "cancel",
-              onPress: () => setSubmitting(false),
-            },
-          ]
-        );
-      }, 250);
-    } else {
-      doDispatch();
-    }
-  };
-
-  const confirmCancel = () => {
-    Alert.alert("Cancel report?", "Your entered details will be lost.", [
-      { text: "Keep editing", style: "cancel" },
-      {
-        text: "Cancel",
-        style: "destructive",
-        onPress: () => {
-          if (countdownRef.current) clearInterval(countdownRef.current);
-          router.back();
-        },
+        detectionEnabled: enableDetection ? "true" : "false",
+        detectedSeverity: finalAnalysis?.severity ?? "",
+        classification: finalAnalysis?.classification ?? "",
+        scenarioId: finalAnalysis?.scenarioId ?? "",
+        dispatchProtocol: finalAnalysis?.dispatchProtocol ?? "",
+        checklist: finalAnalysis?.checklist?.join(" | ") ?? "",
+        countdownSeconds: String(finalAnalysis?.countdownSeconds ?? 0),
       },
-    ]);
+    });
   };
 
   const detectedSeverity = previewAnalysis?.severity ?? "not detected";
@@ -371,9 +161,26 @@ export default function ReportEmergency() {
 
       <Text style={[styles.label, { marginTop: 16 }]}>Severity</Text>
       <View style={styles.severityRow}>
-        <SeverityPill label="Low" selected={severity === "Low"} onPress={() => setSeverity("Low")} />
-        <SeverityPill label="Medium" selected={severity === "Medium"} onPress={() => setSeverity("Medium")} />
-        <SeverityPill label="High" selected={severity === "High"} onPress={() => setSeverity("High")} />
+        <SeverityPill
+          label="Low"
+          selected={severity === "Low"}
+          onPress={() => setSeverity("Low")}
+        />
+        <SeverityPill
+          label="Medium"
+          selected={severity === "Medium"}
+          onPress={() => setSeverity("Medium")}
+        />
+        <SeverityPill
+          label="High"
+          selected={severity === "High"}
+          onPress={() => setSeverity("High")}
+        />
+      </View>
+
+      <View style={styles.switchCard}>
+        <Text style={styles.switchLabel}>Enable emergency detection</Text>
+        <Switch value={enableDetection} onValueChange={setEnableDetection} />
       </View>
 
       <Text style={[styles.label, { marginTop: 16 }]}>
@@ -414,80 +221,45 @@ export default function ReportEmergency() {
         textAlignVertical="top"
       />
 
-      <View style={styles.previewCard}>
-        <Text style={styles.previewTitle}>Emergency Detection Preview</Text>
-        <Text style={styles.previewText}>Detected Severity: {detectedSeverity}</Text>
-        <Text style={styles.previewText}>Classification: {detectedClassification}</Text>
-        {previewAnalysis?.detectionMs !== undefined && (
-          <Text style={styles.previewSubText}>Detection Time: {previewAnalysis.detectionMs} ms</Text>
-        )}
-      </View>
-
-      {(showChecklist || checklist.length > 0) && (
-        <View style={styles.checklistCard}>
-          <Text style={styles.checklistTitle}>Critical Information Checklist</Text>
-          {checklist.length > 0 ? (
-            checklist.map((item, index) => (
-              <Text key={index} style={styles.checklistItem}>
-                • {item}
+      {enableDetection && (
+        <>
+          <View style={styles.previewCard}>
+            <Text style={styles.previewTitle}>Emergency Detection Preview</Text>
+            <Text style={styles.previewText}>
+              Detected Severity: {detectedSeverity}
+            </Text>
+            <Text style={styles.previewText}>
+              Classification: {detectedClassification}
+            </Text>
+            {previewAnalysis?.detectionMs !== undefined && (
+              <Text style={styles.previewSubText}>
+                Detection Time: {previewAnalysis.detectionMs} ms
               </Text>
-            ))
-          ) : (
-            <Text style={styles.previewSubText}>No checklist available yet.</Text>
+            )}
+          </View>
+
+          {(showChecklist || checklist.length > 0) && (
+            <View style={styles.checklistCard}>
+              <Text style={styles.checklistTitle}>Critical Information Checklist</Text>
+              {checklist.length > 0 ? (
+                checklist.map((item, index) => (
+                  <Text key={index} style={styles.checklistItem}>
+                    • {item}
+                  </Text>
+                ))
+              ) : (
+                <Text style={styles.previewSubText}>No checklist available yet.</Text>
+              )}
+            </View>
           )}
-        </View>
+        </>
       )}
 
-      {countdown !== null && (
-        <View style={styles.timerCard}>
-          <Text style={styles.timerTitle}>Emergency Timer / Countdown</Text>
-          <Text style={styles.timerValue}>{countdown}s</Text>
-          <Text style={styles.previewSubText}>
-            Dispatch will trigger automatically when timer reaches zero.
-          </Text>
-        </View>
-      )}
-
-      {dispatchNotified && (
-        <View style={styles.dispatchCard}>
-          <Text style={styles.dispatchTitle}>Admin / Dispatch Notification</Text>
-          <Text style={styles.dispatchText}>Dispatch has been notified successfully 🚨</Text>
-        </View>
-      )}
-
-      <View style={styles.optionsCard}>
-        <Text style={styles.optionsTitle}>Alert Customization Options</Text>
-
-        <OptionRow
-          label="Enable vibration patterns"
-          value={enableVibration}
-          onValueChange={setEnableVibration}
-        />
-
-        <OptionRow
-          label="Enable sound alert"
-          value={enableSoundAlert}
-          onValueChange={setEnableSoundAlert}
-        />
-
-        <OptionRow
-          label="Auto notify admin / dispatch"
-          value={autoNotifyDispatch}
-          onValueChange={setAutoNotifyDispatch}
-        />
-      </View>
-
-      <Pressable
-        style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
-        onPress={submit}
-        disabled={submitting}
-      >
-        <Text style={styles.submitText}>
-          {submitting ? "Processing Emergency..." : "Submit Report"}
-        </Text>
+      <Pressable style={styles.submitBtn} onPress={submit}>
+        <Text style={styles.submitText}>Continue</Text>
       </Pressable>
 
-      <Pressable onPress={confirmCancel} style={styles.cancelBtn}>
+      <Pressable onPress={() => router.back()} style={styles.cancelBtn}>
         <Text style={styles.cancelText}>Cancel</Text>
       </Pressable>
     </ScrollView>
@@ -508,27 +280,15 @@ function SeverityPill({
       onPress={onPress}
       style={[styles.pill, selected ? styles.pillSelected : styles.pillUnselected]}
     >
-      <Text style={[styles.pillText, selected ? styles.pillTextSelected : styles.pillTextUnselected]}>
+      <Text
+        style={[
+          styles.pillText,
+          selected ? styles.pillTextSelected : styles.pillTextUnselected,
+        ]}
+      >
         {label}
       </Text>
     </Pressable>
-  );
-}
-
-function OptionRow({
-  label,
-  value,
-  onValueChange,
-}: {
-  label: string;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-}) {
-  return (
-    <View style={styles.optionRow}>
-      <Text style={styles.optionLabel}>{label}</Text>
-      <Switch value={value} onValueChange={onValueChange} />
-    </View>
   );
 }
 
@@ -571,6 +331,23 @@ const styles = StyleSheet.create({
   pillTextSelected: { color: "#fff" },
   pillTextUnselected: { color: "#111" },
 
+  switchCard: {
+    marginTop: 16,
+    backgroundColor: "#f8faff",
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#d7e6ff",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  switchLabel: {
+    fontSize: 14,
+    color: "#222",
+    fontWeight: "700",
+  },
+
   locationBtn: {
     backgroundColor: "#1f5ea8",
     paddingVertical: 13,
@@ -607,46 +384,6 @@ const styles = StyleSheet.create({
   checklistTitle: { fontSize: 16, fontWeight: "800", color: "#b00020", marginBottom: 8 },
   checklistItem: { fontSize: 14, color: "#222", marginBottom: 6 },
 
-  timerCard: {
-    marginTop: 14,
-    backgroundColor: "#fff4ea",
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#ffd2a6",
-    alignItems: "center",
-  },
-  timerTitle: { fontSize: 16, fontWeight: "800", color: "#a14b00", marginBottom: 6 },
-  timerValue: { fontSize: 30, fontWeight: "900", color: "#ff2d2d" },
-
-  dispatchCard: {
-    marginTop: 14,
-    backgroundColor: "#eefbf0",
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#c8efcf",
-  },
-  dispatchTitle: { fontSize: 16, fontWeight: "800", color: "#1f6f2a", marginBottom: 6 },
-  dispatchText: { fontSize: 14, color: "#184f20", fontWeight: "600" },
-
-  optionsCard: {
-    marginTop: 14,
-    backgroundColor: "#f8faff",
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#d7e6ff",
-  },
-  optionsTitle: { fontSize: 16, fontWeight: "800", color: "#144ea8", marginBottom: 8 },
-  optionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  optionLabel: { fontSize: 14, color: "#222", flex: 1, marginRight: 12 },
-
   submitBtn: {
     marginTop: 18,
     backgroundColor: "#ff2d2d",
@@ -654,7 +391,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
   },
-  submitBtnDisabled: { opacity: 0.7 },
   submitText: { color: "#fff", fontWeight: "900", fontSize: 16 },
 
   cancelBtn: { marginTop: 14, alignItems: "center", paddingVertical: 10 },
