@@ -20,6 +20,7 @@ import {
   subscribeToActiveReports,
 } from "@/backendServices/ApiService";
 import DisclaimerText from '@/components/DisclaimerText';
+import type { ConfirmationDisplayData, InfoFormData } from "@/types/DataModels";
 
 const DEFAULT_REQUEST_ID = "xh4TG0RzYeqkCjnO0ETb";
 
@@ -27,7 +28,7 @@ export default function ConfirmationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { justSynced } = useAuth();
-  const [formData, setFormData] = useState<any>(null);
+  const [formData, setFormData] = useState<InfoFormData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(false);
   const [activeCount, setActiveCount] = useState(0);
@@ -47,7 +48,7 @@ export default function ConfirmationScreen() {
   const showVectorAssets = isOnline;
   console.log(requestId);
 
-  const dummyData = {
+  const dummyData: ConfirmationDisplayData = {
     yourName: "Demo User",
     emailAddress: "demo@petguard.app",
     phoneNumber: "123-456-7890",
@@ -55,7 +56,7 @@ export default function ConfirmationScreen() {
     location: "Arlington, TX",
   };
 
-  const displayData = formData || dummyData;
+  const displayData: ConfirmationDisplayData = formData || dummyData;
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
@@ -148,9 +149,9 @@ export default function ConfirmationScreen() {
   const handleShareRequest = async () => {
     try {
       const location =
-        typeof displayData.location === "object"
+        displayData.location && typeof displayData.location === "object"
           ? displayData.location.address
-          : displayData.location;
+          : displayData.location ?? "N/A";
 
       await Share.share({
         message: `PetGuard Non-Emergency Request\nRequest ID: ${requestId}\nEstimated Response Time: 1hrs 11mins\nContact: ${displayData.yourName} | ${displayData.phoneNumber}\nEmail: ${displayData.emailAddress}\nDescription: ${displayData.additionalDetails}\nLocation: ${location}`,
@@ -289,10 +290,11 @@ export default function ConfirmationScreen() {
             ) : null}
             <Text style={styles.infoText}>
               <Text style={styles.bold}>Location:</Text>{" "}
-              {typeof displayData.location === "object" &&
+              {displayData.location &&
+              typeof displayData.location === "object" &&
               displayData.location !== null
                 ? displayData.location.address
-                : displayData.location}
+                : displayData.location ?? "N/A"}
             </Text>
           </View>
         </View>

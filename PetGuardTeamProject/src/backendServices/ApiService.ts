@@ -12,25 +12,26 @@ import {
 } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db, auth } from "./firebase";
-// import { ServiceRequest } from "../types/ServiceRequest";
-import { InfoFormData } from "../../app/formscreens/info-form";
+import type {
+  EmergencyReportData,
+  InfoFormData,
+  QueuedInfoForm,
+  ServiceRequest,
+  UploadablePhoto,
+  UserProfile,
+  UserProfileUpdate,
+} from "@/types/DataModels";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "./firebase";
+import {
+  RATE_LIMIT_BUCKETS,
+  RATE_LIMIT_WINDOW_MS,
+  throwIfRateLimited,
+} from "./RateLimiter";
 
 let isSyncing = false;
 
-type UploadablePhoto = string | Blob | File;
-
 const INFO_FORM_QUEUE_KEY = "petguard:infoFormQueue:v1";
-
-type QueuedInfoForm = {
-  localId: string;
-  uid: string;
-  data: InfoFormData;
-  photoUris: string[];
-  createdAt: number;
-  retryCount: number;
-};
 
 export const loadQueuedInfoForms = async (): Promise<QueuedInfoForm[]> => {
   const raw = await AsyncStorage.getItem(INFO_FORM_QUEUE_KEY);
@@ -61,39 +62,63 @@ export const enqueueInfoForm = async (
 export const submitInfoForm = async (
   data: InfoFormData,
   photos: UploadablePhoto[],
+  options: { skipRateLimit?: boolean } = {},
 ) => {
+  console.log("submitInfoForm called");
+
+  if (!options.skipRateLimit) {
+    await throwIfRateLimited({
+      key: RATE_LIMIT_BUCKETS.infoFormSubmit,
+      maxAttempts: 1,
+      windowMs: RATE_LIMIT_WINDOW_MS,
+    });
+  }
+
   const user = auth.currentUser;
-  if (!user) throw new Error("Not authenticated");
 
-  const docRef = await addDoc(collection(db, "infoForms"), {
-    ...data,
-    formId: "",
-    uid: user.uid,
-    photos: [],
-    status: "pending",
-    createdAt: Timestamp.now(),
-  });
-  const formId = docRef.id;
+  if (!user) {
+    console.log("no authenticated user, exiting");
+    throw new Error("Not authenticated");
+  }
 
-  const photoUrls = await Promise.all(
-    photos.map((photo) => uploadImage(photo, formId)),
-  );
+  console.log("user exists:", user.uid);
 
-  await updateDoc(doc(db, "infoForms", formId), {
-    formId,
-    photos: photoUrls,
-  });
+  try {
+    const docRef = await addDoc(collection(db, "infoForms"), {
+      ...data,
+      formId: "",
+      uid: user.uid,
+      photos: [],
+      status: "pending",
+      createdAt: Timestamp.now(),
+    });
 
-  return { success: true, formId: docRef.id };
+    console.log("firestore doc created:", docRef.id);
+
+    const formId = docRef.id;
+
+    const photoUrls = await Promise.all(
+      photos.map((photo) => uploadImage(photo, formId)),
+    );
+
+    console.log("photos uploaded:", photoUrls.length);
+
+    await updateDoc(doc(db, "infoForms", formId), {
+      formId,
+      photos: photoUrls,
+    });
+
+    console.log("document updated with photos");
+
+    return { success: true, formId };
+  } catch (err) {
+    console.log("submit failed:", err);
+    throw err;
+  }
 };
 
 // temporary for Venkata's screen testing. submitInfoForm should be the only endpoint at the end
-export const addEmergencyReport = async (reportData: {
-  type: string;
-  severity: string;
-  description: string;
-  location?: string;
-}) => {
+export const addEmergencyReport = async (reportData: EmergencyReportData) => {
   const user = auth.currentUser;
   if (!user) {
     throw new Error("User not authenticated");
@@ -108,12 +133,14 @@ export const addEmergencyReport = async (reportData: {
   return { success: true, id: reportRef.id };
 };
 
-export const getInfoFormDataById = async (formId: string): Promise<any> => {
+export const getInfoFormDataById = async (
+  formId: string,
+): Promise<InfoFormData> => {
   if (!formId) throw new Error("No form id provided");
   const formDocRef = doc(db, "infoForms", formId);
   const docResult = await getDoc(formDocRef);
   if (!docResult.exists()) throw new Error("Info form not found");
-  return docResult.data();
+  return docResult.data() as InfoFormData;
 };
 
 export const uploadImage = async (
@@ -174,7 +201,7 @@ export const syncQueuedInfoForms = async (): Promise<void> => {
         queue = queue.filter((q) => q.localId !== item.localId);
         await saveQueuedInfoForms(queue);
 
-        await submitInfoForm(item.data, item.photoUris);
+        await submitInfoForm(item.data, item.photoUris, { skipRateLimit: true });
 
         console.log("Synced:", item.localId);
       } catch (err) {
@@ -211,7 +238,7 @@ export const subscribeToActiveReports = (
   });
 };
 
-export const getUserProfile = async (uid: string) => {
+export const getUserProfile = async (uid: string): Promise<UserProfile> => {
   if (!uid) throw new Error("Missing uid");
 
   const userRef = doc(db, "users", uid);
@@ -219,16 +246,12 @@ export const getUserProfile = async (uid: string) => {
 
   if (!snapshot.exists()) throw new Error("User not found");
 
-  return snapshot.data();
+  return snapshot.data() as UserProfile;
 };
 
 export const updateUserProfile = async (
   uid: string,
-  updates: {
-    fullName?: string;
-    phoneNumber?: number;
-    dateOfBirth?: string;
-  },
+  updates: UserProfileUpdate,
 ) => {
   if (!uid) throw new Error("Missing uid");
 
@@ -242,19 +265,19 @@ export const updateUserProfile = async (
   return { success: true };
 };
 
-export const getUserRequests = async (uid: string) => {
+export const getUserRequests = async (uid: string): Promise<ServiceRequest[]> => {
   if (!uid) throw new Error("Missing uid");
 
   const q = query(collection(db, "infoForms"), where("uid", "==", uid));
 
-  return new Promise<any[]>((resolve, reject) => {
+  return new Promise<ServiceRequest[]>((resolve, reject) => {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
         const results = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        }));
+        })) as ServiceRequest[];
         resolve(results);
         unsubscribe();
       },

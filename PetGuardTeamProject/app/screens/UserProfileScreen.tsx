@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { onAuthStateChanged } from "firebase/auth";
+import type { User } from "firebase/auth";
 
 import { auth } from "@/backendServices/firebase";
 import {
@@ -22,20 +23,21 @@ import {
 } from "@/backendServices/ApiService";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
+import type { ServiceRequest, UserProfile } from "@/types/DataModels";
 
 const UserProfileScreen = () => {
   const router = useRouter();
   const { isGuest } = useAuth();
 
-  const [profileData, setProfileData] = useState<any>(null);
-  const [requests, setRequests] = useState<any[]>([]);
+  const [profileData, setProfileData] = useState<UserProfile | null>(null);
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "profile" | "history" | "settings"
   >("profile");
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
 
@@ -152,6 +154,11 @@ const UserProfileScreen = () => {
       ]
     : requests;
 
+  const formatRequestDate = (createdAt: ServiceRequest["createdAt"]) => {
+    if (createdAt instanceof Date) return createdAt.toLocaleString();
+    return createdAt?.toDate?.().toLocaleString?.() || "N/A";
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0B1220" }}>
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -217,6 +224,8 @@ const UserProfileScreen = () => {
                     }
 
                     if (isEditing) {
+                      if (!profileData) return;
+
                       await updateUserProfile(uid, {
                         fullName: profileData.fullName,
                         phoneNumber: profileData.phoneNumber,
@@ -262,7 +271,7 @@ const UserProfileScreen = () => {
                         {item.additionalDetails || "No description"}
                       </Text>
                       <Text style={styles.historyTime}>
-                        {item.createdAt?.toDate?.().toLocaleString?.() || "—"}
+                        {formatRequestDate(item.createdAt)}
                       </Text>
                     </View>
                   </View>

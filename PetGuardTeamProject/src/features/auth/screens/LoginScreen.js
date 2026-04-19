@@ -13,6 +13,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
 import { login } from "../../../backendServices/AuthService";
+import {
+  consumeRateLimit,
+  RATE_LIMIT_BUCKETS,
+  RATE_LIMIT_WINDOW_MS,
+} from "../../../backendServices/RateLimiter";
 import { useProtectedNavigation } from "../../../hooks/useProtectedNavigation";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -57,6 +62,19 @@ export default function LoginScreen() {
 
     if (Object.keys(validationErrors).length > 0) return;
 
+    const rateLimit = await consumeRateLimit({
+      key: RATE_LIMIT_BUCKETS.login,
+      maxAttempts: 1,
+      windowMs: RATE_LIMIT_WINDOW_MS,
+    });
+
+    if (!rateLimit.allowed) {
+      setLoginError(
+        `Too many login attempts. Please try again in ${rateLimit.retryAfterSeconds} seconds.`,
+      );
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -77,6 +95,7 @@ export default function LoginScreen() {
         message = "Network error. Please check your connection.";
       }
 
+      setLoginError(message);
       Alert.alert("Sign In Failed", message);
     } finally {
       setSubmitting(false);

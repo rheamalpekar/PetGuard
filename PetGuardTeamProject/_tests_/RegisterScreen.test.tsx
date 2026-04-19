@@ -5,6 +5,7 @@ import RegisterScreen from "../app/auth/register";
 import { register } from "../src/backendServices/AuthService";
 
 const mockReplace = jest.fn();
+const mockConsumeRateLimit = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ replace: mockReplace }),
@@ -33,11 +34,25 @@ jest.mock("../src/backendServices/AuthService", () => ({
   register: jest.fn(() => Promise.resolve()),
 }));
 
+jest.mock("../src/backendServices/RateLimiter", () => ({
+  consumeRateLimit: (...args: any[]) => mockConsumeRateLimit(...args),
+  RATE_LIMIT_BUCKETS: {
+    login: "auth-login",
+    register: "auth-register",
+    infoFormSubmit: "info-form-submit",
+  },
+  RATE_LIMIT_WINDOW_MS: 60 * 1000,
+}));
+
 describe("RegisterScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(Alert, "alert").mockImplementation(jest.fn());
     (register as jest.Mock).mockResolvedValue({ uid: "user-1" });
+    mockConsumeRateLimit.mockResolvedValue({
+      allowed: true,
+      retryAfterSeconds: 0,
+    });
   });
 
   test("renders form fields", () => {
@@ -121,5 +136,33 @@ describe("RegisterScreen", () => {
 
     expect(register).not.toHaveBeenCalled();
     expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  test("rate limited registration shows inline error and blocks register", async () => {
+    mockConsumeRateLimit.mockResolvedValueOnce({
+      allowed: false,
+      retryAfterSeconds: 60,
+    });
+
+    const { getByPlaceholderText, getByText, getAllByText, findByText } =
+      render(<RegisterScreen />);
+
+    fireEvent.changeText(getByPlaceholderText("Full Name"), "John Doe");
+    fireEvent.changeText(getByPlaceholderText("Email"), "john@test.com");
+    fireEvent.changeText(getByPlaceholderText("Phone Number"), "1234567890");
+    fireEvent.changeText(getByPlaceholderText("Password"), "Password1!");
+    fireEvent.changeText(
+      getByPlaceholderText("Confirm Password"),
+      "Password1!",
+    );
+    fireEvent.press(getByText("unchecked"));
+    fireEvent.press(getAllByText("Create Account")[1]);
+
+    expect(
+      await findByText(
+        "Too many registration attempts. Please try again in 60 seconds.",
+      ),
+    ).toBeTruthy();
+    expect(register).not.toHaveBeenCalled();
   });
 });

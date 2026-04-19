@@ -24,9 +24,10 @@ import PhotoUploadComponent from '@/components/PhotoUploadComponent';
 import { auth } from "@/backendServices/firebase";
 import {
   enqueueInfoForm,
-  loadQueuedInfoForms,
   submitInfoForm,
 } from "@/backendServices/ApiService";
+import { RateLimitError } from "@/backendServices/RateLimiter";
+import type { InfoFormData, LocationData, PhotoAsset } from "@/types/DataModels";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import DisclaimerText from '@/components/DisclaimerText';
@@ -48,26 +49,6 @@ type MapRegion = {
   longitudeDelta: number;
 };
 
-
-type LocationData = {
-  latitude: number;
-  longitude: number;
-  address: string;
-};
-
-type InfoFormData = {
-  location: LocationData | null;
-  yourName: string;
-  phoneNumber: string;
-  emailAddress: string;
-  additionalDetails: string;
-};
-
-type PhotoAsset = {
-  uri: string;
-  type: 'image' | 'document';
-  name?: string;
-};
 
 type PhotoUploadHandle = {
   getPhotos: () => PhotoAsset[];
@@ -102,6 +83,7 @@ export default function InfoFormScreen() {
   } | null>(null);
   const mapRef = useRef<any>(null);
   const photoUploadRef = useRef<PhotoUploadHandle>(null);
+  const submitLockRef = useRef(false);
   const TypedPhotoUploadComponent =
     PhotoUploadComponent as React.ForwardRefExoticComponent<
       PhotoUploadProps & React.RefAttributes<PhotoUploadHandle>
@@ -222,7 +204,10 @@ export default function InfoFormScreen() {
   };
 
   const handleFormSubmit = async (data: InfoFormData) => {
-    // console.log("1 start");
+    setRateLimitErrorMessage(null);
+    if (submitLockRef.current) {
+      return;
+    }
 
     if (!validateCustomFields()) return;
 
@@ -232,6 +217,7 @@ export default function InfoFormScreen() {
       return;
     }
 
+    submitLockRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -297,8 +283,15 @@ export default function InfoFormScreen() {
           params: { formId: response.formId },
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("FORCED OFFLINE FALLBACK", error);
+
+      if (error instanceof RateLimitError) {
+        setRateLimitErrorMessage(
+          `Too many submissions. Please try again in ${error.retryAfterSeconds} seconds.`,
+        );
+        return;
+      }
 
       const localId = `queued_${Date.now()}`;
       const photos = photoUploadRef.current?.getPhotos() ?? [];
@@ -327,9 +320,12 @@ export default function InfoFormScreen() {
         params: { formId: localId },
       });
     } finally {
+      submitLockRef.current = false;
       setIsSubmitting(false);
     }
   };
+
+  const [rateLimitErrorMessage, setRateLimitErrorMessage] = useState<string | null>(null);
 
   return (
     <ScrollView
@@ -714,6 +710,11 @@ export default function InfoFormScreen() {
           <Text style={styles.submitButtonText}>Submit Report</Text>
         )}
       </TouchableOpacity>
+      {rateLimitErrorMessage && (
+        <Text style={styles.rateLimitText}>
+          {rateLimitErrorMessage}
+        </Text>
+      )}
       <DisclaimerText />
     </ScrollView>
   );
@@ -911,6 +912,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
+  rateLimitText: {
+    color: '#ff4444',
+    fontSize: 14,
+    marginTop: 10,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   contactSection: {
     borderWidth: 1,
     borderColor: '#ddd',
@@ -976,4 +984,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export type { InfoFormData };
+export type { InfoFormData } from "@/types/DataModels";

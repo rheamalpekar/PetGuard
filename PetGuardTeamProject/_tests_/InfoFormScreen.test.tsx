@@ -27,6 +27,21 @@ jest.mock("@/backendServices/ApiService", () => ({
   enqueueInfoForm: (...args: any[]) => mockEnqueue(...args),
 }));
 
+jest.mock("@/backendServices/RateLimiter", () => {
+  class RateLimitError extends Error {
+    retryAfterSeconds: number;
+
+    constructor(retryAfterSeconds: number) {
+      super(`Too many attempts. Please try again in ${retryAfterSeconds} seconds.`);
+      this.name = "RateLimitError";
+      this.retryAfterSeconds = retryAfterSeconds;
+      Object.setPrototypeOf(this, RateLimitError.prototype);
+    }
+  }
+
+  return { RateLimitError };
+});
+
 jest.mock("@react-native-community/netinfo", () => ({
   fetch: jest.fn(),
 }));
@@ -191,6 +206,38 @@ describe("InfoFormScreen", () => {
         params: { formId: "abc123" },
       });
     });
+  });
+
+  it("shows rate limit message and does not queue when online submit is blocked", async () => {
+    const NetInfo = require("@react-native-community/netinfo");
+    const { RateLimitError } = require("@/backendServices/RateLimiter");
+
+    NetInfo.fetch.mockResolvedValue({
+      isConnected: true,
+      isInternetReachable: true,
+    });
+
+    mockSubmitInfoForm.mockRejectedValue(new RateLimitError(60));
+
+    const { getByText, getByPlaceholderText, findByText } = render(
+      <InfoFormScreen />,
+    );
+
+    fireEvent.changeText(getByPlaceholderText("Your name"), "John");
+    fireEvent.changeText(getByPlaceholderText("Phone number"), "1234567890");
+    fireEvent.changeText(
+      getByPlaceholderText("Email address"),
+      "test@test.com",
+    );
+    fireEvent.press(getByText("YES"));
+    fireEvent.press(getByText("Use My Location"));
+    fireEvent.press(getByText("Submit Report"));
+
+    expect(
+      await findByText("Too many submissions. Please try again in 60 seconds."),
+    ).toBeTruthy();
+    expect(mockEnqueue).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it("submits OFFLINE flow correctly", async () => {

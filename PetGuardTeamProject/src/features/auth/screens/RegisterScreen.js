@@ -15,6 +15,11 @@ import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { register } from "../../../backendServices/AuthService";
+import {
+  consumeRateLimit,
+  RATE_LIMIT_BUCKETS,
+  RATE_LIMIT_WINDOW_MS,
+} from "../../../backendServices/RateLimiter";
 
 /* ---------------- Validation Helpers ---------------- */
 
@@ -122,6 +127,19 @@ export default function RegisterScreen() {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) return;
+
+    const rateLimit = await consumeRateLimit({
+      key: RATE_LIMIT_BUCKETS.register,
+      maxAttempts: 1,
+      windowMs: RATE_LIMIT_WINDOW_MS,
+    });
+
+    if (!rateLimit.allowed) {
+      setFormError(
+        `Too many registration attempts. Please try again in ${rateLimit.retryAfterSeconds} seconds.`,
+      );
+      return;
+    }
 
     setSubmitting(true);
 
