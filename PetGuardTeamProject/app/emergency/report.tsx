@@ -41,7 +41,6 @@ export default function ReportEmergency() {
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
 
   const [enableDetection, setEnableDetection] = useState<boolean>(true);
-  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [showChecklist, setShowChecklist] = useState<boolean>(false);
 
   useEffect(() => {
@@ -113,14 +112,12 @@ export default function ReportEmergency() {
           description: trimmedDesc,
         }) as AnalysisResult;
 
-        setAnalysis(finalAnalysis);
         setShowChecklist(true);
       } catch {
         Alert.alert("Error", "Unable to analyze this emergency right now.");
         return;
       }
     } else {
-      setAnalysis(null);
       setShowChecklist(false);
     }
 

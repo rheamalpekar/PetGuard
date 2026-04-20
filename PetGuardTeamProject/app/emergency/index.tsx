@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert } from "react-native";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { logoutUser, getUserProfile } from "@/backendServices/ApiService";
 import { useProtectedNavigation } from "@/hooks/useProtectedNavigation";
-import { useAuth } from "@/context/AuthContext";
 import { auth } from "@/backendServices/firebase";
 import DisclaimerText from "@/components/DisclaimerText";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -149,27 +148,6 @@ export default function EmergencyHome() {
         <View style={styles.bannerNonEmergency}>
           <Ionicons name="paw" size={20} color="#fff" />
           <Text style={styles.bannerText}>NON-EMERGENCY SERVICES</Text>
-        </View>
-
-        <View style={styles.tileRow}>
-          <ServiceTile
-            title="Vaccination"
-            bg="#1e78ff"
-            icon={<MaterialCommunityIcons name="syringe" size={30} color="#fff" />}
-            onPress={() => goReport("Vaccination")}
-          />
-          <ServiceTile
-            title="Adopt / Surrender"
-            bg="#2e7d32"
-            icon={<Ionicons name="heart" size={30} color="#fff" />}
-            onPress={() => goReport("Adopt / Surrender")}
-          />
-          <ServiceTile
-            title="Spay / Neuter"
-            bg="#7e57c2"
-            icon={<MaterialCommunityIcons name="scissors-cutting" size={30} color="#fff" />}
-            onPress={() => goReport("Spay / Neuter")}
-          />
         </View>
 
         <Pressable onPress={() => protectedNavigate("/formscreens/FirebaseTestScreen" as never)} style={styles.navigation}>
