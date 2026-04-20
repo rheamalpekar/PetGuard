@@ -146,6 +146,13 @@ export default function ConfirmationScreen() {
     router.push("/emergency");
   };
 
+  const handleViewProfileHistory = () => {
+    router.push({
+      pathname: "/screens/UserProfileScreen",
+      params: { tab: "history" },
+    });
+  };
+
   const handleShareRequest = async () => {
     try {
       const location =
@@ -154,7 +161,7 @@ export default function ConfirmationScreen() {
           : displayData.location ?? "N/A";
 
       await Share.share({
-        message: `PetGuard Non-Emergency Request\nRequest ID: ${requestId}\nEstimated Response Time: 1hrs 11mins\nContact: ${displayData.yourName} | ${displayData.phoneNumber}\nEmail: ${displayData.emailAddress}\nDescription: ${displayData.additionalDetails}\nLocation: ${location}`,
+        message: `PetGuard Non-Emergency Request\nRequest ID: ${requestId}\nEstimated Response Time: 0hrs 59mins\nContact: ${displayData.yourName} | ${displayData.phoneNumber}\nEmail: ${displayData.emailAddress}\nDescription: ${displayData.additionalDetails}\nLocation: ${location}`,
         title: "PetGuard Request Details",
       });
     } catch (error) {
@@ -191,7 +198,7 @@ export default function ConfirmationScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Request ID</Text>
+          <Text style={styles.sectionHeading}>Request ID</Text>
 
           <View style={styles.rowBetween}>
             <Text style={styles.requestId}>{requestId}</Text>
@@ -213,17 +220,17 @@ export default function ConfirmationScreen() {
         <View style={styles.divider} />
 
         <View style={styles.section}>
-          <Text style={styles.label}>Estimated Response Time</Text>
+          <Text style={styles.sectionHeading}>Request Tracking</Text>
 
           <View style={styles.timeRow}>
-            <Text style={styles.timeNumber}>1</Text>
+            <Text style={styles.timeNumber}>0</Text>
             <Text style={styles.timeText}>hr</Text>
-            <Text style={styles.timeNumber}> 11</Text>
+            <Text style={styles.timeNumber}> 59</Text>
             <Text style={styles.timeText}>min</Text>
           </View>
 
           <View style={styles.activeReportSection}>
-            <Text style={styles.label}>Active Reports</Text>
+            {/* <Text style={styles.label}>Active Reports</Text> */}
             <Text style={styles.infoText}>
               You have <Text style={styles.blueText}>{activeCount}</Text> active
               report.
@@ -320,7 +327,7 @@ export default function ConfirmationScreen() {
         <View style={styles.bottomButtonsRow}>
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={() => router.push("/requests")}
+            onPress={handleViewProfileHistory}
           >
             <Text style={styles.cancelButtonText}>View All Requests</Text>
           </TouchableOpacity>
@@ -415,7 +422,14 @@ const styles = StyleSheet.create({
   label: {
     color: "#E5E7EB",
     fontSize: 15,
+    fontWeight: "700",
     marginBottom: 14,
+  },
+  sectionHeading: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 22,
   },
 
   rowBetween: {
@@ -426,7 +440,7 @@ const styles = StyleSheet.create({
 
   requestId: {
     color: "white",
-    fontSize: 24,
+    fontSize: 14,
     fontWeight: "500",
     letterSpacing: 1,
   },
@@ -462,8 +476,8 @@ const styles = StyleSheet.create({
 
   contactHeading: {
     color: "white",
-    fontSize: 17,
-    fontWeight: "500",
+    fontSize: 18,
+    fontWeight: "700",
     marginBottom: 22,
   },
 

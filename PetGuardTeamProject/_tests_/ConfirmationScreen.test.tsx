@@ -1,11 +1,12 @@
 import React from "react";
-import { render, waitFor } from "@testing-library/react-native";
+import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import ConfirmationScreen from "../app/formscreens/ConfirmationPage";
 
 const mockUseLocalSearchParams = jest.fn();
+const mockPush = jest.fn();
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: mockPush }),
   useLocalSearchParams: () => mockUseLocalSearchParams(),
 }));
 
@@ -102,6 +103,21 @@ describe("ConfirmationScreen", () => {
       expect(getByText("server_123")).toBeTruthy();
       expect(getByText(/Server User/)).toBeTruthy();
       expect(getByText(/Server Address/)).toBeTruthy();
+    });
+  });
+
+  test("profile button opens profile history tab", async () => {
+    const { getByText } = render(<ConfirmationScreen />);
+
+    await waitFor(() => {
+      expect(getByText("Profile")).toBeTruthy();
+    });
+
+    fireEvent.press(getByText("Profile"));
+
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: "/screens/UserProfileScreen",
+      params: { tab: "history" },
     });
   });
 });

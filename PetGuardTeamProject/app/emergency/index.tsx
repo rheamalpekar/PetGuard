@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
-import { logoutUser, getUserProfile } from "@/backendServices/ApiService";
+import { logoutUser, getUserProfileWithCache } from "@/backendServices/ApiService";
 import { useProtectedNavigation } from "@/hooks/useProtectedNavigation";
 import { useAuth } from "@/context/AuthContext";
 import { auth } from "@/backendServices/firebase";
@@ -11,15 +11,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EmergencyHome() {
   const { protectedNavigate } = useProtectedNavigation();
-    const [fullName, setFullName] = useState("");
+  const { user: contextUser } = useAuth();
+  const currentUser = contextUser ?? auth.currentUser;
+  const [fullName, setFullName] = useState("");
 
   useEffect(() => {
     const fetchName = async () => {
-      const uid = auth.currentUser?.uid;
+      const uid = currentUser?.uid;
       if (!uid) return;
+      if (currentUser?.isAnonymous) return;
 
       try {
-        const data = await getUserProfile(uid);
+        const data = await getUserProfileWithCache(uid);
         setFullName(data.fullName);
       } catch (e) {
         console.log("Name load error", e);
@@ -27,7 +30,7 @@ export default function EmergencyHome() {
     };
 
     fetchName();
-  }, []);
+  }, [currentUser?.uid, currentUser?.isAnonymous]);
 
   const userName = fullName || "Guest User" ;
   const notifCount = 1;
@@ -155,7 +158,7 @@ export default function EmergencyHome() {
           <ServiceTile
             title="Vaccination"
             bg="#1e78ff"
-            icon={<MaterialCommunityIcons name="syringe" size={30} color="#fff" />}
+            icon={<MaterialCommunityIcons name="needle" size={30} color="#fff" />}
             onPress={() => goReport("Vaccination")}
           />
           <ServiceTile

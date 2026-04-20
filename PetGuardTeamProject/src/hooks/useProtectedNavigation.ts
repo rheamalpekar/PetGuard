@@ -6,7 +6,7 @@ const PROTECTED_ROUTES = ["/emergency", "/formscreens", "/index"];
 
 export function useProtectedNavigation() {
   const router = useRouter();
-  const { isLoggedIn, isGuest } = useAuth();
+  const { isLoggedIn } = useAuth();
 
   const protectedNavigate = useCallback(
     (href: string | any) => {
@@ -14,14 +14,14 @@ export function useProtectedNavigation() {
         (typeof href === "string" ? href : href.pathname || "").includes(route),
       );
 
-      if (isProtectedRoute && !isLoggedIn && !isGuest) {
+      if (isProtectedRoute && !isLoggedIn) {
         console.warn("Access denied - not logged in");
         router.replace("/auth/login" as never);
         return;
       }
       router.push(href);
     },
-    [isLoggedIn, isGuest, router],
+    [isLoggedIn, router],
   );
 
   return { protectedNavigate };
