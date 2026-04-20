@@ -13,10 +13,6 @@ import { useRouter } from "expo-router";
 export default function AboutScreen() {
   const router = useRouter();
 
-  const handleEmailPress = () => {
-    Linking.openURL("mailto:spandanmahat00@gmail.com");
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>

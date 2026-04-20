@@ -136,8 +136,10 @@ export default function LoginScreen() {
         >
           <Text style={styles.title}>Login</Text>
 
-          <Text style={styles.demoInline}>
-            Quick login: demoaccount@gmail.com / Demoaccount#5320
+          <Text style={styles.quickLoginText}>
+            Quick login{"\n"}
+            <Text style={{ fontWeight: "bold" }}>Email:</Text> demoaccount@gmail.com{"\n"}
+            <Text style={{ fontWeight: "bold" }}>Password:</Text> Demoaccount#5320
           </Text>
 
           <TextInput
@@ -231,11 +233,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    padding: 20,
+    // padding: 7,
     paddingVertical: 18,
   },
   title: { fontSize: 28, fontWeight: "bold", color: "#FFF", marginBottom: 20 },
-  demoInline: {
+  quickLoginText: {
     color: "#9CA3AF",
     fontSize: 12,
     marginBottom: 14,
