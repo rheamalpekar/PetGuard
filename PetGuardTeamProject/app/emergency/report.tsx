@@ -12,15 +12,14 @@ import { router, useLocalSearchParams } from "expo-router";
 import { detectEmergency } from "../../src/emergency/core/EmergencyAlertSystem";
 // import { submitEmergencyReport } from "@/services/ApiResponse";
 import { addEmergencyReport } from "@/backendServices/ApiService";
-
-type SeverityUI = "Low" | "Medium" | "High";
+import type { EmergencyReportSeverityUI } from "@/types/DataModels";
 
 export default function ReportEmergency() {
   const params = useLocalSearchParams();
   const prefillType = String(params.prefillType ?? "");
 
   const [type, setType] = useState<string>(prefillType);
-  const [severity, setSeverity] = useState<SeverityUI>("Medium");
+  const [severity, setSeverity] = useState<EmergencyReportSeverityUI>("Medium");
   const [description, setDescription] = useState<string>("");
   const [location, setLocation] = useState<string>("");
 
@@ -82,7 +81,12 @@ export default function ReportEmergency() {
       }
     } catch (error) {
       console.error("Error submitting emergency report:", error);
-      Alert.alert("Submission Error", error?.message || "An error occurred while submitting.");
+      Alert.alert(
+        "Submission Error",
+        error instanceof Error
+          ? error.message
+          : "An error occurred while submitting.",
+      );
     }
   };
 
@@ -166,7 +170,7 @@ function SeverityPill({
   selected,
   onPress,
 }: {
-  label: SeverityUI;
+  label: EmergencyReportSeverityUI;
   selected: boolean;
   onPress: () => void;
 }) {
@@ -181,33 +185,6 @@ function SeverityPill({
     </Pressable>
   );
 }
-
-const handleReportSubmission = async () => {
-  const trimmedType = type.trim();
-  const trimmedDesc = description.trim();
-  const trimmedLoc = location.trim();
-
-  if (!trimmedType || !trimmedDesc) {
-    Alert.alert("Missing Information", "Please provide both the emergency type and description.");
-    return;
-  }
-
-  try {
-    const result = await addEmergencyReport({
-      type: trimmedType,
-      severity,
-      description: trimmedDesc,
-      location: trimmedLoc || undefined,
-    });
-
-    if (result.success) {
-      Alert.alert("Success", "Your emergency report has been submitted.");
-      router.back();
-    }
-  } catch (error) {
-    Alert.alert("Error", error.message || "Failed to submit the emergency report.");
-  }
-};
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#fff" },

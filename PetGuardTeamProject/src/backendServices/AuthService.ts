@@ -14,12 +14,13 @@ import { Platform } from "react-native";
 import { Timestamp, doc, setDoc } from "firebase/firestore";
 
 import { auth, db } from "./firebase";
+import type { UserProfile } from "@/types/DataModels";
 
 export const register = async (
   email: string,
   password: string,
   fullName: string,
-  phoneNumber: number,
+  phoneNumber: UserProfile["phoneNumber"],
 ) => {
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, password);

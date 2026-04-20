@@ -6,19 +6,9 @@ import {
   loadQueuedInfoForms,
   syncQueuedInfoForms,
 } from "../backendServices/ApiService";
+import type { AuthContextValue } from "@/types/DataModels";
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  isLoggedIn: boolean;
-  justSynced: boolean;
-  isOnline: boolean;
-  hadPendingQueue: boolean;
-  isGuest: boolean;
-  setIsGuest: (value: boolean) => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -73,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return netUnsub;
   }, []);
 
-  const value: AuthContextType = {
+  const value: AuthContextValue = {
     user,
     loading,
     isLoggedIn: !!user,
