@@ -20,7 +20,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.PetGuardTeamProject"
+      "package": "com.anonymous.PetGuardTeamProject",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyB2Zl-ZgH0vgffkdsSW6uy1Bt5Ju7YwVsg"
+      }
+  }
     },
     "web": {
       "output": "static",

@@ -32,6 +32,10 @@ import {
 let isSyncing = false;
 
 const INFO_FORM_QUEUE_KEY = "petguard:infoFormQueue:v1";
+const USER_PROFILE_CACHE_KEY_PREFIX = "petguard:userProfile:v1:";
+
+const userProfileCacheKey = (uid: string) =>
+  `${USER_PROFILE_CACHE_KEY_PREFIX}${uid}`;
 
 export const loadQueuedInfoForms = async (): Promise<QueuedInfoForm[]> => {
   const raw = await AsyncStorage.getItem(INFO_FORM_QUEUE_KEY);
@@ -249,6 +253,50 @@ export const getUserProfile = async (uid: string): Promise<UserProfile> => {
   return snapshot.data() as UserProfile;
 };
 
+export const loadCachedUserProfile = async (
+  uid: string,
+): Promise<UserProfile | null> => {
+  if (!uid) throw new Error("Missing uid");
+
+  const raw = await AsyncStorage.getItem(userProfileCacheKey(uid));
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as UserProfile;
+  } catch {
+    return null;
+  }
+};
+
+export const cacheUserProfile = async (
+  uid: string,
+  profile: UserProfile,
+): Promise<void> => {
+  if (!uid) throw new Error("Missing uid");
+
+  await AsyncStorage.setItem(userProfileCacheKey(uid), JSON.stringify(profile));
+};
+
+export const clearCachedUserProfile = async (uid: string): Promise<void> => {
+  if (!uid) throw new Error("Missing uid");
+
+  await AsyncStorage.removeItem(userProfileCacheKey(uid));
+};
+
+export const getUserProfileWithCache = async (
+  uid: string,
+): Promise<UserProfile> => {
+  try {
+    const profile = await getUserProfile(uid);
+    await cacheUserProfile(uid, profile);
+    return profile;
+  } catch (error) {
+    const cachedProfile = await loadCachedUserProfile(uid);
+    if (cachedProfile) return cachedProfile;
+    throw error;
+  }
+};
+
 export const updateUserProfile = async (
   uid: string,
   updates: UserProfileUpdate,
@@ -261,6 +309,14 @@ export const updateUserProfile = async (
     ...updates,
     updatedAt: Timestamp.now(),
   });
+
+  const cachedProfile = await loadCachedUserProfile(uid);
+  if (cachedProfile) {
+    await cacheUserProfile(uid, {
+      ...cachedProfile,
+      ...updates,
+    });
+  }
 
   return { success: true };
 };

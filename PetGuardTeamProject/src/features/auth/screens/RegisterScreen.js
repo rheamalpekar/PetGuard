@@ -21,7 +21,6 @@ import {
   RATE_LIMIT_WINDOW_MS,
 } from "../../../backendServices/RateLimiter";
 
-/* ---------------- Validation Helpers ---------------- */
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -57,7 +56,6 @@ function isStrongPassword(password) {
   );
 }
 
-/* ---------------- Component ---------------- */
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -130,7 +128,7 @@ export default function RegisterScreen() {
 
     const rateLimit = await consumeRateLimit({
       key: RATE_LIMIT_BUCKETS.register,
-      maxAttempts: 1,
+      maxAttempts: 3,
       windowMs: RATE_LIMIT_WINDOW_MS,
     });
 
@@ -329,7 +327,6 @@ export default function RegisterScreen() {
   );
 }
 
-/* ---------------- Styles ---------------- */
 
 const styles = StyleSheet.create({
   container: {

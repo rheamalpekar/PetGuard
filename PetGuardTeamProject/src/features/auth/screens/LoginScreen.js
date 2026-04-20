@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -28,7 +29,7 @@ function isValidEmail(email) {
 export default function LoginScreen() {
   const router = useRouter();
   const { protectedNavigate } = useProtectedNavigation();
-  const { setIsGuest } = useAuth();
+  const { continueAsGuest } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -64,7 +65,7 @@ export default function LoginScreen() {
 
     const rateLimit = await consumeRateLimit({
       key: RATE_LIMIT_BUCKETS.login,
-      maxAttempts: 1,
+      maxAttempts: 3,
       windowMs: RATE_LIMIT_WINDOW_MS,
     });
 
@@ -102,91 +103,125 @@ export default function LoginScreen() {
     }
   }
 
+  async function handleGuestLogin() {
+    setLoginError(null);
+    setSubmitting(true);
+
+    try {
+      await continueAsGuest();
+      router.replace("/emergency");
+    } catch (err) {
+      const message =
+        err?.code === "auth/admin-restricted-operation"
+          ? "Guest access is not enabled in Firebase."
+          : "Guest access failed. Please try again.";
+
+      setLoginError(message);
+      Alert.alert("Guest Sign In Failed", message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <LinearGradient colors={["#0B1220", "#111C33"]} style={styles.container}>
       <KeyboardAvoidingView
         style={styles.inner}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <Text style={styles.title}>Login</Text>
-
-        <TextInput
-          style={[styles.input, errors.email && styles.inputError]}
-          placeholder="Email"
-          placeholderTextColor="#888"
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            setLoginError(null);
-          }}
-          autoCapitalize="none"
-        />
-        {errors.email && <Text style={styles.error}>{errors.email}</Text>}
-
-        <TextInput
-          style={[styles.input, errors.password && styles.inputError]}
-          placeholder="Password"
-          placeholderTextColor="#888"
-          value={password}
-          onChangeText={(text) => {
-            setPassword(text);
-            setLoginError(null);
-          }}
-          secureTextEntry
-        />
-        {errors.password && <Text style={styles.error}>{errors.password}</Text>}
-
-        {loginError && <Text style={styles.error}>{loginError}</Text>}
-
-        <View style={styles.row}>
-          <Checkbox value={rememberMe} onValueChange={setRememberMe} />
-          <Text style={styles.checkboxText}>Remember Me</Text>
-        </View>
-
-        <Pressable
-          onPress={handleLogin}
-          disabled={!canSubmit}
-          style={[styles.button, !canSubmit && { opacity: 0.5 }]}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.buttonText}>
-            {submitting ? "Signing in..." : "Sign In"}
+          <Text style={styles.title}>Login</Text>
+
+          <Text style={styles.quickLoginText}>
+            Quick login{"\n"}
+            <Text style={{ fontWeight: "bold" }}>Email:</Text> demoaccount@gmail.com{"\n"}
+            <Text style={{ fontWeight: "bold" }}>Password:</Text> Demoaccount#5320
           </Text>
-        </Pressable>
 
-        <Pressable onPress={() => router.push("/auth/register")}>
-          <Text style={styles.link}>Create Account</Text>
-        </Pressable>
+          <TextInput
+            style={[styles.input, errors.email && styles.inputError]}
+            placeholder="Email"
+            placeholderTextColor="#888"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              setLoginError(null);
+            }}
+            autoCapitalize="none"
+          />
+          {errors.email && <Text style={styles.error}>{errors.email}</Text>}
 
-        <Pressable
-          onPress={() => {
-            setIsGuest(true);
-            router.replace("/emergency");
-          }}
-          style={[styles.button, { backgroundColor: "#666" }]}
-        >
-          <Text style={styles.buttonText}>Continue as Guest</Text>
-        </Pressable>
+          <TextInput
+            style={[styles.input, errors.password && styles.inputError]}
+            placeholder="Password"
+            placeholderTextColor="#888"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              setLoginError(null);
+            }}
+            secureTextEntry
+          />
+          {errors.password && <Text style={styles.error}>{errors.password}</Text>}
 
-        <Pressable onPress={() => protectedNavigate("/formscreens/FirebaseTestScreen")} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Firebase test screen</Text>
-        </Pressable>
+          {loginError && <Text style={styles.error}>{loginError}</Text>}
 
-        <Pressable onPress={() => protectedNavigate("/emergency")} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Emergency/Home screen</Text>
-        </Pressable>
+          <View style={styles.row}>
+            <Checkbox value={rememberMe} onValueChange={setRememberMe} />
+            <Text style={styles.checkboxText}>Remember Me</Text>
+          </View>
 
-        <Pressable onPress={() => router.push("/screens/UserProfileScreen")} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Profile Screen</Text>
-        </Pressable>
+          <Pressable
+            onPress={handleLogin}
+            disabled={!canSubmit}
+            style={[styles.button, !canSubmit && { opacity: 0.5 }]}
+          >
+            <Text style={styles.buttonText}>
+              {submitting ? "Signing in..." : "Sign In"}
+            </Text>
+          </Pressable>
 
-        <Pressable onPress={() => protectedNavigate("/formscreens/info-form")} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Info Form Screen</Text>
-        </Pressable>
+          <Pressable onPress={() => router.push("/auth/register")}>
+            <Text style={styles.link}>Create Account</Text>
+          </Pressable>
 
-        <Pressable onPress={() => protectedNavigate("/formscreens/ConfirmationPage")} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Confirmation screen</Text>
-        </Pressable>
+          <Pressable
+            onPress={handleGuestLogin}
+            disabled={submitting}
+            style={[styles.button, styles.guestButton]}
+          >
+            <Text style={styles.buttonText}>
+              {submitting ? "Signing in..." : "Continue as Guest"}
+            </Text>
+          </Pressable>
+          <Text style={styles.guestNote}>
+            Guest mode supports less functionalities. Recommended to sign in manually.
+          </Text>
 
+          <Pressable onPress={() => protectedNavigate("/formscreens/FirebaseTestScreen")} style={styles.navigation}>
+            <Text style={styles.navigationText}>Go to Firebase test screen</Text>
+          </Pressable>
+
+          <Pressable onPress={() => protectedNavigate("/emergency")} style={styles.navigation}>
+            <Text style={styles.navigationText}>Go to Emergency/Home screen</Text>
+          </Pressable>
+
+          <Pressable onPress={() => router.push("/screens/UserProfileScreen")} style={styles.navigation}>
+            <Text style={styles.navigationText}>Go to Profile Screen</Text>
+          </Pressable>
+
+          <Pressable onPress={() => protectedNavigate("/formscreens/info-form")} style={styles.navigation}>
+            <Text style={styles.navigationText}>Go to Info Form Screen</Text>
+          </Pressable>
+
+          <Pressable onPress={() => protectedNavigate("/formscreens/ConfirmationPage")} style={styles.navigation}>
+            <Text style={styles.navigationText}>Go to Confirmation screen</Text>
+          </Pressable>
+        </ScrollView>
       </KeyboardAvoidingView>
     </LinearGradient>
   );
@@ -195,7 +230,18 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   inner: { flex: 1, justifyContent: "center", padding: 20 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    // padding: 7,
+    paddingVertical: 18,
+  },
   title: { fontSize: 28, fontWeight: "bold", color: "#FFF", marginBottom: 20 },
+  quickLoginText: {
+    color: "#9CA3AF",
+    fontSize: 12,
+    marginBottom: 14,
+  },
   input: {
     backgroundColor: "#222",
     color: "#FFF",
@@ -214,8 +260,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 10,
   },
+  guestButton: {
+    backgroundColor: "#666",
+    marginTop: 20,
+  },
   buttonText: { color: "#000", fontWeight: "bold" },
   link: { color: "#4da6ff", marginTop: 16, textAlign: "center" },
+  guestNote: {
+    color: "#9CA3AF",
+    fontSize: 12,
+    marginTop: 10,
+    textAlign: "center",
+    marginBottom: 20,
+  },
   navigation: {
     backgroundColor: "#233244",
     paddingVertical: 8,

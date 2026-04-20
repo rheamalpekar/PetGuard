@@ -49,11 +49,16 @@ jest.mock("../src/backendServices/firebase", () => ({
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
+  cacheUserProfile,
+  clearCachedUserProfile,
   enqueueInfoForm,
+  getUserProfileWithCache,
+  loadCachedUserProfile,
   loadQueuedInfoForms,
   saveQueuedInfoForms,
   syncQueuedInfoForms,
 } from "../src/backendServices/ApiService";
+import { getDoc } from "firebase/firestore";
 
 const makeItem = (localId: string) => ({
   localId,
@@ -134,5 +139,67 @@ describe("offline info form queue", () => {
     await syncQueuedInfoForms();
 
     await expect(loadQueuedInfoForms()).resolves.toEqual([item]);
+  });
+});
+
+describe("user profile cache", () => {
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    await AsyncStorage.clear();
+  });
+
+  it("caches a profile after loading it from Firestore", async () => {
+    const profile = {
+      uid: "user-1",
+      fullName: "Cached User",
+      email: "cached@test.com",
+      phoneNumber: "123",
+    };
+
+    (getDoc as jest.Mock).mockResolvedValueOnce({
+      exists: () => true,
+      data: () => profile,
+    });
+
+    await expect(getUserProfileWithCache("user-1")).resolves.toEqual(profile);
+    await expect(loadCachedUserProfile("user-1")).resolves.toEqual(profile);
+  });
+
+  it("falls back to cached profile when Firestore load fails", async () => {
+    const profile = {
+      uid: "user-1",
+      fullName: "Offline User",
+      email: "offline@test.com",
+      phoneNumber: "456",
+    };
+
+    await cacheUserProfile("user-1", profile);
+    (getDoc as jest.Mock).mockRejectedValueOnce(new Error("offline"));
+
+    await expect(getUserProfileWithCache("user-1")).resolves.toEqual(profile);
+  });
+
+  it("clears only the current user's cached profile", async () => {
+    const profile = {
+      uid: "user-1",
+      fullName: "Cached User",
+      email: "cached@test.com",
+      phoneNumber: "123",
+    };
+    const otherProfile = {
+      uid: "user-2",
+      fullName: "Other User",
+      email: "other@test.com",
+      phoneNumber: "789",
+    };
+
+    await cacheUserProfile("user-1", profile);
+    await cacheUserProfile("user-2", otherProfile);
+    await clearCachedUserProfile("user-1");
+
+    await expect(loadCachedUserProfile("user-1")).resolves.toBeNull();
+    await expect(loadCachedUserProfile("user-2")).resolves.toEqual(
+      otherProfile,
+    );
   });
 });

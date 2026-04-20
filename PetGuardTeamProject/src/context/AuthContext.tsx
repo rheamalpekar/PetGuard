@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import NetInfo from "@react-native-community/netinfo";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "../backendServices/firebase";
+import { signInAsGuest } from "../backendServices/AuthService";
 import {
   loadQueuedInfoForms,
   syncQueuedInfoForms,
@@ -16,11 +17,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [justSynced, setJustSynced] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [hadPendingQueue, setHadPendingQueue] = useState(false);
-  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       console.log("Auth restore:", !!currentUser);
+
+      if (!isMounted) return;
 
       setUser(currentUser);
       setLoading(false);
@@ -30,7 +34,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return unsubscribe;
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -63,6 +70,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return netUnsub;
   }, []);
 
+  const continueAsGuest = async () => {
+    setLoading(true);
+
+    try {
+      const guestUser = await signInAsGuest();
+      setUser(guestUser);
+      await syncQueuedInfoForms();
+      return guestUser;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value: AuthContextValue = {
     user,
     loading,
@@ -70,8 +90,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     justSynced,
     isOnline,
     hadPendingQueue,
-    isGuest,
-    setIsGuest,
+    isGuest: user?.isAnonymous ?? false,
+    continueAsGuest,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

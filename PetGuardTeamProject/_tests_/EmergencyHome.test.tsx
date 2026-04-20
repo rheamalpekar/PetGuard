@@ -3,6 +3,8 @@ import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import EmergencyHome from "../app/emergency/index";
 import { Platform } from "react-native";
 
+let mockAuthUser: any = { uid: "123", isAnonymous: false };
+
 jest.mock("expo-router", () => ({
   useRouter: () => ({
     push: jest.fn(),
@@ -24,18 +26,23 @@ jest.mock("@/hooks/useProtectedNavigation", () => ({
 
 jest.mock("@/backendServices/ApiService", () => ({
   logoutUser: jest.fn(),
-  getUserProfile: jest.fn(() => Promise.resolve({ fullName: "Test User" })),
+  getUserProfileWithCache: jest.fn(() =>
+    Promise.resolve({ fullName: "Test User" }),
+  ),
 }));
 
 jest.mock("@/backendServices/firebase", () => ({
   auth: {
-    currentUser: { uid: "123" },
+    get currentUser() {
+      return mockAuthUser;
+    },
   },
 }));
 
 jest.mock("@/context/AuthContext", () => ({
   useAuth: () => ({
-    isGuest: false,
+    user: mockAuthUser,
+    isGuest: mockAuthUser?.isAnonymous ?? false,
   }),
 }));
 
@@ -52,6 +59,7 @@ jest.spyOn(console, "log").mockImplementation(() => {});
 describe("EmergencyHome", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAuthUser = { uid: "123", isAnonymous: false };
   });
 
   it("renders welcome text", async () => {
@@ -61,7 +69,18 @@ describe("EmergencyHome", () => {
     });
   });
 
-  it("renders all service tiles", () => {
+  it("Does not load a Firestore profile for guest users", async () => {
+    mockAuthUser = { uid: "guest-1", isAnonymous: true };
+    const { getByText } = render(<EmergencyHome />);
+    const { getUserProfileWithCache } = require("@/backendServices/ApiService");
+
+    await waitFor(() => {
+      expect(getByText("Welcome, Guest User!")).toBeTruthy();
+      expect(getUserProfileWithCache).not.toHaveBeenCalled();
+    });
+  });
+
+  it("Renders all service tiles", () => {
     const { getByText } = render(<EmergencyHome />);
 
     expect(getByText("Sick Animal")).toBeTruthy();

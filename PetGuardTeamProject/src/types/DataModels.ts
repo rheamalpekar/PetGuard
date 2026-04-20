@@ -118,7 +118,7 @@ export type AuthContextValue = {
   isOnline: boolean;
   hadPendingQueue: boolean;
   isGuest: boolean;
-  setIsGuest: (value: boolean) => void;
+  continueAsGuest: () => Promise<User>;
 };
 
 export type EmergencyScenario = {
