@@ -12,8 +12,7 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
 import { detectEmergency } from "../../src/emergency/core/EmergencyAlertSystem";
-
-type SeverityUI = "Low" | "Medium" | "High";
+import { EmergencyReportSeverityUI } from "@/types/DataModels";
 
 type AnalysisResult = {
   isEmergency: boolean;
@@ -34,7 +33,7 @@ export default function ReportEmergency() {
   const prefillType = String(params.prefillType ?? "");
 
   const [type, setType] = useState<string>(prefillType);
-  const [severity, setSeverity] = useState<SeverityUI>("Medium");
+  const [severity, setSeverity] = useState<EmergencyReportSeverityUI>("Medium");
   const [description, setDescription] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [gpsLocation, setGpsLocation] = useState<string>("");
@@ -274,7 +273,7 @@ function SeverityPill({
   selected,
   onPress,
 }: {
-  label: SeverityUI;
+  label: EmergencyReportSeverityUI;
   selected: boolean;
   onPress: () => void;
 }) {
