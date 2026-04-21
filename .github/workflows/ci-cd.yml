@@ -2,9 +2,9 @@ name: PetGuard CI/CD Pipeline
 
 on:
   push:
-    branches: [ '**' ]
+    branches: [ main, develop, 'feature/**' ]
   pull_request:
-    branches: [ '**' ]
+    branches: [ main, develop, 'feature/**' ]
   workflow_dispatch:
 
 env:
