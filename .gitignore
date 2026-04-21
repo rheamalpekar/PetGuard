@@ -152,5 +152,6 @@ vite.config.ts.timestamp-*
 
 # Project documentation
 PROJECT_REPORT.md
-PROJECT_REPORT.docx
+*.docx
 *.pdf
+.windsurf/

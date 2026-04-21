@@ -24,9 +24,5 @@ module.exports = {
       lines: 0,
       statements: 0
     }
-  },
-  transform: {
-    '^.+\\.ts$': 'ts-jest',
-    '^.+\\.tsx$': 'ts-jest'
   }
 };
