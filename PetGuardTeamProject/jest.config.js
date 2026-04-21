@@ -1,8 +1,5 @@
 module.exports = {
   preset: "jest-expo",
-  transformIgnorePatterns: [
-    "node_modules/(?!react-native|@react-native|@testing-library/react-native)"
-  ],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
