@@ -76,7 +76,7 @@ jest.mock("../services/LocationService", () => ({
 }));
 
 jest.mock("@/backendServices/ApiService", () => ({
-  submitInfoForm: mockSubmitInfoForm as any,
+  submitInfoForm: (a: any) => mockSubmitInfoForm(a),
   enqueueInfoForm: jest.fn(),
   getInfoFormDataById: jest.fn(async (formId: string) => ({
     ...mockSubmittedFormSnapshot,
