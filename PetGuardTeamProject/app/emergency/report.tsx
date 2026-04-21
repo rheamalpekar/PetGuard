@@ -95,7 +95,6 @@ export default function ReportEmergency() {
   const submit = () => {
     const trimmedType = type.trim();
     const trimmedDesc = description.trim();
-    const trimmedLoc = location.trim();
 
     if (!trimmedType || !trimmedDesc) {
       Alert.alert("Missing info", "Please fill Emergency Type and Description.");

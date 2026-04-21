@@ -32,6 +32,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import DisclaimerText from '@/components/DisclaimerText';
 import type { EmergencyContext } from "@/types/DataModels";
+import { createFormValidator, PhoneFormatter } from '../../services/FormValidation';
 
 // Conditionally import MapView only on mobile platforms
 let MapView: any;
@@ -119,6 +120,10 @@ export default function InfoFormScreen() {
       PhotoUploadProps & React.RefAttributes<PhotoUploadHandle>
     >;
 
+  // Initialize form validator
+  const [formValidator] = useState(() => createFormValidator('emergencyReporting'));
+  const [validationErrors, setValidationErrors] = useState(new Map());
+
   const {
     control,
     handleSubmit,
@@ -195,6 +200,45 @@ export default function InfoFormScreen() {
     return !hasErrors;
   };
 
+  const validateFormWithCustomRules = (formData: InfoFormData) => {
+    // Use FormValidation.js for standard field validation
+    const validationResult = formValidator.validateForm(formData) as any;
+    
+    if (!validationResult.isValid) {
+      setValidationErrors(validationResult.errors);
+      return false;
+    }
+    
+    // Clear validation errors if valid
+    setValidationErrors(new Map());
+    
+    // Run custom field validations
+    return validateCustomFields();
+  };
+
+  const handleFieldChange = (fieldName: string, value: any) => {
+    // Real-time validation using FormValidation.js
+    const result = formValidator.validateField(fieldName, value) as any;
+    
+    if (!result.isValid) {
+      setValidationErrors(prev => {
+        const newErrors = new Map(prev);
+        newErrors.set(fieldName, result.errors);
+        return newErrors;
+      });
+    } else {
+      setValidationErrors(prev => {
+        const newErrors = new Map(prev);
+        newErrors.delete(fieldName);
+        return newErrors;
+      });
+    }
+  };
+
+  const formatPhoneNumber = (phone: string) => {
+    return PhoneFormatter.format(phone);
+  };
+
   const submitFormWithProgress = (formData: FormData): Promise<any> => {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -239,7 +283,7 @@ export default function InfoFormScreen() {
       return;
     }
 
-    if (!validateCustomFields()) return;
+    if (!validateFormWithCustomRules(data)) return;
 
     const user = auth.currentUser;
     if (!user) {
@@ -384,7 +428,7 @@ export default function InfoFormScreen() {
             <Controller
               control={control}
               name="location"
-              rules={{ required: 'Location is required' }}
+              rules={{}}
               render={({ field: { value } }) => (
                 <>
                   <View style={styles.webLocationInputContainer}>
@@ -394,7 +438,7 @@ export default function InfoFormScreen() {
                         styles.multilineInput,
                         { 
                           color: colors.text, 
-                          borderColor: errors.location ? '#ff4444' : '#ddd',
+                          borderColor: validationErrors.get('location') ? '#ff4444' : '#ddd',
                           backgroundColor: isLoadingLocation ? '#f8f8f8' : '#fff',
                         },
                       ]}
@@ -442,9 +486,9 @@ export default function InfoFormScreen() {
             <Controller
               control={control}
               name="location"
-              rules={{ required: 'Please select a location on the map' }}
+              rules={{}}
               render={({ field: { value } }) => (
-                <View style={[styles.mapContainer, errors.location && styles.mapContainerError]}>
+                <View style={[styles.mapContainer, validationErrors.get('location') && styles.mapContainerError]}>
                   {mapRegion ? (
                     <>
                       <MapView
@@ -532,8 +576,8 @@ export default function InfoFormScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-        {errors.location && (
-          <Text style={styles.errorText}>{errors.location.message}</Text>
+        {validationErrors.get('location') && (
+          <Text style={styles.errorText}>{formValidator.getErrorMessage('location')}</Text>
         )}
       </View>
 
@@ -554,12 +598,12 @@ export default function InfoFormScreen() {
           <Controller
             control={control}
             name="yourName"
-            rules={{ required: 'Name is required' }}
+            rules={{}}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 style={[
                   styles.contactInput,
-                  { color: colors.text, borderBottomColor: errors.yourName ? '#ff4444' : '#eee' },
+                  { color: colors.text, borderBottomColor: validationErrors.get('yourName') ? '#ff4444' : '#eee' },
                 ]}
                 placeholder="Your name"
                 placeholderTextColor={colors.icon}
@@ -569,29 +613,26 @@ export default function InfoFormScreen() {
                   }
                 }}
                 onBlur={onBlur}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  onChange(text);
+                  handleFieldChange('yourName', text);
+                }}
                 value={value}
               />
             )}
           />
-          {errors.yourName && (
-            <Text style={styles.errorText}>{errors.yourName.message}</Text>
+          {validationErrors.get('yourName') && (
+            <Text style={styles.errorText}>{formValidator.getErrorMessage('yourName')}</Text>
           )}
           <Controller
             control={control}
             name="phoneNumber"
-            rules={{
-              required: 'Phone number is required',
-              pattern: {
-                value: /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/,
-                message: 'Please enter a valid phone number',
-              },
-            }}
+            rules={{}}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 style={[
                   styles.contactInput,
-                  { color: colors.text, borderBottomColor: errors.phoneNumber ? '#ff4444' : '#eee' },
+                  { color: colors.text, borderBottomColor: validationErrors.get('phoneNumber') ? '#ff4444' : '#eee' },
                 ]}
                 placeholder="Phone number"
                 placeholderTextColor={colors.icon}
@@ -601,30 +642,28 @@ export default function InfoFormScreen() {
                   }
                 }}
                 onBlur={onBlur}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  const formatted = formatPhoneNumber(text);
+                  onChange(formatted);
+                  handleFieldChange('phoneNumber', formatted);
+                }}
                 value={value}
                 keyboardType="phone-pad"
               />
             )}
           />
-          {errors.phoneNumber && (
-            <Text style={styles.errorText}>{errors.phoneNumber.message}</Text>
+          {validationErrors.get('phoneNumber') && (
+            <Text style={styles.errorText}>{formValidator.getErrorMessage('phoneNumber')}</Text>
           )}
           <Controller
             control={control}
             name="emailAddress"
-            rules={{
-              required: 'Email address is required',
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: 'Please enter a valid email address',
-              },
-            }}
+            rules={{}}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 style={[
                   styles.contactInput,
-                  { color: colors.text, borderBottomColor: errors.emailAddress ? '#ff4444' : '#eee' },
+                  { color: colors.text, borderBottomColor: validationErrors.get('emailAddress') ? '#ff4444' : '#eee' },
                 ]}
                 placeholder="Email address"
                 placeholderTextColor={colors.icon}
@@ -634,15 +673,18 @@ export default function InfoFormScreen() {
                   }
                 }}
                 onBlur={onBlur}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  onChange(text);
+                  handleFieldChange('emailAddress', text);
+                }}
                 value={value}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
             )}
           />
-          {errors.emailAddress && (
-            <Text style={styles.errorText}>{errors.emailAddress.message}</Text>
+          {validationErrors.get('emailAddress') && (
+            <Text style={styles.errorText}>{formValidator.getErrorMessage('emailAddress')}</Text>
           )}
         </View>
       </View>
@@ -721,7 +763,10 @@ export default function InfoFormScreen() {
                 }
               }}
               onBlur={onBlur}
-              onChangeText={onChange}
+              onChangeText={(text) => {
+                onChange(text);
+                handleFieldChange('additionalDetails', text);
+              }}
               value={value}
               multiline
               numberOfLines={4}
@@ -750,6 +795,19 @@ export default function InfoFormScreen() {
           {rateLimitErrorMessage}
         </Text>
       )}
+      
+      {/* Display FormValidation.js errors */}
+      {validationErrors.size > 0 && (
+        <View style={styles.validationErrorContainer}>
+          <Text style={styles.validationErrorTitle}>Please correct the following errors:</Text>
+          {Array.from(validationErrors.entries()).map(([fieldName, errors]) => (
+            <Text key={fieldName} style={styles.validationErrorText}>
+              {fieldName}: {errors[0]}
+            </Text>
+          ))}
+        </View>
+      )}
+      
       <DisclaimerText />
     </ScrollView>
   );
@@ -1016,6 +1074,26 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  validationErrorContainer: {
+    backgroundColor: '#ffe6e6',
+    borderWidth: 1,
+    borderColor: '#ffcccc',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  validationErrorTitle: {
+    color: '#ff3b30',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  validationErrorText: {
+    color: '#ff3b30',
+    fontSize: 12,
+    marginBottom: 4,
   },
 });
 
