@@ -34,7 +34,7 @@ export default function ReportEmergency() {
   const prefillType = String(params.prefillType ?? "");
 
   const [type, setType] = useState<string>(prefillType);
-  const [severity, setSeverity] = useState<SeverityUI>("Medium");
+  const [severity, setSeverity] = useState<EmergencyReportSeverityUI>("Medium");
   const [description, setDescription] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [gpsLocation, setGpsLocation] = useState<string>("");
@@ -274,7 +274,7 @@ function SeverityPill({
   selected,
   onPress,
 }: {
-  label: SeverityUI;
+  label: EmergencyReportSeverityUI;
   selected: boolean;
   onPress: () => void;
 }) {

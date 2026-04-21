@@ -6,7 +6,7 @@ import {
   browserLocalPersistence,
   browserSessionPersistence,
   inMemoryPersistence,
-  signOut,
+  signInAnonymously,
 } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
@@ -14,12 +14,33 @@ import { Platform } from "react-native";
 import { Timestamp, doc, setDoc } from "firebase/firestore";
 
 import { auth, db } from "./firebase";
+import type { UserProfile } from "@/types/DataModels";
+
+const getReactNativePersistence = (FirebaseAuth as any)
+  .getReactNativePersistence as ((s: typeof AsyncStorage) => any) | undefined;
+
+const setDurablePersistence = async () => {
+  if (Platform.OS === "web") {
+    await setPersistence(auth, browserLocalPersistence);
+    return;
+  }
+
+  if (getReactNativePersistence) {
+    await setPersistence(auth, getReactNativePersistence(AsyncStorage));
+  }
+};
+
+export const signInAsGuest = async () => {
+  await setDurablePersistence();
+  const cred = await signInAnonymously(auth);
+  return cred.user;
+};
 
 export const register = async (
   email: string,
   password: string,
   fullName: string,
-  phoneNumber: number,
+  phoneNumber: UserProfile["phoneNumber"],
 ) => {
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -42,9 +63,6 @@ export const login = async (
   password: string,
   rememberMe: boolean,
 ) => {
-  const getReactNativePersistence = (FirebaseAuth as any)
-    .getReactNativePersistence as ((s: typeof AsyncStorage) => any) | undefined;
-
   if (Platform.OS === "web") {
     await setPersistence(
       auth,

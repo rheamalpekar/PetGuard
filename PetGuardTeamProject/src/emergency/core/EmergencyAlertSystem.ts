@@ -5,6 +5,11 @@ import {
   type EmergencyScenario,
 } from "./emergencyScenarios";
 
+import type {
+  EmergencyDetectionInput,
+  EmergencyDetectionResult,
+} from "@/types/DataModels";
+
 const SEVERITY_PRIORITY: Record<string, number> = {
   [SEVERITY.CRITICAL]: 4,
   [SEVERITY.HIGH]: 3,
@@ -19,27 +24,10 @@ const DEFAULT_COUNTDOWN: Record<string, number> = {
   [SEVERITY.LOW]: 0,
 };
 
-type DetectEmergencyInput = {
-  emergencyType: string;
-  description: string;
-};
-
-type DetectEmergencyOutput = {
-  isEmergency: boolean;
-  severity: string;
-  classification: string;
-  scenarioId: string | null;
-  checklist: string[];
-  dispatchProtocol: string;
-  countdownSeconds: number;
-  detectionMs: number;
-  matchedKeywords?: string[];
-};
-
 export function detectEmergency({
-  emergencyType = "",
-  description = "",
-}: DetectEmergencyInput): DetectEmergencyOutput {
+  emergencyType = '',
+  description = '',
+}: EmergencyDetectionInput): EmergencyDetectionResult {
   const start = Date.now();
 
   const combinedText = `${emergencyType} ${description}`.toLowerCase().trim();
@@ -55,6 +43,14 @@ export function detectEmergency({
       countdownSeconds: 0,
       detectionMs: Date.now() - start,
     };
+  let best: EmergencyScenario | null = null;
+
+  for (const scenario of candidates) {
+    if (!best) best = scenario;
+    else if (
+      SEVERITY_PRIORITY[scenario.severity] > SEVERITY_PRIORITY[best.severity]
+    )
+      best = scenario;
   }
 
   const candidates = getScenarioCandidates(combinedText);

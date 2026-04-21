@@ -5,13 +5,19 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "types": ["jest"]
+
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
+<<<<<<< HEAD
 , "assets/emergency.mp3"  ]
+=======
+, "jest.config.js"  ]
+>>>>>>> upstream/dev
 }
 

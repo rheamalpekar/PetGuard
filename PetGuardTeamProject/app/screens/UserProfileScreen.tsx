@@ -10,34 +10,43 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { onAuthStateChanged } from "firebase/auth";
 
 import { auth } from "@/backendServices/firebase";
 import {
-  getUserProfile,
+  clearCachedUserProfile,
+  getUserProfileWithCache,
   updateUserProfile,
   getUserRequests,
   deleteUserAccount,
   logoutUser,
 } from "@/backendServices/ApiService";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
+import type { ServiceRequest, UserProfile } from "@/types/DataModels";
+import {
+  formatCountdown,
+  formatTrackingStatus,
+  getRequestTracking,
+} from "@/utils/requestTracking";
 
 const UserProfileScreen = () => {
   const router = useRouter();
-  const { isGuest } = useAuth();
+  const params = useLocalSearchParams();
+  const { user: contextUser } = useAuth();
+  const user = contextUser ?? auth.currentUser;
+  const isGuest = user?.isAnonymous ?? false;
 
-  const [profileData, setProfileData] = useState<any>(null);
-  const [requests, setRequests] = useState<any[]>([]);
+  const [profileData, setProfileData] = useState<UserProfile | null>(null);
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "profile" | "history" | "settings"
-  >("profile");
-  const [user, setUser] = useState<any>(null);
+  >(params.tab === "history" || params.tab === "settings" ? params.tab : "profile");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
+  const [nowMs, setNowMs] = useState(Date.now());
 
   const profileFields = [
     { key: "fullName", label: "Full Name", value: profileData?.fullName },
@@ -55,46 +64,47 @@ const UserProfileScreen = () => {
     if (!auth.currentUser && !isGuest) {
       router.replace("/auth/login");
     }
-  }, [isGuest]);
+  }, [isGuest, router]);
 
   useEffect(() => {
     const fetchUser = async () => {
-      const uid = auth.currentUser?.uid;
-      if (!uid) return;
+      const uid = user?.uid;
+      if (!uid) {
+        setLoadingProfile(false);
+        return;
+      }
+
+      if (user?.isAnonymous) {
+        setProfileData(null);
+        setLoadingProfile(false);
+        return;
+      }
 
       try {
-        const data = await getUserProfile(uid);
+        const data = await getUserProfileWithCache(uid);
         setProfileData(data);
       } catch (e) {
         console.log("Profile load error", e);
+      } finally {
+        setLoadingProfile(false);
       }
     };
 
     fetchUser();
-  }, []);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      console.log("AUTH STATE:", u);
-      setUser(u);
-    });
-    return unsub;
-  }, []);
+  }, [user?.uid, user?.isAnonymous]);
 
   const loadHistory = async () => {
-    console.log("LOAD HISTORY TRIGGERED");
 
     try {
       setLoadingHistory(true);
 
       const uid = user?.uid;
-      if (!uid || isGuest) {
-        console.log("NO USER OR GUEST → returning");
+      if (!uid) {
+        console.log("No user returning");
         return;
       }
 
       const data = await getUserRequests(uid);
-      console.log("REQUESTS:", data);
 
       setRequests(data);
     } catch (e) {
@@ -109,6 +119,17 @@ const UserProfileScreen = () => {
       loadHistory();
     }
   }, [activeTab, user]);
+
+  useEffect(() => {
+    if (params.tab === "history" || params.tab === "settings") {
+      setActiveTab(params.tab);
+    }
+  }, [params.tab]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleDeleteAccount = async () => {
     if (isGuest) {
@@ -132,32 +153,49 @@ const UserProfileScreen = () => {
     }
   };
 
+  const handleClearProfileCache = async () => {
+    const uid = user?.uid;
+    if (!uid) return;
+
+    if (isGuest) {
+      showAlert(
+        "Not Available",
+        "Profile cache clearing is only available for signed-in accounts.",
+      );
+      return;
+    }
+
+    try {
+      await clearCachedUserProfile(uid);
+      setProfileData(null);
+      showAlert("Cache Cleared", "Stored profile information was cleared.");
+    } catch (e) {
+      console.log("Clear profile cache error", e);
+      showAlert("Error", "Failed to clear cached profile information.");
+    }
+  };
+
   const showAlert = (title: string, message: string) => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && typeof window.alert === "function") {
       window.alert(`${title}\n\n${message}`);
     } else {
       Alert.alert(title, message);
     }
   };
 
-  const displayRequests = isGuest
-    ? [
-        {
-          id: "demo1",
-          formId: "DEMO123",
-          additionalDetails: "Sample emergency report preview",
-          status: "pending",
-          createdAt: { toDate: () => new Date() },
-        },
-      ]
-    : requests;
+  const displayRequests = requests;
+
+  const formatRequestDate = (createdAt: ServiceRequest["createdAt"]) => {
+    if (createdAt instanceof Date) return createdAt.toLocaleString();
+    return createdAt?.toDate?.().toLocaleString?.() || "N/A";
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0B1220" }}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <Text style={styles.appName}>PetGuard</Text>
-          <Ionicons name="settings-outline" size={22} color="white" />
+          {/* <Ionicons name="settings-outline" size={22} color="white" /> */}
         </View>
 
         <View style={styles.userRow}>
@@ -217,6 +255,8 @@ const UserProfileScreen = () => {
                     }
 
                     if (isEditing) {
+                      if (!profileData) return;
+
                       await updateUserProfile(uid, {
                         fullName: profileData.fullName,
                         phoneNumber: profileData.phoneNumber,
@@ -247,35 +287,39 @@ const UserProfileScreen = () => {
             <Text style={styles.sectionTitle}>Request History</Text>
 
             {displayRequests.map((item) => (
-              <View key={item.id} style={styles.card}>
-                <View style={styles.rowBetween}>
-                  <View style={styles.historyLeft}>
-                    <View style={[styles.statusIcon, styles.green]}>
-                      <Ionicons name="checkmark" color="white" size={14} />
-                    </View>
-
-                    <View>
-                      <Text style={styles.historyTitle}>
-                        Request #{item.formId || item.id}
-                      </Text>
-                      <Text style={styles.historySub}>
-                        {item.additionalDetails || "No description"}
-                      </Text>
-                      <Text style={styles.historyTime}>
-                        {item.createdAt?.toDate?.().toLocaleString?.() || "—"}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Text style={styles.historyRight}>{item.status}</Text>
-                </View>
-              </View>
+              <RequestHistoryCard
+                key={item.id}
+                item={item}
+                nowMs={nowMs}
+                formatRequestDate={formatRequestDate}
+              />
             ))}
           </>
         )}
 
         {activeTab === "settings" && (
           <>
+            <TouchableOpacity
+              style={styles.clearCache}
+              onPress={handleClearProfileCache}
+            >
+              <Text style={{ color: "white" }}>Clear Profile Cache</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.signOut}
+              onPress={async () => {
+                if (isGuest) {
+                  router.replace("/auth/login");
+                  return;
+                }
+                await logoutUser();
+                router.replace("/auth/login");
+              }}
+            >
+              <Text style={{ color: "white" }}>Sign Out</Text>
+            </TouchableOpacity>
+
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Danger Zone</Text>
               <Text style={styles.dangerText}>
@@ -291,20 +335,6 @@ const UserProfileScreen = () => {
                 <Text style={styles.deleteText}>Delete Account</Text>
               </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={styles.signOut}
-              onPress={async () => {
-                if (isGuest) {
-                  router.replace("/auth/login");
-                  return;
-                }
-                await logoutUser();
-                router.replace("/auth/login");
-              }}
-            >
-              <Text style={{ color: "white" }}>Sign Out</Text>
-            </TouchableOpacity>
           </>
         )}
 
@@ -382,6 +412,67 @@ const UserProfileScreen = () => {
     </SafeAreaView>
   );
 };
+
+function RequestHistoryCard({
+  item,
+  nowMs,
+  formatRequestDate,
+}: {
+  item: ServiceRequest;
+  nowMs: number;
+  formatRequestDate: (createdAt: ServiceRequest["createdAt"]) => string;
+}) {
+  const tracking = getRequestTracking(item.createdAt, nowMs);
+  const statusLabel = formatTrackingStatus(tracking.status);
+  const countdownLabel = formatCountdown(tracking.remainingMs);
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.rowBetween}>
+        <View style={styles.historyLeft}>
+          <View
+            style={[
+              styles.statusIcon,
+              tracking.status === "completed" ? styles.green : styles.blue,
+            ]}
+          >
+            <Ionicons
+              name={tracking.status === "completed" ? "checkmark" : "time"}
+              color="white"
+              size={14}
+            />
+          </View>
+
+          <View style={styles.historyContent}>
+            <Text style={styles.historyTitle}>
+              Request #{item.formId || item.id}
+            </Text>
+            <Text style={styles.historySub}>
+              {item.additionalDetails || "No description"}
+            </Text>
+            <Text style={styles.historyTime}>
+              {formatRequestDate(item.createdAt)}
+            </Text>
+            <Text style={styles.historyCountdown}>
+              {tracking.status === "completed"
+                ? "Completed"
+                : `${countdownLabel} remaining`}
+            </Text>
+          </View>
+        </View>
+
+        <Text
+          style={[
+            styles.historyRight,
+            tracking.status === "completed" && styles.historyComplete,
+          ]}
+        >
+          {statusLabel}
+        </Text>
+      </View>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0B1220" },
@@ -473,7 +564,19 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   green: { backgroundColor: "#10B981" },
+  blue: { backgroundColor: "#2563EB" },
   red: { backgroundColor: "#EF4444" },
+  historyContent: {
+    flex: 1,
+  },
+  historyCountdown: {
+    color: "#60A5FA",
+    fontSize: 12,
+    marginTop: 3,
+  },
+  historyComplete: {
+    color: "#10B981",
+  },
 
   settingRow: {
     flexDirection: "row",
@@ -496,6 +599,14 @@ const styles = StyleSheet.create({
 
   signOut: {
     marginTop: 20,
+    padding: 14,
+    backgroundColor: "#111827",
+    borderRadius: 12,
+    alignItems: "center",
+    margin: 20,
+  },
+  clearCache: {
+    marginTop: 12,
     padding: 14,
     backgroundColor: "#111827",
     borderRadius: 12,
