@@ -150,7 +150,7 @@ vite.config.ts.timestamp-*
 .github/prompts/
 .github/skills/
 
-# Project documentation files
+# Project documentation
 PROJECT_REPORT.md
 PROJECT_REPORT.docx
-Animal Emergency Service App - Project Documentation.pdf
+*.pdf
