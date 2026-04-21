@@ -12,12 +12,12 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
 }));
 
 jest.mock("firebase/firestore", () => ({
-  addDoc: (...args: any[]) => mockAddDoc(...args as any),
+  addDoc: mockAddDoc as any,
   collection: (db: any, name: string) => ({ db, name }),
   Timestamp: { now: jest.fn(() => ({ seconds: 1 })) },
   getDoc: jest.fn(),
   doc: (db: any, collectionName: string, id: string) => ({ db, collectionName, id }),
-  updateDoc: (...args: any[]) => mockUpdateDoc(...args as any),
+  updateDoc: mockUpdateDoc as any,
   query: jest.fn(),
   where: jest.fn(),
   onSnapshot: jest.fn(),
@@ -26,8 +26,8 @@ jest.mock("firebase/firestore", () => ({
 
 jest.mock("firebase/storage", () => ({
   ref: (_storage: any, path: string) => ({ path }),
-  uploadBytes: (...args: any[]) => mockUploadBytes(...args as any),
-  getDownloadURL: (...args: any[]) => mockGetDownloadURL(...args as any),
+  uploadBytes: mockUploadBytes as any,
+  getDownloadURL: mockGetDownloadURL as any,
 }));
 
 jest.mock("../src/backendServices/firebase", () => ({
@@ -43,7 +43,7 @@ jest.mock("../src/backendServices/firebase", () => ({
 jest.mock("../src/backendServices/RateLimiter", () => ({
   RATE_LIMIT_BUCKETS: { infoFormSubmit: "info" },
   RATE_LIMIT_WINDOW_MS: 60000,
-  throwIfRateLimited: (...args: any[]) => mockThrowIfRateLimited(...args as any),
+  throwIfRateLimited: mockThrowIfRateLimited as any,
 }));
 
 import { detectEmergency } from "../src/emergency/core/EmergencyAlertSystem";
