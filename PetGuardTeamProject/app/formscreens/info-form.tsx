@@ -165,44 +165,6 @@ export default function InfoFormScreen() {
     return !hasErrors;
   };
 
-  const submitFormWithProgress = (formData: FormData): Promise<any> => {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', 'https://api.com/submit-report');
-      xhr.setRequestHeader('Accept', 'application/json');
-
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          setUploadProgress(Math.round((event.loaded / event.total) * 100));
-        }
-      };
-
-      xhr.onerror = () => {
-        reject(new Error('Network request failed'));
-      };
-
-      xhr.onload = () => {
-        let parsedResponse: any = {};
-
-        try {
-          parsedResponse = xhr.responseText ? JSON.parse(xhr.responseText) : {};
-        } catch {
-          parsedResponse = {};
-        }
-
-        if (xhr.status >= 200 && xhr.status < 300) {
-          setUploadProgress(100);
-          resolve(parsedResponse);
-          return;
-        }
-
-        reject(new Error(parsedResponse.message || 'Failed to submit report'));
-      };
-
-      xhr.send(formData);
-    });
-  };
-
   const handleFormSubmit = async (data: InfoFormData) => {
     setRateLimitErrorMessage(null);
     if (submitLockRef.current) {

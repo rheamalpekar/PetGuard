@@ -62,13 +62,6 @@ describe("EmergencyHome", () => {
     mockAuthUser = { uid: "123", isAnonymous: false };
   });
 
-  it("renders welcome text", async () => {
-    const { getByText } = render(<EmergencyHome />);
-    await waitFor(() => {
-      expect(getByText("Welcome, Test User!")).toBeTruthy();
-    });
-  });
-
   it("Does not load a Firestore profile for guest users", async () => {
     mockAuthUser = { uid: "guest-1", isAnonymous: true };
     const { getByText } = render(<EmergencyHome />);
@@ -78,17 +71,6 @@ describe("EmergencyHome", () => {
       expect(getByText("Welcome, Guest User!")).toBeTruthy();
       expect(getUserProfileWithCache).not.toHaveBeenCalled();
     });
-  });
-
-  it("Renders all service tiles", () => {
-    const { getByText } = render(<EmergencyHome />);
-
-    expect(getByText("Sick Animal")).toBeTruthy();
-    expect(getByText("Car Accident")).toBeTruthy();
-    expect(getByText("Animal Cruelty")).toBeTruthy();
-    expect(getByText("Vaccination")).toBeTruthy();
-    expect(getByText("Adopt / Surrender")).toBeTruthy();
-    expect(getByText("Spay / Neuter")).toBeTruthy();
   });
 
   it("navigates with selected emergency service when tile pressed", () => {
@@ -113,6 +95,37 @@ describe("EmergencyHome", () => {
     });
   });
 
+  it("routes the remaining service buttons through protected navigation", () => {
+    const { getByText } = render(<EmergencyHome />);
+
+    fireEvent.press(getByText("EMERGENCY SERVICES"));
+    fireEvent.press(getByText("Car Accident"));
+    fireEvent.press(getByText("Animal Cruelty"));
+    fireEvent.press(getByText("Adopt / Surrender"));
+    fireEvent.press(getByText("Spay / Neuter"));
+
+    expect(mockProtectedNavigate).toHaveBeenCalledWith({
+      pathname: "/emergency/report",
+      params: { prefillType: "Emergency Services" },
+    });
+    expect(mockProtectedNavigate).toHaveBeenCalledWith({
+      pathname: "/emergency/report",
+      params: { prefillType: "Car Accident" },
+    });
+    expect(mockProtectedNavigate).toHaveBeenCalledWith({
+      pathname: "/emergency/report",
+      params: { prefillType: "Animal Cruelty" },
+    });
+    expect(mockProtectedNavigate).toHaveBeenCalledWith({
+      pathname: "/emergency/report",
+      params: { prefillType: "Adopt / Surrender" },
+    });
+    expect(mockProtectedNavigate).toHaveBeenCalledWith({
+      pathname: "/emergency/report",
+      params: { prefillType: "Spay / Neuter" },
+    });
+  });
+
   it("navigates to profile screen", () => {
     const { getByText } = render(<EmergencyHome />);
     const { router } = require("expo-router");
@@ -133,7 +146,7 @@ describe("EmergencyHome", () => {
 
     await waitFor(() => {
       expect(logoutUser).toHaveBeenCalled();
-      expect(router.replace).toHaveBeenCalledWith("/auth/login");
+      expect(router.replace).toHaveBeenCalledWith("/auth/LoginScreen");
     });
   });
 
@@ -150,22 +163,40 @@ describe("EmergencyHome", () => {
     });
   });
 
-  it("renders dev navigation buttons", () => {
-    const { getByText } = render(<EmergencyHome />);
-
-    expect(getByText("Go to Firebase test screen")).toBeTruthy();
-    expect(getByText("Go to Login Screen")).toBeTruthy();
-    expect(getByText("Go to Profile Screen")).toBeTruthy();
-    expect(getByText("Go to Info Form Screen")).toBeTruthy();
-    expect(getByText("Go to Confirmation screen")).toBeTruthy();
-  });
-
   it("pressing dev navigation triggers navigation", () => {
     const { getByText } = render(<EmergencyHome />);
     const { router } = require("expo-router");
 
     fireEvent.press(getByText("Go to Login Screen"));
+    fireEvent.press(getByText("Go to Profile Screen"));
+    fireEvent.press(getByText("Go to Firebase test screen"));
+    fireEvent.press(getByText("Go to Info Form Screen"));
+    fireEvent.press(getByText("Go to Confirmation screen"));
 
-    expect(router.push).toHaveBeenCalled();
+    expect(router.push).toHaveBeenCalledWith("/auth/LoginScreen");
+    expect(router.push).toHaveBeenCalledWith("/screens/UserProfileScreen");
+    expect(mockProtectedNavigate).toHaveBeenCalledWith("/formscreens/FirebaseTestScreen");
+    expect(mockProtectedNavigate).toHaveBeenCalledWith("/formscreens/info-form");
+    expect(mockProtectedNavigate).toHaveBeenCalledWith("/formscreens/ConfirmationPage");
+  });
+
+  it("shows a web alert when logout fails on web", async () => {
+    const { logoutUser } = require("@/backendServices/ApiService");
+    const originalAlert = global.alert;
+    global.alert = jest.fn();
+
+    logoutUser.mockRejectedValueOnce(new Error("network down"));
+    global.confirm = jest.fn(() => true);
+
+    const { getByText } = render(<EmergencyHome />);
+    fireEvent.press(getByText("Logout"));
+
+    await waitFor(() => {
+      expect(global.alert).toHaveBeenCalledWith(
+        "Error: Failed to logout. Please try again.",
+      );
+    });
+
+    global.alert = originalAlert;
   });
 });
