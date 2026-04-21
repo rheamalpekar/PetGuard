@@ -46,6 +46,8 @@ export default function ConfirmationScreen() {
     : formId ?? "UNKNOWN";
 
   const showVectorAssets = isOnline;
+
+  const [synced, setSynced] = useState(false);
   console.log(requestId);
 
   const dummyData: ConfirmationDisplayData = {
@@ -107,6 +109,7 @@ export default function ConfirmationScreen() {
 
   useEffect(() => {
     if (justSynced && isQueuedRequest) {
+      setSynced(true);
       Alert.alert("Uploaded", "Your request has been sent to the server.");
     }
   }, [justSynced, isQueuedRequest]);
@@ -172,6 +175,24 @@ export default function ConfirmationScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {isQueuedRequest && !synced && (
+          <View style={styles.offlineBanner}>
+            <Ionicons name="cloud-offline-outline" size={20} color="#FBBF24" />
+            <Text style={styles.offlineBannerText}>
+              This request has not been sent to the server yet. It will be uploaded when you are back online.
+            </Text>
+          </View>
+        )}
+
+        {isQueuedRequest && synced && (
+          <View style={styles.syncedBanner}>
+            <Ionicons name="checkmark-circle-outline" size={20} color="#34D399" />
+            <Text style={styles.syncedBannerText}>
+              This request has been successfully uploaded to the server.
+            </Text>
+          </View>
+        )}
+
         <View style={styles.topSection}>
           <View style={styles.topTextArea}>
             <Text style={styles.heading}>Request Confirmed</Text>
@@ -578,5 +599,37 @@ const styles = StyleSheet.create({
     color: "#60A5FA",
     fontSize: 15,
     fontWeight: "500",
+  },
+
+  offlineBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#78350F",
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
+    gap: 10,
+  },
+  offlineBannerText: {
+    color: "#FDE68A",
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 18,
+  },
+
+  syncedBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#064E3B",
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
+    gap: 10,
+  },
+  syncedBannerText: {
+    color: "#A7F3D0",
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 18,
   },
 });

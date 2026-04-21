@@ -379,6 +379,11 @@ export default function InfoFormScreen() {
         photoUploadRef.current?.reset();
         setIsSubmitting(false);
 
+        Alert.alert(
+          "Saved Offline",
+          "Your request has been saved locally but has not been sent to the server yet. It will be uploaded automatically when you are back online."
+        );
+
         router.push({
           pathname: "/formscreens/ConfirmationPage",
           params: { formId: localId },
@@ -420,6 +425,11 @@ export default function InfoFormScreen() {
         );
         return;
       }
+
+      Alert.alert(
+        "Submission Failed",
+        "Your request could not be sent to the server. It has been saved locally and will be uploaded when you are back online."
+      );
 
       const localId = `queued_${Date.now()}`;
       const photos = photoUploadRef.current?.getPhotos() ?? [];
