@@ -33,6 +33,7 @@ import { useAuth } from "@/context/AuthContext";
 import DisclaimerText from '@/components/DisclaimerText';
 import type { EmergencyContext } from "@/types/DataModels";
 import { createFormValidator, PhoneFormatter } from '../../services/FormValidation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Conditionally import MapView only on mobile platforms
 let MapView: any;
@@ -124,6 +125,52 @@ export default function InfoFormScreen() {
   const [formValidator] = useState(() => createFormValidator('emergencyReporting'));
   const [validationErrors, setValidationErrors] = useState(new Map());
 
+  // Draft saving functionality
+  const [isDraftSaved, setIsDraftSaved] = useState(false);
+
+  // Save draft to AsyncStorage
+  const saveDraft = async (formData: InfoFormData) => {
+    try {
+      await AsyncStorage.setItem('infoFormDraft', JSON.stringify(formData));
+      setIsDraftSaved(true);
+      setTimeout(() => setIsDraftSaved(false), 2000); // Hide message after 2 seconds
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+    }
+  };
+
+  // Load draft from AsyncStorage
+  const loadDraft = async () => {
+    try {
+      const draftData = await AsyncStorage.getItem('infoFormDraft');
+      if (draftData) {
+        const draft = JSON.parse(draftData);
+        setValue('yourName', draft.yourName || '');
+        setValue('phoneNumber', draft.phoneNumber || '');
+        setValue('emailAddress', draft.emailAddress || '');
+        setValue('additionalDetails', draft.additionalDetails || '');
+        if (draft.location) {
+          setValue('location', draft.location);
+          setLocationAddress(draft.location.address || '');
+        }
+        setIsDraftSaved(true);
+        setTimeout(() => setIsDraftSaved(false), 2000);
+      }
+    } catch (error) {
+      console.error('Failed to load draft:', error);
+    }
+  };
+
+  // Clear draft
+  const clearDraft = async () => {
+    try {
+      await AsyncStorage.removeItem('infoFormDraft');
+      setIsDraftSaved(false);
+    } catch (error) {
+      console.error('Failed to clear draft:', error);
+    }
+  };
+
   const {
     control,
     handleSubmit,
@@ -142,11 +189,14 @@ export default function InfoFormScreen() {
   });
 
   useEffect(() => {
-    // Initialize location on mount
+    // Initialize location on mount and load draft
     LocationService.initializeLocation(
       { setMapRegion, setIsLoadingLocation },
       isWeb
     );
+    
+    // Load draft on component mount
+    loadDraft();
   }, [isWeb]);
 
   const getCurrentLocation = () => {
@@ -774,6 +824,35 @@ export default function InfoFormScreen() {
         />
       </View>
 
+      {/* Draft Actions */}
+      <View style={styles.draftActions}>
+        <TouchableOpacity
+          style={[styles.draftButton, isDraftSaved && styles.draftButtonSaved]}
+          onPress={() => saveDraft(control._formValues as InfoFormData)}
+          disabled={isSubmitting}
+        >
+          <Ionicons name="save" size={16} color="#3478f6" />
+          <Text style={styles.draftButtonText}>Save Draft</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.draftButton, styles.clearButton]}
+          onPress={clearDraft}
+          disabled={isSubmitting}
+        >
+          <Ionicons name="trash" size={16} color="#ff3b30" />
+          <Text style={styles.draftButtonText}>Clear Draft</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Draft Saved Message */}
+      {isDraftSaved && (
+        <View style={styles.draftSavedMessage}>
+          <Ionicons name="checkmark-circle" size={16} color="#34c759" />
+          <Text style={styles.draftSavedText}>Draft saved successfully</Text>
+        </View>
+      )}
+
       {/* Submit Button */}
       <TouchableOpacity
         style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
@@ -1073,6 +1152,53 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  draftActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  draftButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 100,
+  },
+  draftButtonSaved: {
+    backgroundColor: '#e8f9ef',
+    borderColor: '#c3f1d1',
+  },
+  clearButton: {
+    backgroundColor: '#ffe6e6',
+    borderColor: '#ffcccc',
+  },
+  draftButtonText: {
+    color: '#333',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  draftSavedMessage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f9ef',
+    borderWidth: 1,
+    borderColor: '#c3f1d1',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 10,
+  },
+  draftSavedText: {
+    color: '#34c759',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
   },
   validationErrorContainer: {
     backgroundColor: '#ffe6e6',
