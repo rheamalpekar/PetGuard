@@ -10,7 +10,6 @@ import {
   Switch,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import * as Location from "expo-location";
 import { detectEmergency } from "../../src/emergency/core/EmergencyAlertSystem";
 import { EmergencyReportSeverityUI } from "@/types/DataModels";
 
@@ -35,9 +34,6 @@ export default function ReportEmergency() {
   const [type, setType] = useState<string>(prefillType);
   const [severity, setSeverity] = useState<EmergencyReportSeverityUI>("Medium");
   const [description, setDescription] = useState<string>("");
-  const [location, setLocation] = useState<string>("");
-  const [gpsLocation, setGpsLocation] = useState<string>("");
-  const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
 
   const [enableDetection, setEnableDetection] = useState<boolean>(true);
 
@@ -65,31 +61,6 @@ export default function ReportEmergency() {
     }
   }, [type, description, enableDetection]);
 
-  const getCurrentLocation = async () => {
-    try {
-      setFetchingLocation(true);
-
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Permission Denied", "Location access is required.");
-        return;
-      }
-
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-
-      const lat = loc.coords.latitude.toFixed(6);
-      const lon = loc.coords.longitude.toFixed(6);
-
-      setGpsLocation(`Latitude: ${lat}, Longitude: ${lon}`);
-    } catch (error) {
-      console.error("Error fetching location:", error);
-      Alert.alert("Location Error", "Unable to fetch location right now.");
-    } finally {
-      setFetchingLocation(false);
-    }
-  };
 
   const submit = () => {
     const trimmedType = type.trim();
@@ -174,31 +145,6 @@ export default function ReportEmergency() {
         <Text style={styles.switchLabel}>Enable emergency detection</Text>
         <Switch value={enableDetection} onValueChange={setEnableDetection} />
       </View>
-
-      <Text style={[styles.label, { marginTop: 16 }]}>
-        Location <Text style={styles.optional}>(optional manual input)</Text>
-      </Text>
-      <TextInput
-        value={location}
-        onChangeText={setLocation}
-        placeholder="Enter address / landmark"
-        placeholderTextColor="#999"
-        style={styles.input}
-      />
-
-      <Text style={[styles.label, { marginTop: 16 }]}>GPS Location</Text>
-      <Pressable style={styles.locationBtn} onPress={getCurrentLocation}>
-        <Text style={styles.locationBtnText}>
-          {fetchingLocation ? "Fetching Location..." : "Use Current GPS Location"}
-        </Text>
-      </Pressable>
-
-      <TextInput
-        style={[styles.input, styles.locationInput]}
-        value={gpsLocation}
-        editable={false}
-        placeholder="GPS coordinates will appear here"
-      />
 
       <Text style={[styles.label, { marginTop: 16 }]}>
         Description <Text style={styles.required}>*</Text>
@@ -306,7 +252,6 @@ const styles = StyleSheet.create({
     color: "#111",
     backgroundColor: "#fff",
   },
-  locationInput: { color: "#444" },
   textarea: { minHeight: 120, paddingTop: 12 },
 
   severityRow: { flexDirection: "row", gap: 10, marginTop: 2 },
@@ -338,19 +283,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#222",
     fontWeight: "700",
-  },
-
-  locationBtn: {
-    backgroundColor: "#1f5ea8",
-    paddingVertical: 13,
-    borderRadius: 12,
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  locationBtnText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "800",
   },
 
   previewCard: {

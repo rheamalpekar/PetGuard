@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -27,6 +27,8 @@ export default function BookingScreen() {
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+
+  const timeoutRef = useRef<number | null>(null);
 
   const getCurrentLocation = async () => {
     try {
@@ -57,6 +59,14 @@ export default function BookingScreen() {
     }
   };
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleBooking = () => {
     if (!ownerName.trim() || !petName.trim() || !phone.trim() || !date.trim()) {
       Alert.alert("Missing Information", "Please fill all required fields.");
@@ -79,7 +89,7 @@ export default function BookingScreen() {
     setAlertMessage("Booking Successful ✅");
     setAlertVisible(true);
 
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       router.push({
         pathname: "/non-emergency/confirmation",
         params: {
