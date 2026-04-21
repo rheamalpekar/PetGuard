@@ -171,7 +171,7 @@ export default function EmergencyHome() {
         <ServiceTile
           title="Vaccination"
           bg="#1e78ff"
-          icon={<MaterialCommunityIcons name={"syringe" as any} size={30} color="#fff" />}
+          icon={<MaterialCommunityIcons name="needle" size={30} color="#fff" />}
           onPress={() => router.push("/non-emergency/vaccination")}
         />
         <ServiceTile

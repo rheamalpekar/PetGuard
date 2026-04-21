@@ -20,7 +20,7 @@
     ],
     "collectCoverage": true,
     "collectCoverageFrom": [
-      "app/emergency/core/**/*.ts",
+      "src/emergency/core/**/*.ts",
       "utils/**/*.ts"
     ],
     "coverageThreshold": {
