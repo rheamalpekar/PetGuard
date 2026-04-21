@@ -40,7 +40,6 @@ export default function ReportEmergency() {
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
 
   const [enableDetection, setEnableDetection] = useState<boolean>(true);
-  const [showChecklist, setShowChecklist] = useState<boolean>(false);
 
   useEffect(() => {
     if (prefillType) {
@@ -109,14 +108,10 @@ export default function ReportEmergency() {
           emergencyType: trimmedType,
           description: trimmedDesc,
         }) as AnalysisResult;
-
-        setShowChecklist(true);
       } catch {
         Alert.alert("Error", "Unable to analyze this emergency right now.");
         return;
       }
-    } else {
-      setShowChecklist(false);
     }
 
     router.push({
@@ -235,7 +230,7 @@ export default function ReportEmergency() {
             )}
           </View>
 
-          {(showChecklist || checklist.length > 0) && (
+          {checklist.length > 0 && (
             <View style={styles.checklistCard}>
               <Text style={styles.checklistTitle}>Critical Information Checklist</Text>
               {checklist.length > 0 ? (
