@@ -14,12 +14,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { register } from "../../../backendServices/AuthService";
+import { register } from "../../src/backendServices/AuthService";
 import {
   consumeRateLimit,
   RATE_LIMIT_BUCKETS,
   RATE_LIMIT_WINDOW_MS,
-} from "../../../backendServices/RateLimiter";
+} from "../../src/backendServices/RateLimiter";
 
 
 function isValidEmail(email) {
@@ -147,7 +147,7 @@ export default function RegisterScreen() {
 
       setSuccessMessage("Account created successfully.");
       Alert.alert("Success", "Account created successfully.");
-      router.replace("/auth/login");
+      router.replace("/auth/LoginScreen");
     } catch (err) {
       setFormError(err.message || "Registration failed. Please try again.");
     } finally {
@@ -315,7 +315,7 @@ export default function RegisterScreen() {
               </Text>
             </Pressable>
 
-            <Pressable onPress={() => router.replace("/auth/login")}>
+            <Pressable onPress={() => router.replace("/auth/LoginScreen")}>
               <Text style={styles.link}>
                 Already have an account? Sign In
               </Text>

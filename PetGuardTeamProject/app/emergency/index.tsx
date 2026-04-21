@@ -61,7 +61,7 @@ export default function EmergencyHome() {
         console.log("Logout initiated...");
         await logoutUser();
         console.log("User logged out successfully");
-        router.replace("/auth/login" as never);
+        router.replace("/auth/LoginScreen" as never);
       } catch (error) {
         console.error("Logout error:", error);
         if (Platform.OS !== "web") {
@@ -158,7 +158,7 @@ export default function EmergencyHome() {
           <Text style={styles.navigationText}>Go to Firebase test screen</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/auth/login" as never)} style={styles.navigation}>
+        <Pressable onPress={() => router.push("/auth/LoginScreen" as never)} style={styles.navigation}>
           <Text style={styles.navigationText}>Go to Login Screen</Text>
         </Pressable>
 

@@ -310,7 +310,7 @@ export default function ConfirmationScreen() {
 
         <View style={styles.bottomMessageWrapper}>
           <Text style={styles.bottomMessage}>
-            While you wait, please stay calm. We will be with you shortly.{"\n"}
+            While you wait, please stay calm.{"\n"}
             We will be with you shortly.
           </Text>
         </View>

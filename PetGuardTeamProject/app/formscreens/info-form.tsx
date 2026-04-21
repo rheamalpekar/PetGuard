@@ -276,7 +276,6 @@ export default function InfoFormScreen() {
       xhr.send(formData);
     });
   };
-
   const handleFormSubmit = async (data: InfoFormData) => {
     setRateLimitErrorMessage(null);
     if (submitLockRef.current) {

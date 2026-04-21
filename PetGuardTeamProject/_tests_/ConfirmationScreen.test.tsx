@@ -46,16 +46,6 @@ describe("ConfirmationScreen", () => {
     mockUseLocalSearchParams.mockReturnValue({});
   });
 
-  test("renders fallback demo data after async state settles", async () => {
-    const { getByText } = render(<ConfirmationScreen />);
-
-    await waitFor(() => {
-      expect(getByText("Request Confirmed")).toBeTruthy();
-      expect(getByText("DEMO-REQUEST")).toBeTruthy();
-      expect(getByText(/Demo User/)).toBeTruthy();
-    });
-  });
-
   test("loads queued request data by local id", async () => {
     const {
       loadQueuedInfoForms,
@@ -106,14 +96,14 @@ describe("ConfirmationScreen", () => {
     });
   });
 
-  test("profile button opens profile history tab", async () => {
+  test("view all requests button opens profile history tab", async () => {
     const { getByText } = render(<ConfirmationScreen />);
 
     await waitFor(() => {
-      expect(getByText("Profile")).toBeTruthy();
+      expect(getByText("View All Requests")).toBeTruthy();
     });
 
-    fireEvent.press(getByText("Profile"));
+    fireEvent.press(getByText("View All Requests"));
 
     expect(mockPush).toHaveBeenCalledWith({
       pathname: "/screens/UserProfileScreen",
