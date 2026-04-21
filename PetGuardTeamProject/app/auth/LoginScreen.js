@@ -13,14 +13,14 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
-import { login } from "../../../backendServices/AuthService";
+import { login } from "../../src/backendServices/AuthService";
 import {
   consumeRateLimit,
   RATE_LIMIT_BUCKETS,
   RATE_LIMIT_WINDOW_MS,
-} from "../../../backendServices/RateLimiter";
-import { useProtectedNavigation } from "../../../hooks/useProtectedNavigation";
-import { useAuth } from "../../../context/AuthContext";
+} from "../../src/backendServices/RateLimiter";
+import { useProtectedNavigation } from "../../src/hooks/useProtectedNavigation";
+import { useAuth } from "../../src/context/AuthContext";
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -185,7 +185,7 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
 
-          <Pressable onPress={() => router.push("/auth/register")}>
+          <Pressable onPress={() => router.push("/auth/RegisterScreen")}>
             <Text style={styles.link}>Create Account</Text>
           </Pressable>
 

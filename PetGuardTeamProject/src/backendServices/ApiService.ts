@@ -68,7 +68,7 @@ export const submitInfoForm = async (
   photos: UploadablePhoto[],
   options: { skipRateLimit?: boolean } = {},
 ) => {
-  console.log("submitInfoForm called");
+  console.log("submitInfoForm called", data);
 
   if (!options.skipRateLimit) {
     await throwIfRateLimited({

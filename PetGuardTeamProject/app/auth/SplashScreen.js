@@ -106,7 +106,7 @@ export default function SplashScreen() {
         return;
       }
       
-      const destination = isLoggedIn ? "/emergency" : "/auth/login";
+      const destination = isLoggedIn ? "/emergency" : "/auth/LoginScreen";
       console.log(`Redirecting to ${destination}`);
       router.replace(destination);
     }, REDIRECT_MS);
@@ -148,7 +148,7 @@ export default function SplashScreen() {
             accessibilityLabel="PetGuard logo"
           >
             <Image
-              source={require("../../../../assets/images/petguard-logo.png")}
+              source={require("../../assets/images/petguard-logo.png")}
               style={styles.logoImage}
               resizeMode="contain"
             />

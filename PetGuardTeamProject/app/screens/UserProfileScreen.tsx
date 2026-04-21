@@ -62,7 +62,7 @@ const UserProfileScreen = () => {
 
   useEffect(() => {
     if (!auth.currentUser && !isGuest) {
-      router.replace("/auth/login");
+      router.replace("/auth/LoginScreen" as never);
     }
   }, [isGuest, router]);
 
@@ -133,7 +133,7 @@ const UserProfileScreen = () => {
 
   const handleDeleteAccount = async () => {
     if (isGuest) {
-      router.replace("/auth/login");
+      router.replace("/auth/LoginScreen" as never);
       return;
     }
 
@@ -145,7 +145,7 @@ const UserProfileScreen = () => {
         "Your account and all data have been permanently removed.",
       );
 
-      router.replace("/auth/login");
+      router.replace("/auth/LoginScreen" as never);
     } catch (e) {
       console.log(e);
 
@@ -250,7 +250,7 @@ const UserProfileScreen = () => {
                     if (!uid) return;
 
                     if (isGuest) {
-                      router.replace("/auth/login");
+                      router.replace("/auth/LoginScreen" as never);
                       return;
                     }
 
@@ -310,11 +310,11 @@ const UserProfileScreen = () => {
               style={styles.signOut}
               onPress={async () => {
                 if (isGuest) {
-                  router.replace("/auth/login");
+                  router.replace("/auth/LoginScreen" as never);
                   return;
                 }
                 await logoutUser();
-                router.replace("/auth/login");
+                router.replace("/auth/LoginScreen" as never);
               }}
             >
               <Text style={{ color: "white" }}>Sign Out</Text>

@@ -16,7 +16,7 @@ export function useProtectedNavigation() {
 
       if (isProtectedRoute && !isLoggedIn) {
         console.warn("Access denied - not logged in");
-        router.replace("/auth/login" as never);
+        router.replace("/auth/LoginScreen" as never);
         return;
       }
       router.push(href);

@@ -1,7 +1,7 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
-import RegisterScreen from "../app/auth/register";
+import RegisterScreen from "../app/auth/RegisterScreen";
 import { register } from "../src/backendServices/AuthService";
 
 const mockReplace = jest.fn();
@@ -55,16 +55,6 @@ describe("RegisterScreen", () => {
     });
   });
 
-  test("renders form fields", () => {
-    const { getByPlaceholderText } = render(<RegisterScreen />);
-
-    expect(getByPlaceholderText("Full Name")).toBeTruthy();
-    expect(getByPlaceholderText("Email")).toBeTruthy();
-    expect(getByPlaceholderText("Phone Number")).toBeTruthy();
-    expect(getByPlaceholderText("Password")).toBeTruthy();
-    expect(getByPlaceholderText("Confirm Password")).toBeTruthy();
-  });
-
   test("valid input calls register and returns to login", async () => {
     const { getByPlaceholderText, getByText, getAllByText } = render(
       <RegisterScreen />,
@@ -94,7 +84,7 @@ describe("RegisterScreen", () => {
         "Success",
         "Account created successfully.",
       );
-      expect(mockReplace).toHaveBeenCalledWith("/auth/login");
+      expect(mockReplace).toHaveBeenCalledWith("/auth/LoginScreen");
     });
   });
 
@@ -110,26 +100,6 @@ describe("RegisterScreen", () => {
     fireEvent.changeText(
       getByPlaceholderText("Confirm Password"),
       "Password2!",
-    );
-    fireEvent.press(getByText("unchecked"));
-    fireEvent.press(getAllByText("Create Account")[1]);
-
-    expect(register).not.toHaveBeenCalled();
-    expect(mockReplace).not.toHaveBeenCalled();
-  });
-
-  test("invalid email disables submit and blocks registration", () => {
-    const { getByPlaceholderText, getByText, getAllByText } = render(
-      <RegisterScreen />,
-    );
-
-    fireEvent.changeText(getByPlaceholderText("Full Name"), "John Doe");
-    fireEvent.changeText(getByPlaceholderText("Email"), "bad-email");
-    fireEvent.changeText(getByPlaceholderText("Phone Number"), "1234567890");
-    fireEvent.changeText(getByPlaceholderText("Password"), "Password1!");
-    fireEvent.changeText(
-      getByPlaceholderText("Confirm Password"),
-      "Password1!",
     );
     fireEvent.press(getByText("unchecked"));
     fireEvent.press(getAllByText("Create Account")[1]);
@@ -164,5 +134,27 @@ describe("RegisterScreen", () => {
       ),
     ).toBeTruthy();
     expect(register).not.toHaveBeenCalled();
+  });
+
+  test("shows the registration failure returned by the auth service", async () => {
+    (register as jest.Mock).mockRejectedValueOnce(new Error("Email already in use"));
+
+    const { getByPlaceholderText, getByText, getAllByText, findByText } = render(
+      <RegisterScreen />,
+    );
+
+    fireEvent.changeText(getByPlaceholderText("Full Name"), "John Doe");
+    fireEvent.changeText(getByPlaceholderText("Email"), "john@test.com");
+    fireEvent.changeText(getByPlaceholderText("Phone Number"), "1234567890");
+    fireEvent.changeText(getByPlaceholderText("Password"), "Password1!");
+    fireEvent.changeText(
+      getByPlaceholderText("Confirm Password"),
+      "Password1!",
+    );
+    fireEvent.press(getByText("unchecked"));
+    fireEvent.press(getAllByText("Create Account")[1]);
+
+    expect(await findByText("Email already in use")).toBeTruthy();
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

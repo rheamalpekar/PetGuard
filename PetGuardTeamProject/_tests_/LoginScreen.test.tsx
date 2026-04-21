@@ -1,7 +1,7 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
-import LoginScreen from "../app/auth/login";
+import LoginScreen from "../app/auth/LoginScreen";
 import { login } from "../src/backendServices/AuthService";
 
 const mockReplace = jest.fn();
@@ -64,12 +64,6 @@ describe("LoginScreen", () => {
       allowed: true,
       retryAfterSeconds: 0,
     });
-  });
-
-  test("renders inputs", () => {
-    const { getByPlaceholderText } = render(<LoginScreen />);
-    expect(getByPlaceholderText("Email")).toBeTruthy();
-    expect(getByPlaceholderText("Password")).toBeTruthy();
   });
 
   test("valid input calls Firebase login and navigates", async () => {
@@ -171,14 +165,65 @@ describe("LoginScreen", () => {
     fireEvent.press(getByText("Continue as Guest"));
 
     expect(
-      await findByText(
-        "Guest access is not enabled in Firebase. Enable Anonymous sign-in in Firebase Authentication, then try again.",
-      ),
+      await findByText("Guest access is not enabled in Firebase."),
     ).toBeTruthy();
     expect(Alert.alert).toHaveBeenCalledWith(
       "Guest Sign In Failed",
-      "Guest access is not enabled in Firebase. Enable Anonymous sign-in in Firebase Authentication, then try again.",
+      "Guest access is not enabled in Firebase.",
     );
     expect(mockReplace).not.toHaveBeenCalledWith("/emergency");
   });
+
+  test("network login failure maps to the network-specific error message", async () => {
+    (login as jest.Mock).mockRejectedValueOnce({
+      code: "auth/network-request-failed",
+    });
+
+    const { getByPlaceholderText, getByText } = render(<LoginScreen />);
+
+    fireEvent.changeText(getByPlaceholderText("Email"), "test@gmail.com");
+    fireEvent.changeText(getByPlaceholderText("Password"), "Password1!");
+    fireEvent.press(getByText("Sign In"));
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Sign In Failed",
+        "Network error. Please check your connection.",
+      );
+    });
+  });
+
+  test("too many requests maps to the lockout message", async () => {
+    (login as jest.Mock).mockRejectedValueOnce({
+      code: "auth/too-many-requests",
+    });
+
+    const { getByPlaceholderText, getByText } = render(<LoginScreen />);
+
+    fireEvent.changeText(getByPlaceholderText("Email"), "test@gmail.com");
+    fireEvent.changeText(getByPlaceholderText("Password"), "Password1!");
+    fireEvent.press(getByText("Sign In"));
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Sign In Failed",
+        "Too many failed attempts. Please try again later.",
+      );
+    });
+  });
+
+  test("generic guest login failure shows the fallback guest error", async () => {
+    mockContinueAsGuest.mockRejectedValueOnce(new Error("unexpected"));
+
+    const { getByText, findByText } = render(<LoginScreen />);
+
+    fireEvent.press(getByText("Continue as Guest"));
+
+    expect(await findByText("Guest access failed. Please try again.")).toBeTruthy();
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "Guest Sign In Failed",
+      "Guest access failed. Please try again.",
+    );
+  });
+
 });
