@@ -179,15 +179,11 @@ export default function ReportEmergency() {
           {checklist.length > 0 && (
             <View style={styles.checklistCard}>
               <Text style={styles.checklistTitle}>Critical Information Checklist</Text>
-              {checklist.length > 0 ? (
-                checklist.map((item, index) => (
-                  <Text key={index} style={styles.checklistItem}>
-                    • {item}
-                  </Text>
-                ))
-              ) : (
-                <Text style={styles.previewSubText}>No checklist available yet.</Text>
-              )}
+              {checklist.map((item, index) => (
+                <Text key={index} style={styles.checklistItem}>
+                  • {item}
+                </Text>
+              ))}
             </View>
           )}
         </>

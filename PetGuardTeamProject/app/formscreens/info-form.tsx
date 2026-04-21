@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -125,6 +125,23 @@ export default function InfoFormScreen() {
   const [formValidator] = useState(() => createFormValidator('emergencyReporting'));
   const [validationErrors, setValidationErrors] = useState(new Map());
 
+  const {
+    control,
+    handleSubmit,
+    getValues,
+    reset,
+    setValue,
+  } = useForm<InfoFormData>({
+    mode: 'onBlur',
+    defaultValues: {
+      location: null,
+      yourName: '',
+      phoneNumber: '',
+      emailAddress: '',
+      additionalDetails: '',
+    },
+  });
+
   // Draft saving functionality
   const [isDraftSaved, setIsDraftSaved] = useState(false);
 
@@ -140,7 +157,7 @@ export default function InfoFormScreen() {
   };
 
   // Load draft from AsyncStorage
-  const loadDraft = async () => {
+  const loadDraft = useCallback(async () => {
     try {
       const draftData = await AsyncStorage.getItem('infoFormDraft');
       if (draftData) {
@@ -159,7 +176,7 @@ export default function InfoFormScreen() {
     } catch (error) {
       console.error('Failed to load draft:', error);
     }
-  };
+  }, [setValue]);
 
   // Clear draft
   const clearDraft = async () => {
@@ -171,23 +188,6 @@ export default function InfoFormScreen() {
     }
   };
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-  } = useForm<InfoFormData>({
-    mode: 'onBlur',
-    defaultValues: {
-      location: null,
-      yourName: '',
-      phoneNumber: '',
-      emailAddress: '',
-      additionalDetails: '',
-    },
-  });
-
   useEffect(() => {
     // Initialize location on mount and load draft
     LocationService.initializeLocation(
@@ -197,7 +197,7 @@ export default function InfoFormScreen() {
     
     // Load draft on component mount
     loadDraft();
-  }, [isWeb]);
+  }, [isWeb, loadDraft]);
 
   const getCurrentLocation = () => {
     LocationService.getCurrentLocationWithAddress({
@@ -666,11 +666,6 @@ export default function InfoFormScreen() {
                 ]}
                 placeholder="Your name"
                 placeholderTextColor={colors.icon}
-                onFocus={() => {
-                  if (hasTransportation === null) {
-                    setTransportationError('Please select a transportation option');
-                  }
-                }}
                 onBlur={onBlur}
                 onChangeText={(text) => {
                   onChange(text);
@@ -695,11 +690,6 @@ export default function InfoFormScreen() {
                 ]}
                 placeholder="Phone number"
                 placeholderTextColor={colors.icon}
-                onFocus={() => {
-                  if (hasTransportation === null) {
-                    setTransportationError('Please select a transportation option');
-                  }
-                }}
                 onBlur={onBlur}
                 onChangeText={(text) => {
                   const formatted = formatPhoneNumber(text);
@@ -726,11 +716,6 @@ export default function InfoFormScreen() {
                 ]}
                 placeholder="Email address"
                 placeholderTextColor={colors.icon}
-                onFocus={() => {
-                  if (hasTransportation === null) {
-                    setTransportationError('Please select a transportation option');
-                  }
-                }}
                 onBlur={onBlur}
                 onChangeText={(text) => {
                   onChange(text);
@@ -816,11 +801,6 @@ export default function InfoFormScreen() {
               ]}
               placeholder=""
               placeholderTextColor={colors.icon}
-              onFocus={() => {
-                if (hasTransportation === null) {
-                  setTransportationError('Please select a transportation option');
-                }
-              }}
               onBlur={onBlur}
               onChangeText={(text) => {
                 onChange(text);
@@ -838,7 +818,7 @@ export default function InfoFormScreen() {
       <View style={styles.draftActions}>
         <TouchableOpacity
           style={[styles.draftButton, isDraftSaved && styles.draftButtonSaved]}
-          onPress={() => saveDraft(control._formValues as InfoFormData)}
+          onPress={() => saveDraft(getValues() as InfoFormData)}
           disabled={isSubmitting}
         >
           <Ionicons name="save" size={16} color="#3478f6" />

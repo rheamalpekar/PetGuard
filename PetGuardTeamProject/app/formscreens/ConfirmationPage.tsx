@@ -47,8 +47,7 @@ export default function ConfirmationScreen() {
 
   const showVectorAssets = isOnline;
 
-  const [synced, setSynced] = useState(false);
-  console.log(requestId);
+  const synced = isQueuedRequest && justSynced;
 
   const dummyData: ConfirmationDisplayData = {
     yourName: "Demo User",
@@ -109,7 +108,6 @@ export default function ConfirmationScreen() {
 
   useEffect(() => {
     if (justSynced && isQueuedRequest) {
-      setSynced(true);
       Alert.alert("Uploaded", "Your request has been sent to the server.");
     }
   }, [justSynced, isQueuedRequest]);

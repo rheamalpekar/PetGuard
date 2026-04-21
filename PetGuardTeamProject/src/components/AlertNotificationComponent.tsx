@@ -34,7 +34,7 @@ export default function AlertNotificationComponent({
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [visible, slideAnim, onHide]);
+  }, [visible, slideAnim]);
 
   if (!visible) return null;
 

@@ -7,7 +7,7 @@
 
 // Validation patterns
 const PATTERNS = {
-  phone: /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/,
+  phone: /^[+]?[(]?[0-9]{1,4}[)]?[-\s./]?[(]?[0-9]{1,4}[)]?[-\s./]?[0-9]{1,9}$/,
   email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   name: /^[a-zA-Z\s'-]+$/,
   coordinates: /^-?\d+\.?\d*,-?\d+\.?\d*$/
@@ -369,7 +369,7 @@ export const ErrorMessageGenerator = {
   generate: (fieldName, errors) => {
     if (!errors || errors.length === 0) return '';
     
-    const fieldDisplayName = this.formatFieldName(fieldName);
+    const fieldDisplayName = ErrorMessageGenerator.formatFieldName(fieldName);
     const primaryError = errors[0];
     
     return `${fieldDisplayName}: ${primaryError}`;
@@ -399,7 +399,7 @@ export const ErrorMessageGenerator = {
     if (errorCount === 0) return '';
     
     const fieldNames = Array.from(fieldErrors.keys())
-      .map(name => this.formatFieldName(name))
+      .map(name => ErrorMessageGenerator.formatFieldName(name))
       .join(', ');
     
     return `Please correct the ${errorCount} error${errorCount > 1 ? 's' : ''} in: ${fieldNames}`;
@@ -423,7 +423,7 @@ export const RequiredFieldValidator = {
     for (const field of requiredFields) {
       const value = formData[field];
       
-      if (this.isEmpty(value)) {
+      if (RequiredFieldValidator.isEmpty(value)) {
         missingFields.push(field);
         errors.set(field, [ERROR_MESSAGES.required]);
       }

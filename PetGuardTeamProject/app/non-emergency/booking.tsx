@@ -10,7 +10,10 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import AlertNotificationComponent from "@/components/AlertNotificationComponent";
+
+const BOOKING_QUEUE_KEY = "petguard:bookingQueue:v1";
 
 export default function BookingScreen() {
   const params = useLocalSearchParams();
@@ -67,7 +70,7 @@ export default function BookingScreen() {
     };
   }, []);
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!ownerName.trim() || !petName.trim() || !phone.trim() || !date.trim()) {
       Alert.alert("Missing Information", "Please fill all required fields.");
       return;
@@ -84,7 +87,15 @@ export default function BookingScreen() {
       createdAt: new Date().toISOString(),
     };
 
-    console.log("Booking created:", bookingData);
+    // Persist booking to AsyncStorage so it survives app restarts
+    try {
+      const existing = await AsyncStorage.getItem(BOOKING_QUEUE_KEY);
+      const queue = existing ? JSON.parse(existing) : [];
+      queue.push({ ...bookingData, id: `booking_${Date.now()}` });
+      await AsyncStorage.setItem(BOOKING_QUEUE_KEY, JSON.stringify(queue));
+    } catch (e) {
+      console.error("Failed to save booking:", e);
+    }
 
     setAlertMessage("Booking Successful ✅");
     setAlertVisible(true);

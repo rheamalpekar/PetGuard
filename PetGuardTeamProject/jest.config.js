@@ -8,7 +8,9 @@ module.exports = {
   },
   testMatch: [
     "**/__tests__/**/*.test.ts",
-    "**/__tests__/**/*.test.tsx"
+    "**/__tests__/**/*.test.tsx",
+    "**/_tests_/**/*.test.ts",
+    "**/_tests_/**/*.test.tsx"
   ],
   collectCoverage: true,
   collectCoverageFrom: [

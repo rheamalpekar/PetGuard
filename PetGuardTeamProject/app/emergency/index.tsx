@@ -154,18 +154,6 @@ export default function EmergencyHome() {
           <Text style={styles.bannerText}>NON-EMERGENCY SERVICES</Text>
         </View>
 
-        <Pressable onPress={() => protectedNavigate("/formscreens/FirebaseTestScreen" as never)} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Firebase test screen</Text>
-        </Pressable>
-
-        <Pressable onPress={() => router.push("/auth/LoginScreen" as never)} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Login Screen</Text>
-        </Pressable>
-
-        <Pressable onPress={() => router.push("/screens/UserProfileScreen" as never)} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Profile Screen</Text>
-        </Pressable>
-
       {/* Non-Emergency Tiles */}
       <View style={styles.tileRow}>
         <ServiceTile
@@ -187,14 +175,6 @@ export default function EmergencyHome() {
           onPress={() => router.push("/non-emergency/spay")}
         />
       </View>
-        <Pressable onPress={() => protectedNavigate("/formscreens/info-form" as never)} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Info Form Screen</Text>
-        </Pressable>
-
-        <Pressable onPress={() => protectedNavigate("/formscreens/ConfirmationPage" as never)} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Confirmation screen</Text>
-        </Pressable>
-
         <View style={{ height: 14 }} />
         <DisclaimerText />
       </ScrollView>
@@ -357,18 +337,6 @@ const styles = StyleSheet.create({
     color: "#8b949e",
     fontSize: 12,
     textAlign: "center",
-  },
-  navigation: {
-    backgroundColor: "#233244",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    alignSelf: "center",
-    marginTop: 12,
-  },
-  navigationText: {
-    color: "#ffffff",
-    fontSize: 14,
   },
   profileBtn: {
     flexDirection: "row",
