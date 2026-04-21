@@ -2,12 +2,12 @@ import {
   getScenarioCandidates,
   SEVERITY,
   CLASSIFICATION,
-  type EmergencyScenario,
 } from "./emergencyScenarios";
 
 import type {
   EmergencyDetectionInput,
   EmergencyDetectionResult,
+  EmergencyScenario,
 } from "@/types/DataModels";
 
 const SEVERITY_PRIORITY: Record<string, number> = {
@@ -42,15 +42,8 @@ export function detectEmergency({
       dispatchProtocol: "NO_DISPATCH_REQUIRED",
       countdownSeconds: 0,
       detectionMs: Date.now() - start,
+      matchedKeywords: [],
     };
-  let best: EmergencyScenario | null = null;
-
-  for (const scenario of candidates) {
-    if (!best) best = scenario;
-    else if (
-      SEVERITY_PRIORITY[scenario.severity] > SEVERITY_PRIORITY[best.severity]
-    )
-      best = scenario;
   }
 
   const candidates = getScenarioCandidates(combinedText);
@@ -71,8 +64,12 @@ export function detectEmergency({
     }
   }
 
-  // Fallback heuristics if no direct candidate matched
-  if (!bestMatch) {
+  // Fallback heuristics: if nothing matched OR the matched scenario lacks
+  // richer guidance (protocol/checklist), upgrade to a fallback scenario.
+  const needsFallbackGuidance =
+    !bestMatch || !bestMatch.dispatchProtocol || !bestMatch.checklist?.length;
+
+  if (needsFallbackGuidance) {
     if (
       combinedText.includes("cruelty") ||
       combinedText.includes("abuse") ||
@@ -161,11 +158,12 @@ export function detectEmergency({
       dispatchProtocol: "NO_DISPATCH_REQUIRED",
       countdownSeconds: 0,
       detectionMs: Date.now() - start,
+      matchedKeywords: [],
     };
   }
 
   const matchedKeywords =
-    bestMatch.keywords?.filter((keyword) =>
+    bestMatch.keywords?.filter((keyword: string) =>
       combinedText.includes(keyword.toLowerCase())
     ) ?? [];
 
@@ -174,8 +172,8 @@ export function detectEmergency({
     severity: bestMatch.severity,
     classification: bestMatch.classification,
     scenarioId: bestMatch.id,
-    checklist: bestMatch.checklist,
-    dispatchProtocol: bestMatch.dispatchProtocol,
+    checklist: bestMatch.checklist ?? [],
+    dispatchProtocol: bestMatch.dispatchProtocol ?? "TRIAGE",
     countdownSeconds: DEFAULT_COUNTDOWN[bestMatch.severity] ?? 0,
     detectionMs: Date.now() - start,
     matchedKeywords,

@@ -52,6 +52,7 @@ describe("DataModels", () => {
       dispatchProtocol: "TRIAGE",
       countdownSeconds: 20,
       detectionMs: 5,
+      matchedKeywords: [],
     } satisfies EmergencyDetectionResult;
 
     expect(result.isEmergency).toBe(true);

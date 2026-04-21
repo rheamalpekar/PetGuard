@@ -1,4 +1,4 @@
-import { getScenarioCandidates } from "../app/emergency/core/emergencyScenarios";
+import { getScenarioCandidates } from "../src/emergency/core/emergencyScenarios";
 
 describe("Scenario Matching", () => {
   test("matches accident keywords", () => {

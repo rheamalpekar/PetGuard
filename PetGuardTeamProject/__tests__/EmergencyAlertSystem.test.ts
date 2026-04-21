@@ -1,4 +1,4 @@
-import { detectEmergency } from "../app/emergency/core/EmergencyAlertSystem";
+import { detectEmergency } from "../src/emergency/core/EmergencyAlertSystem";
 
 describe("Emergency Detection", () => {
   test("detects accident from direct scenario match", () => {
