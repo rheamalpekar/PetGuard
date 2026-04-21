@@ -3,6 +3,26 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const EMERGENCY_KEY = "offline_emergencies";
 const BOOKING_KEY = "offline_bookings";
 
+// Per-key in-memory mutex: serializes concurrent read-modify-write operations
+// so that rapid concurrent calls cannot lose queued items.
+const queueLocks = new Map<string, Promise<void>>();
+
+async function withQueueLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const previous = queueLocks.get(key) ?? Promise.resolve();
+  let release!: () => void;
+  const next = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  queueLocks.set(key, previous.then(() => next));
+
+  await previous;
+  try {
+    return await fn();
+  } finally {
+    release();
+  }
+}
+
 export type OfflineEmergency = {
   id: string;
   emergencyType: string;
@@ -44,15 +64,19 @@ async function setQueue<T>(key: string, items: T[]) {
 }
 
 export async function queueEmergency(item: OfflineEmergency) {
-  const list = await getQueue<OfflineEmergency>(EMERGENCY_KEY);
-  list.push(item);
-  await setQueue(EMERGENCY_KEY, list);
+  await withQueueLock(EMERGENCY_KEY, async () => {
+    const list = await getQueue<OfflineEmergency>(EMERGENCY_KEY);
+    list.push(item);
+    await setQueue(EMERGENCY_KEY, list);
+  });
 }
 
 export async function queueBooking(item: OfflineBooking) {
-  const list = await getQueue<OfflineBooking>(BOOKING_KEY);
-  list.push(item);
-  await setQueue(BOOKING_KEY, list);
+  await withQueueLock(BOOKING_KEY, async () => {
+    const list = await getQueue<OfflineBooking>(BOOKING_KEY);
+    list.push(item);
+    await setQueue(BOOKING_KEY, list);
+  });
 }
 
 export async function getOfflineEmergencies() {

@@ -50,6 +50,7 @@ export type InfoFormData = {
   phoneNumber: string;
   emailAddress: string;
   additionalDetails: string;
+  emergencyContext?: EmergencyContext;
 };
 
 export type ConfirmationDisplayData = InfoFormData | {
@@ -152,6 +153,17 @@ export type EmergencyDetectionResult = {
 };
 
 export type EmergencyReportSeverityUI = "Low" | "Medium" | "High";
+
+export type EmergencyContext = {
+  emergencyType?: string;
+  description?: string;
+  severity?: string;
+  classification?: string;
+  scenarioId?: string | null;
+  dispatchProtocol?: string;
+  checklist?: string[];
+  countdownSeconds?: number;
+};
 
 export type EmergencyReportData = {
   type: string;

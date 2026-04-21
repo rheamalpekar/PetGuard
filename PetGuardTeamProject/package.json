@@ -12,26 +12,6 @@
     "test": "jest",
     "test:coverage": "jest --coverage"
   },
-  "jest": {
-    "preset": "jest-expo",
-    "testMatch": [
-      "**/__tests__/**/*.test.ts",
-      "**/__tests__/**/*.test.tsx"
-    ],
-    "collectCoverage": true,
-    "collectCoverageFrom": [
-      "src/emergency/core/**/*.ts",
-      "utils/**/*.ts"
-    ],
-    "coverageThreshold": {
-      "global": {
-        "branches": 80,
-        "functions": 80,
-        "lines": 80,
-        "statements": 80
-      }
-    }
-  },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",

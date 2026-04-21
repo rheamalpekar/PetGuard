@@ -28,9 +28,10 @@ import {
 } from "@/backendServices/ApiService";
 import { RateLimitError } from "@/backendServices/RateLimiter";
 import type { InfoFormData, LocationData, PhotoAsset } from "@/types/DataModels";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import DisclaimerText from '@/components/DisclaimerText';
+import type { EmergencyContext } from "@/types/DataModels";
 
 // Conditionally import MapView only on mobile platforms
 let MapView: any;
@@ -67,6 +68,35 @@ export default function InfoFormScreen() {
   const colors = Colors[colorScheme ?? 'light'];
   const isWeb = Platform.OS === 'web';
   const router = useRouter();
+
+  const params = useLocalSearchParams<{
+    emergencyType?: string;
+    description?: string;
+    severity?: string;
+    classification?: string;
+    scenarioId?: string;
+    dispatchProtocol?: string;
+    checklist?: string;
+    countdownSeconds?: string;
+  }>();
+
+  const emergencyContext: EmergencyContext | undefined =
+    params.emergencyType
+      ? {
+          emergencyType: params.emergencyType,
+          description: params.description,
+          severity: params.severity,
+          classification: params.classification,
+          scenarioId: params.scenarioId ?? null,
+          dispatchProtocol: params.dispatchProtocol,
+          checklist: params.checklist
+            ? params.checklist.split(" | ").filter(Boolean)
+            : undefined,
+          countdownSeconds: params.countdownSeconds
+            ? Number(params.countdownSeconds)
+            : undefined,
+        }
+      : undefined;
 
   const [hasTransportation, setHasTransportation] = useState<boolean | null>(null);
   const [transportationError, setTransportationError] = useState<string | null>(null);
@@ -220,6 +250,11 @@ export default function InfoFormScreen() {
     submitLockRef.current = true;
     setIsSubmitting(true);
 
+    // Merge in any emergency context passed from the report screen
+    const submissionData: InfoFormData = emergencyContext
+      ? { ...data, emergencyContext }
+      : data;
+
     try {
       const netState = await NetInfo.fetch();
 
@@ -239,7 +274,7 @@ export default function InfoFormScreen() {
           localId,
           uid: user.uid,
           data: {
-            ...data,
+            ...submissionData,
             formId: localId,
           },
           photoUris,
@@ -270,7 +305,7 @@ export default function InfoFormScreen() {
       );
 
       const response: any = await Promise.race([
-        submitInfoForm(data, photoInputs),
+        submitInfoForm(submissionData, photoInputs),
         timeoutPromise,
       ]);
 
@@ -304,7 +339,7 @@ export default function InfoFormScreen() {
         localId,
         uid: user.uid,
         data: {
-          ...data,
+          ...submissionData,
           formId: localId,
         },
         photoUris,
