@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useColorScheme } from "react-native";
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AlertNotificationComponent from "@/components/AlertNotificationComponent";
@@ -18,6 +19,19 @@ const BOOKING_QUEUE_KEY = "petguard:bookingQueue:v1";
 export default function BookingScreen() {
   const params = useLocalSearchParams();
   const service = String(params.service ?? "Service Booking");
+  const colorScheme = useColorScheme();
+
+  const colors = {
+    background: colorScheme === 'dark' ? '#121212' : '#f8f9fa',
+    text: colorScheme === 'dark' ? '#ffffff' : '#111',
+    label: colorScheme === 'dark' ? '#e0e0e0' : '#222',
+    inputBackground: colorScheme === 'dark' ? '#1F2937' : '#fff',
+    inputBorder: colorScheme === 'dark' ? '#374151' : '#ddd',
+    inputText: colorScheme === 'dark' ? '#ffffff' : '#000',
+    locationInput: colorScheme === 'dark' ? '#9ca3af' : '#444',
+    subtitle: colorScheme === 'dark' ? '#4ade80' : '#2e7d32',
+    backText: colorScheme === 'dark' ? '#60a5fa' : '#007bff',
+  };
 
   const [ownerName, setOwnerName] = useState("");
   const [petName, setPetName] = useState("");
@@ -117,7 +131,7 @@ export default function BookingScreen() {
   };
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
       <AlertNotificationComponent
         message={alertMessage}
         type="success"
@@ -125,44 +139,48 @@ export default function BookingScreen() {
         onHide={() => setAlertVisible(false)}
       />
 
-      <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Appointment Booking</Text>
-        <Text style={styles.subtitle}>{service}</Text>
+      <ScrollView style={[styles.screen, { backgroundColor: colors.background }]} contentContainerStyle={styles.container}>
+        <Text style={[styles.title, { color: colors.text }]}>Appointment Booking</Text>
+        <Text style={[styles.subtitle, { color: colors.subtitle }]}>{service}</Text>
 
-        <Text style={styles.label}>Owner Name *</Text>
+        <Text style={[styles.label, { color: colors.label }]}>Owner Name *</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.inputText }]}
           value={ownerName}
           onChangeText={setOwnerName}
           placeholder="Enter owner name"
+          placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>Pet Name *</Text>
+        <Text style={[styles.label, { color: colors.label }]}>Pet Name *</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.inputText }]}
           value={petName}
           onChangeText={setPetName}
           placeholder="Enter pet name"
+          placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>Phone Number *</Text>
+        <Text style={[styles.label, { color: colors.label }]}>Phone Number *</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.inputText }]}
           value={phone}
           onChangeText={setPhone}
           placeholder="Enter phone number"
           keyboardType="phone-pad"
+          placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>Preferred Date *</Text>
+        <Text style={[styles.label, { color: colors.label }]}>Preferred Date *</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.inputText }]}
           value={date}
           onChangeText={setDate}
           placeholder="MM/DD/YYYY"
+          placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>GPS Location</Text>
+        <Text style={[styles.label, { color: colors.label }]}>GPS Location</Text>
         <Pressable style={styles.locationBtn} onPress={getCurrentLocation}>
           <Text style={styles.locationBtnText}>
             {fetchingLocation ? "Fetching Location..." : "Use Current GPS Location"}
@@ -170,18 +188,20 @@ export default function BookingScreen() {
         </Pressable>
 
         <TextInput
-          style={[styles.input, styles.locationInput]}
+          style={[styles.input, styles.locationInput, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.locationInput }]}
           value={gpsLocation}
           editable={false}
           placeholder="GPS coordinates will appear here"
+          placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>Additional Notes</Text>
+        <Text style={[styles.label, { color: colors.label }]}>Additional Notes</Text>
         <TextInput
-          style={[styles.input, styles.notesInput]}
+          style={[styles.input, styles.notesInput, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.inputText }]}
           value={notes}
           onChangeText={setNotes}
           placeholder="Any additional details..."
+          placeholderTextColor="#999"
           multiline
           textAlignVertical="top"
         />
@@ -191,7 +211,7 @@ export default function BookingScreen() {
         </Pressable>
 
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={[styles.backText, { color: colors.backText }]}>← Back</Text>
         </Pressable>
       </ScrollView>
     </View>
@@ -201,11 +221,9 @@ export default function BookingScreen() {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
   },
   screen: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
   },
   container: {
     padding: 20,
@@ -214,12 +232,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#111",
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 16,
-    color: "#2e7d32",
     fontWeight: "700",
     marginBottom: 20,
   },
@@ -227,12 +243,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     marginBottom: 8,
-    color: "#222",
   },
   input: {
-    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -243,9 +256,7 @@ const styles = StyleSheet.create({
     minHeight: 100,
     paddingTop: 12,
   },
-  locationInput: {
-    color: "#444",
-  },
+  locationInput: {},
   locationBtn: {
     backgroundColor: "#1f5ea8",
     paddingVertical: 13,
@@ -275,7 +286,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backText: {
-    color: "#007bff",
     fontSize: 14,
     fontWeight: "600",
   },
