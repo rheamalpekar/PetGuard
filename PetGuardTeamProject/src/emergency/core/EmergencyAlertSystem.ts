@@ -1,4 +1,9 @@
-import { getScenarioCandidates, SEVERITY, CLASSIFICATION } from './emergencyScenarios';
+import {
+  getScenarioCandidates,
+  SEVERITY,
+  CLASSIFICATION,
+} from "./emergencyScenarios";
+
 import type {
   EmergencyDetectionInput,
   EmergencyDetectionResult,
@@ -14,8 +19,8 @@ const SEVERITY_PRIORITY: Record<string, number> = {
 
 const DEFAULT_COUNTDOWN: Record<string, number> = {
   [SEVERITY.CRITICAL]: 10,
-  [SEVERITY.HIGH]: 20,
-  [SEVERITY.MEDIUM]: 30,
+  [SEVERITY.HIGH]: 15,
+  [SEVERITY.MEDIUM]: 20,
   [SEVERITY.LOW]: 0,
 };
 
@@ -24,64 +29,153 @@ export function detectEmergency({
   description = '',
 }: EmergencyDetectionInput): EmergencyDetectionResult {
   const start = Date.now();
-  const text = `${emergencyType} ${description}`.toLowerCase();
 
-  const candidates = getScenarioCandidates(text);
+  const combinedText = `${emergencyType} ${description}`.toLowerCase().trim();
 
-  let best: EmergencyScenario | null = null;
-
-  for (const scenario of candidates) {
-    if (!best) best = scenario;
-    else if (
-      SEVERITY_PRIORITY[scenario.severity] > SEVERITY_PRIORITY[best.severity]
-    )
-      best = scenario;
+  if (!combinedText) {
+    return {
+      isEmergency: false,
+      severity: SEVERITY.LOW,
+      classification: CLASSIFICATION.UNKNOWN,
+      scenarioId: null,
+      checklist: [],
+      dispatchProtocol: "NO_DISPATCH_REQUIRED",
+      countdownSeconds: 0,
+      detectionMs: Date.now() - start,
+      matchedKeywords: [],
+    };
   }
 
-  if (!best) {
-    const dangerWords = [
-      'bleeding',
-      'unconscious',
-      'fracture',
-      'hit',
-      'burn',
-      'attack',
-      'seizure',
-    ];
-    const dangerHit = dangerWords.some((w) => text.includes(w));
+  const candidates = getScenarioCandidates(combinedText);
 
-    if (dangerHit) {
-      best = {
-        id: 'heuristic_high_risk',
+  let bestMatch: EmergencyScenario | null = null;
+
+  for (const scenario of candidates) {
+    if (!bestMatch) {
+      bestMatch = scenario;
+      continue;
+    }
+
+    const currentPriority = SEVERITY_PRIORITY[scenario.severity] ?? 0;
+    const bestPriority = SEVERITY_PRIORITY[bestMatch.severity] ?? 0;
+
+    if (currentPriority > bestPriority) {
+      bestMatch = scenario;
+    }
+  }
+
+  // Fallback heuristics: if nothing matched OR the matched scenario lacks
+  // richer guidance (protocol/checklist), upgrade to a fallback scenario.
+  const needsFallbackGuidance =
+    !bestMatch || !bestMatch.dispatchProtocol || !bestMatch.checklist?.length;
+
+  if (needsFallbackGuidance) {
+    if (
+      combinedText.includes("cruelty") ||
+      combinedText.includes("abuse") ||
+      combinedText.includes("beating") ||
+      combinedText.includes("neglect")
+    ) {
+      bestMatch = {
+        id: "fallback_cruelty",
+        title: "Fallback Cruelty Detection",
         keywords: [],
+        classification: CLASSIFICATION.CRUELTY,
         isEmergency: true,
         severity: SEVERITY.HIGH,
+        requiredFields: ["description", "location"],
+        responseTimeEstimateMin: 15,
+        dispatchProtocol: "NOTIFY_ADMIN_AND_DISPATCH",
+        checklist: [
+          "Is the animal in immediate danger?",
+          "Is the abuser still present nearby?",
+          "Is it safe for you to stay at the location?",
+          "Can you share the exact location?",
+          "Is photo/video evidence available?",
+        ],
+      };
+    } else if (
+      combinedText.includes("accident") ||
+      combinedText.includes("hit") ||
+      combinedText.includes("car") ||
+      combinedText.includes("road") ||
+      combinedText.includes("bleeding")
+    ) {
+      bestMatch = {
+        id: "fallback_accident",
+        title: "Fallback Accident Detection",
+        keywords: [],
         classification: CLASSIFICATION.ACCIDENT,
-        checklist: ['Move to safe area', 'Share location', 'Avoid human medicine'],
-        dispatchProtocol: 'DISPATCH_TRIAGE',
+        isEmergency: true,
+        severity: SEVERITY.CRITICAL,
+        requiredFields: ["description", "location"],
+        responseTimeEstimateMin: 10,
+        dispatchProtocol: "DISPATCH_RESCUE_IMMEDIATELY",
+        checklist: [
+          "Is the animal breathing?",
+          "Is there heavy bleeding?",
+          "Is the animal trapped or unable to move?",
+          "Is the location safe from traffic?",
+          "Share the exact location immediately.",
+        ],
+      };
+    } else if (
+      combinedText.includes("sick") ||
+      combinedText.includes("weak") ||
+      combinedText.includes("vomit") ||
+      combinedText.includes("fever") ||
+      combinedText.includes("breathing problem") ||
+      combinedText.includes("injury")
+    ) {
+      bestMatch = {
+        id: "fallback_sick",
+        title: "Fallback Sick Detection",
+        keywords: [],
+        classification: CLASSIFICATION.SICK,
+        isEmergency: true,
+        severity: SEVERITY.MEDIUM,
+        requiredFields: ["description"],
+        responseTimeEstimateMin: 30,
+        dispatchProtocol: "SEND_HEALTH_ALERT",
+        checklist: [
+          "Is the animal conscious?",
+          "Is the animal breathing normally?",
+          "Are there visible injuries?",
+          "How long has the animal been sick?",
+          "Does the animal need immediate transport?",
+        ],
       };
     }
   }
 
-  const result = best
-    ? {
-        isEmergency: !!best.isEmergency,
-        severity: best.severity,
-        classification: best.classification,
-        scenarioId: best.id,
-        checklist: best.checklist || [],
-        dispatchProtocol: best.dispatchProtocol || 'TRIAGE',
-        countdownSeconds: DEFAULT_COUNTDOWN[best.severity] ?? 0,
-      }
-    : {
-        isEmergency: false,
-        severity: SEVERITY.LOW,
-        classification: CLASSIFICATION.UNKNOWN,
-        scenarioId: null,
-        checklist: [],
-        dispatchProtocol: 'NONE',
-        countdownSeconds: 0,
-      };
+  if (!bestMatch) {
+    return {
+      isEmergency: false,
+      severity: SEVERITY.LOW,
+      classification: CLASSIFICATION.UNKNOWN,
+      scenarioId: null,
+      checklist: [],
+      dispatchProtocol: "NO_DISPATCH_REQUIRED",
+      countdownSeconds: 0,
+      detectionMs: Date.now() - start,
+      matchedKeywords: [],
+    };
+  }
 
-  return { ...result, detectionMs: Date.now() - start };
+  const matchedKeywords =
+    bestMatch.keywords?.filter((keyword: string) =>
+      combinedText.includes(keyword.toLowerCase())
+    ) ?? [];
+
+  return {
+    isEmergency: bestMatch.isEmergency,
+    severity: bestMatch.severity,
+    classification: bestMatch.classification,
+    scenarioId: bestMatch.id,
+    checklist: bestMatch.checklist ?? [],
+    dispatchProtocol: bestMatch.dispatchProtocol ?? "TRIAGE",
+    countdownSeconds: DEFAULT_COUNTDOWN[bestMatch.severity] ?? 0,
+    detectionMs: Date.now() - start,
+    matchedKeywords,
+  };
 }

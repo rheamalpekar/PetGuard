@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -28,9 +28,12 @@ import {
 } from "@/backendServices/ApiService";
 import { RateLimitError } from "@/backendServices/RateLimiter";
 import type { InfoFormData, LocationData, PhotoAsset } from "@/types/DataModels";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import DisclaimerText from '@/components/DisclaimerText';
+import type { EmergencyContext, ServiceCategory } from "@/types/DataModels";
+import { createFormValidator, PhoneFormatter } from '../../services/FormValidation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Conditionally import MapView only on mobile platforms
 let MapView: any;
@@ -68,6 +71,41 @@ export default function InfoFormScreen() {
   const isWeb = Platform.OS === 'web';
   const router = useRouter();
 
+  const params = useLocalSearchParams<{
+    emergencyType?: string;
+    description?: string;
+    severity?: string;
+    classification?: string;
+    scenarioId?: string;
+    dispatchProtocol?: string;
+    checklist?: string;
+    countdownSeconds?: string;
+    serviceType?: string;
+  }>();
+
+  const serviceType = typeof params.serviceType === 'string' ? params.serviceType : '';
+  const nonEmergencySeverity = typeof params.severity === 'string' ? params.severity : '';
+
+  const emergencyContext: EmergencyContext | undefined =
+    params.emergencyType
+      ? {
+          emergencyType: params.emergencyType,
+          description: params.description,
+          severity: params.severity,
+          classification: params.classification,
+          scenarioId: params.scenarioId ?? null,
+          dispatchProtocol: params.dispatchProtocol,
+          checklist: params.checklist
+            ? params.checklist.split(" | ").filter(Boolean)
+            : undefined,
+          countdownSeconds: params.countdownSeconds
+            ? Number(params.countdownSeconds)
+            : undefined,
+        }
+      : undefined;
+
+  const requestType: ServiceCategory = emergencyContext ? 'emergency' : (serviceType ? 'non-emergency' : 'emergency');
+
   const [hasTransportation, setHasTransportation] = useState<boolean | null>(null);
   const [transportationError, setTransportationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,10 +127,14 @@ export default function InfoFormScreen() {
       PhotoUploadProps & React.RefAttributes<PhotoUploadHandle>
     >;
 
+  // Initialize form validator
+  const [formValidator] = useState(() => createFormValidator('emergencyReporting'));
+  const [validationErrors, setValidationErrors] = useState(new Map());
+
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    getValues,
     reset,
     setValue,
   } = useForm<InfoFormData>({
@@ -103,16 +145,76 @@ export default function InfoFormScreen() {
       phoneNumber: '',
       emailAddress: '',
       additionalDetails: '',
+      serviceType: '',
+      severity: '',
     },
   });
 
+  // Draft saving functionality
+  const [isDraftSaved, setIsDraftSaved] = useState(false);
+
+  // Save draft to AsyncStorage
+  const saveDraft = async (formData: InfoFormData) => {
+    try {
+      await AsyncStorage.setItem('infoFormDraft', JSON.stringify(formData));
+      setIsDraftSaved(true);
+      setTimeout(() => setIsDraftSaved(false), 2000); // Hide message after 2 seconds
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+    }
+  };
+
+  // Load draft from AsyncStorage
+  const loadDraft = useCallback(async () => {
+    try {
+      const draftData = await AsyncStorage.getItem('infoFormDraft');
+      if (draftData) {
+        const draft = JSON.parse(draftData);
+        setValue('yourName', draft.yourName || '');
+        setValue('phoneNumber', draft.phoneNumber || '');
+        setValue('emailAddress', draft.emailAddress || '');
+        setValue('additionalDetails', draft.additionalDetails || '');
+        if (draft.location) {
+          setValue('location', draft.location);
+          setLocationAddress(draft.location.address || '');
+        }
+        setIsDraftSaved(true);
+        setTimeout(() => setIsDraftSaved(false), 2000);
+      }
+    } catch (error) {
+      console.error('Failed to load draft:', error);
+    }
+  }, [setValue]);
+
+  // Clear draft
+  const clearDraft = async () => {
+    try {
+      await AsyncStorage.removeItem('infoFormDraft');
+      setIsDraftSaved(false);
+    } catch (error) {
+      console.error('Failed to clear draft:', error);
+    }
+  };
+
   useEffect(() => {
-    // Initialize location on mount
+    // Initialize location on mount and load draft
     LocationService.initializeLocation(
       { setMapRegion, setIsLoadingLocation },
       isWeb
     );
-  }, [isWeb]);
+
+    // Load draft on component mount
+    loadDraft();
+  }, [isWeb, loadDraft]);
+
+  useEffect(() => {
+    if (serviceType) {
+      setValue('serviceType', serviceType);
+    }
+    if (nonEmergencySeverity) {
+      setValue('severity', nonEmergencySeverity);
+    }
+  }, [serviceType, nonEmergencySeverity, setValue]);
 
   const getCurrentLocation = () => {
     LocationService.getCurrentLocationWithAddress({
@@ -165,13 +267,89 @@ export default function InfoFormScreen() {
     return !hasErrors;
   };
 
+  const validateFormWithCustomRules = (formData: InfoFormData) => {
+    // Use FormValidation.js for standard field validation
+    const validationResult = formValidator.validateForm(formData) as any;
+    
+    if (!validationResult.isValid) {
+      setValidationErrors(validationResult.errors);
+      return false;
+    }
+    
+    // Clear validation errors if valid
+    setValidationErrors(new Map());
+    
+    // Run custom field validations
+    return validateCustomFields();
+  };
+
+  const handleFieldChange = (fieldName: string, value: any) => {
+    // Real-time validation using FormValidation.js
+    const result = formValidator.validateField(fieldName, value) as any;
+    
+    if (!result.isValid) {
+      setValidationErrors(prev => {
+        const newErrors = new Map(prev);
+        newErrors.set(fieldName, result.errors);
+        return newErrors;
+      });
+    } else {
+      setValidationErrors(prev => {
+        const newErrors = new Map(prev);
+        newErrors.delete(fieldName);
+        return newErrors;
+      });
+    }
+  };
+
+  const formatPhoneNumber = (phone: string) => {
+    return PhoneFormatter.format(phone);
+  };
+
+  const submitFormWithProgress = (formData: FormData): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', 'https://api.com/submit-report');
+      xhr.setRequestHeader('Accept', 'application/json');
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          setUploadProgress(Math.round((event.loaded / event.total) * 100));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error('Network request failed'));
+      };
+
+      xhr.onload = () => {
+        let parsedResponse: any = {};
+
+        try {
+          parsedResponse = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+        } catch {
+          parsedResponse = {};
+        }
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setUploadProgress(100);
+          resolve(parsedResponse);
+          return;
+        }
+
+        reject(new Error(parsedResponse.message || 'Failed to submit report'));
+      };
+
+      xhr.send(formData);
+    });
+  };
   const handleFormSubmit = async (data: InfoFormData) => {
     setRateLimitErrorMessage(null);
     if (submitLockRef.current) {
       return;
     }
 
-    if (!validateCustomFields()) return;
+    if (!validateFormWithCustomRules(data)) return;
 
     const user = auth.currentUser;
     if (!user) {
@@ -181,6 +359,11 @@ export default function InfoFormScreen() {
 
     submitLockRef.current = true;
     setIsSubmitting(true);
+
+    // Merge in any emergency context passed from the report screen
+    const submissionData: InfoFormData = emergencyContext
+      ? { ...data, emergencyContext, requestType }
+      : { ...data, requestType };
 
     try {
       const netState = await NetInfo.fetch();
@@ -201,7 +384,7 @@ export default function InfoFormScreen() {
           localId,
           uid: user.uid,
           data: {
-            ...data,
+            ...submissionData,
             formId: localId,
           },
           photoUris,
@@ -212,6 +395,11 @@ export default function InfoFormScreen() {
         reset();
         photoUploadRef.current?.reset();
         setIsSubmitting(false);
+
+        Alert.alert(
+          "Saved Offline",
+          "Your request has been saved locally but has not been sent to the server yet. It will be uploaded automatically when you are back online."
+        );
 
         router.push({
           pathname: "/formscreens/ConfirmationPage",
@@ -232,7 +420,7 @@ export default function InfoFormScreen() {
       );
 
       const response: any = await Promise.race([
-        submitInfoForm(data, photoInputs),
+        submitInfoForm(submissionData, photoInputs),
         timeoutPromise,
       ]);
 
@@ -255,6 +443,11 @@ export default function InfoFormScreen() {
         return;
       }
 
+      Alert.alert(
+        "Submission Failed",
+        "Your request could not be sent to the server. It has been saved locally and will be uploaded when you are back online."
+      );
+
       const localId = `queued_${Date.now()}`;
       const photos = photoUploadRef.current?.getPhotos() ?? [];
 
@@ -266,7 +459,7 @@ export default function InfoFormScreen() {
         localId,
         uid: user.uid,
         data: {
-          ...data,
+          ...submissionData,
           formId: localId,
         },
         photoUris,
@@ -295,6 +488,25 @@ export default function InfoFormScreen() {
       contentContainerStyle={styles.contentContainer}
       keyboardShouldPersistTaps="handled"
     >
+      {(serviceType || nonEmergencySeverity) && (
+        <View style={styles.section}>
+          <View style={[styles.serviceSummaryCard, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#eef3fb', borderColor: colorScheme === 'dark' ? '#374151' : '#c9d8ef' }]}>
+            {serviceType ? (
+              <View style={styles.serviceSummaryRow}>
+                <Text style={[styles.serviceSummaryLabel, { color: colorScheme === 'dark' ? '#60A5FA' : '#1f5ea8' }]}>Service</Text>
+                <Text style={[styles.serviceSummaryValue, { color: colors.text }]}>{serviceType}</Text>
+              </View>
+            ) : null}
+            {nonEmergencySeverity ? (
+              <View style={styles.serviceSummaryRow}>
+                <Text style={[styles.serviceSummaryLabel, { color: colorScheme === 'dark' ? '#60A5FA' : '#1f5ea8' }]}>Priority</Text>
+                <Text style={[styles.serviceSummaryValue, { color: colors.text }]}>{nonEmergencySeverity}</Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      )}
+
       {/* Location */}
       <View style={styles.section}>
         <View style={styles.labelContainer}>
@@ -311,7 +523,7 @@ export default function InfoFormScreen() {
             <Controller
               control={control}
               name="location"
-              rules={{ required: 'Location is required' }}
+              rules={{}}
               render={({ field: { value } }) => (
                 <>
                   <View style={styles.webLocationInputContainer}>
@@ -321,7 +533,7 @@ export default function InfoFormScreen() {
                         styles.multilineInput,
                         { 
                           color: colors.text, 
-                          borderColor: errors.location ? '#ff4444' : '#ddd',
+                          borderColor: validationErrors.get('location') ? '#ff4444' : '#ddd',
                           backgroundColor: isLoadingLocation ? '#f8f8f8' : '#fff',
                         },
                       ]}
@@ -369,9 +581,9 @@ export default function InfoFormScreen() {
             <Controller
               control={control}
               name="location"
-              rules={{ required: 'Please select a location on the map' }}
+              rules={{}}
               render={({ field: { value } }) => (
-                <View style={[styles.mapContainer, errors.location && styles.mapContainerError]}>
+                <View style={[styles.mapContainer, { borderColor: validationErrors.get('location') ? '#ff4444' : (colorScheme === 'dark' ? '#374151' : '#ddd') }, validationErrors.get('location') && styles.mapContainerError]}>
                   {mapRegion ? (
                     <>
                       <MapView
@@ -395,8 +607,8 @@ export default function InfoFormScreen() {
                         )}
                       </MapView>
                       {isLoadingLocation && (
-                        <View style={styles.mapLoadingOverlay}>
-                          <View style={styles.mapLoadingContainer}>
+                        <View style={[styles.mapLoadingOverlay, { backgroundColor: colorScheme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.9)' }]}>
+                          <View style={[styles.mapLoadingContainer, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#fff' }]}>
                             <ActivityIndicator size="large" color="#3478f6" />
                             <Text style={styles.mapLoadingText}>Getting your location...</Text>
                           </View>
@@ -415,9 +627,9 @@ export default function InfoFormScreen() {
               )}
             />
             {locationAddress !== '' && (
-              <View style={styles.addressContainer}>
-                <Ionicons name="location-outline" size={16} color="#666" />
-                <Text style={styles.addressText}>{locationAddress}</Text>
+              <View style={[styles.addressContainer, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#f8f9fa' }]}>
+                <Ionicons name="location-outline" size={16} color={colorScheme === 'dark' ? '#9CA3AF' : '#666'} />
+                <Text style={[styles.addressText, { color: colors.text }]}>{locationAddress}</Text>
               </View>
             )}
             {locationAccuracy && (
@@ -438,7 +650,7 @@ export default function InfoFormScreen() {
                     '#ff3b30'
                   } 
                 />
-                <Text style={styles.accuracyText}>
+                <Text style={[styles.accuracyText, { color: colors.text }]}>
                   {locationAccuracy.description}
                   {locationAccuracy.meters != null && ` (±${Math.round(locationAccuracy.meters)}m)`}
                 </Text>
@@ -459,8 +671,8 @@ export default function InfoFormScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-        {errors.location && (
-          <Text style={styles.errorText}>{errors.location.message}</Text>
+        {validationErrors.get('location') && (
+          <Text style={styles.errorText}>{formValidator.getErrorMessage('location')}</Text>
         )}
       </View>
 
@@ -481,95 +693,78 @@ export default function InfoFormScreen() {
           <Controller
             control={control}
             name="yourName"
-            rules={{ required: 'Name is required' }}
+            rules={{}}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 style={[
                   styles.contactInput,
-                  { color: colors.text, borderBottomColor: errors.yourName ? '#ff4444' : '#eee' },
+                  { color: colors.text, borderBottomColor: validationErrors.get('yourName') ? '#ff4444' : (colorScheme === 'dark' ? '#374151' : '#eee') },
                 ]}
                 placeholder="Your name"
                 placeholderTextColor={colors.icon}
-                onFocus={() => {
-                  if (hasTransportation === null) {
-                    setTransportationError('Please select a transportation option');
-                  }
-                }}
                 onBlur={onBlur}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  onChange(text);
+                  handleFieldChange('yourName', text);
+                }}
                 value={value}
               />
             )}
           />
-          {errors.yourName && (
-            <Text style={styles.errorText}>{errors.yourName.message}</Text>
+          {validationErrors.get('yourName') && (
+            <Text style={styles.errorText}>{formValidator.getErrorMessage('yourName')}</Text>
           )}
           <Controller
             control={control}
             name="phoneNumber"
-            rules={{
-              required: 'Phone number is required',
-              pattern: {
-                value: /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/,
-                message: 'Please enter a valid phone number',
-              },
-            }}
+            rules={{}}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 style={[
                   styles.contactInput,
-                  { color: colors.text, borderBottomColor: errors.phoneNumber ? '#ff4444' : '#eee' },
+                  { color: colors.text, borderBottomColor: validationErrors.get('phoneNumber') ? '#ff4444' : (colorScheme === 'dark' ? '#374151' : '#eee') },
                 ]}
                 placeholder="Phone number"
                 placeholderTextColor={colors.icon}
-                onFocus={() => {
-                  if (hasTransportation === null) {
-                    setTransportationError('Please select a transportation option');
-                  }
-                }}
                 onBlur={onBlur}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  const formatted = formatPhoneNumber(text);
+                  onChange(formatted);
+                  handleFieldChange('phoneNumber', formatted);
+                }}
                 value={value}
                 keyboardType="phone-pad"
               />
             )}
           />
-          {errors.phoneNumber && (
-            <Text style={styles.errorText}>{errors.phoneNumber.message}</Text>
+          {validationErrors.get('phoneNumber') && (
+            <Text style={styles.errorText}>{formValidator.getErrorMessage('phoneNumber')}</Text>
           )}
           <Controller
             control={control}
             name="emailAddress"
-            rules={{
-              required: 'Email address is required',
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: 'Please enter a valid email address',
-              },
-            }}
+            rules={{}}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 style={[
                   styles.contactInput,
-                  { color: colors.text, borderBottomColor: errors.emailAddress ? '#ff4444' : '#eee' },
+                  { color: colors.text, borderBottomColor: validationErrors.get('emailAddress') ? '#ff4444' : (colorScheme === 'dark' ? '#374151' : '#eee') },
                 ]}
                 placeholder="Email address"
                 placeholderTextColor={colors.icon}
-                onFocus={() => {
-                  if (hasTransportation === null) {
-                    setTransportationError('Please select a transportation option');
-                  }
-                }}
                 onBlur={onBlur}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  onChange(text);
+                  handleFieldChange('emailAddress', text);
+                }}
                 value={value}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
             )}
           />
-          {errors.emailAddress && (
-            <Text style={styles.errorText}>{errors.emailAddress.message}</Text>
+          {validationErrors.get('emailAddress') && (
+            <Text style={styles.errorText}>{formValidator.getErrorMessage('emailAddress')}</Text>
           )}
         </View>
       </View>
@@ -638,17 +833,15 @@ export default function InfoFormScreen() {
               style={[
                 styles.input,
                 styles.multilineInput,
-                { color: colors.text },
+                { color: colors.text, backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#fff', borderColor: colorScheme === 'dark' ? '#374151' : '#ddd' },
               ]}
               placeholder=""
               placeholderTextColor={colors.icon}
-              onFocus={() => {
-                if (hasTransportation === null) {
-                  setTransportationError('Please select a transportation option');
-                }
-              }}
               onBlur={onBlur}
-              onChangeText={onChange}
+              onChangeText={(text) => {
+                onChange(text);
+                handleFieldChange('additionalDetails', text);
+              }}
               value={value}
               multiline
               numberOfLines={4}
@@ -656,6 +849,35 @@ export default function InfoFormScreen() {
           )}
         />
       </View>
+
+      {/* Draft Actions */}
+      <View style={styles.draftActions}>
+        <TouchableOpacity
+          style={[styles.draftButton, isDraftSaved && styles.draftButtonSaved]}
+          onPress={() => saveDraft(getValues() as InfoFormData)}
+          disabled={isSubmitting}
+        >
+          <Ionicons name="save" size={16} color="#3478f6" />
+          <Text style={styles.draftButtonText}>Save Draft</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.draftButton, styles.clearButton]}
+          onPress={clearDraft}
+          disabled={isSubmitting}
+        >
+          <Ionicons name="trash" size={16} color="#ff3b30" />
+          <Text style={styles.draftButtonText}>Clear Draft</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Draft Saved Message */}
+      {isDraftSaved && (
+        <View style={styles.draftSavedMessage}>
+          <Ionicons name="checkmark-circle" size={16} color="#34c759" />
+          <Text style={styles.draftSavedText}>Draft saved successfully</Text>
+        </View>
+      )}
 
       {/* Submit Button */}
       <TouchableOpacity
@@ -677,6 +899,19 @@ export default function InfoFormScreen() {
           {rateLimitErrorMessage}
         </Text>
       )}
+      
+      {/* Display FormValidation.js errors */}
+      {validationErrors.size > 0 && (
+        <View style={styles.validationErrorContainer}>
+          <Text style={styles.validationErrorTitle}>Please correct the following errors:</Text>
+          {Array.from(validationErrors.entries()).map(([fieldName, errors]) => (
+            <Text key={fieldName} style={styles.validationErrorText}>
+              {fieldName}: {errors[0]}
+            </Text>
+          ))}
+        </View>
+      )}
+      
       <DisclaimerText />
     </ScrollView>
   );
@@ -693,6 +928,27 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 20,
+  },
+  serviceSummaryCard: {
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    gap: 6,
+  },
+  serviceSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  serviceSummaryLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  serviceSummaryValue: {
+    fontSize: 15,
+    fontWeight: '700',
   },
   labelContainer: {
     flexDirection: 'row',
@@ -724,7 +980,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
@@ -740,7 +995,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: '#ddd',
     marginBottom: 12,
   },
   mapContainerError: {
@@ -760,12 +1014,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   mapLoadingContainer: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 12,
     alignItems: 'center',
@@ -784,7 +1036,6 @@ const styles = StyleSheet.create({
   addressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
     padding: 12,
     borderRadius: 8,
     gap: 8,
@@ -793,7 +1044,6 @@ const styles = StyleSheet.create({
   addressText: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
     lineHeight: 20,
   },
   accuracyContainer: {
@@ -827,7 +1077,6 @@ const styles = StyleSheet.create({
   accuracyText: {
     flex: 1,
     fontSize: 13,
-    color: '#333',
     fontWeight: '500',
   },
   locationActions: {
@@ -943,6 +1192,73 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  draftActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  draftButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 100,
+  },
+  draftButtonSaved: {
+    backgroundColor: '#e8f9ef',
+    borderColor: '#c3f1d1',
+  },
+  clearButton: {
+    backgroundColor: '#ffe6e6',
+    borderColor: '#ffcccc',
+  },
+  draftButtonText: {
+    color: '#333',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  draftSavedMessage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f9ef',
+    borderWidth: 1,
+    borderColor: '#c3f1d1',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 10,
+  },
+  draftSavedText: {
+    color: '#34c759',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  validationErrorContainer: {
+    backgroundColor: '#ffe6e6',
+    borderWidth: 1,
+    borderColor: '#ffcccc',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  validationErrorTitle: {
+    color: '#ff3b30',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  validationErrorText: {
+    color: '#ff3b30',
+    fontSize: 12,
+    marginBottom: 4,
   },
 });
 

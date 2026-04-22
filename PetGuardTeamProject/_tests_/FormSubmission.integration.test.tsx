@@ -8,7 +8,7 @@ const mockPush = jest.fn();
 let mockCurrentParams: Record<string, any> = {};
 let mockSubmittedFormSnapshot: any = null;
 
-const mockSubmitInfoForm = jest.fn(async (data: any) => {
+const mockSubmitInfoForm = jest.fn(async (data: any, _files?: any) => {
   mockSubmittedFormSnapshot = data;
   return { success: true, formId: "server-flow-123" };
 });
@@ -76,7 +76,7 @@ jest.mock("../services/LocationService", () => ({
 }));
 
 jest.mock("@/backendServices/ApiService", () => ({
-  submitInfoForm: (...args: any[]) => mockSubmitInfoForm(...args),
+  submitInfoForm: (a: any, b?: any) => mockSubmitInfoForm(a, b),
   enqueueInfoForm: jest.fn(),
   getInfoFormDataById: jest.fn(async (formId: string) => ({
     ...mockSubmittedFormSnapshot,
@@ -162,7 +162,7 @@ describe("integration: form submission flow", () => {
       expect(mockSubmitInfoForm).toHaveBeenCalledWith(
         expect.objectContaining({
           yourName: "Taylor",
-          phoneNumber: "8175551212",
+          phoneNumber: "(817) 555-1212",
           emailAddress: "taylor@test.com",
           additionalDetails: "Please help this pet.",
           location: expect.objectContaining({ address: "123 Pet Lane" }),

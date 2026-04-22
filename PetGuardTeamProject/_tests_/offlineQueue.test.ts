@@ -70,6 +70,8 @@ const makeItem = (localId: string) => ({
     phoneNumber: "1234567890",
     emailAddress: "test@test.com",
     additionalDetails: "Queue test",
+    serviceType: "",
+    severity: "",
   },
   photoUris: ["https://example.com/photo.jpg"],
   createdAt: 1000,

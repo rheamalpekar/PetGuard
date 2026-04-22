@@ -1,9 +1,9 @@
 const mockCurrentUser: any = { uid: "perf-user" };
-const mockAddDoc = jest.fn(async () => ({ id: "perf-form" }));
-const mockUpdateDoc = jest.fn(async () => undefined);
-const mockUploadBytes = jest.fn(async () => undefined);
-const mockGetDownloadURL = jest.fn(async () => "https://cdn.test/perf.jpg");
-const mockThrowIfRateLimited = jest.fn(async () => undefined);
+const mockAddDoc = jest.fn(async (_a: any, _b: any) => ({ id: "perf-form" }));
+const mockUpdateDoc = jest.fn(async (_a: any, _b: any) => undefined);
+const mockUploadBytes = jest.fn(async (_a: any, _b: any) => undefined);
+const mockGetDownloadURL = jest.fn(async (_a: any) => "https://cdn.test/perf.jpg");
+const mockThrowIfRateLimited = jest.fn(async (_a: any, _b: any) => undefined);
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
   getItem: jest.fn(async () => null),
@@ -12,12 +12,12 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
 }));
 
 jest.mock("firebase/firestore", () => ({
-  addDoc: (...args: any[]) => mockAddDoc(...args),
+  addDoc: (a: any, b: any) => mockAddDoc(a, b),
   collection: (db: any, name: string) => ({ db, name }),
   Timestamp: { now: jest.fn(() => ({ seconds: 1 })) },
   getDoc: jest.fn(),
   doc: (db: any, collectionName: string, id: string) => ({ db, collectionName, id }),
-  updateDoc: (...args: any[]) => mockUpdateDoc(...args),
+  updateDoc: (a: any, b: any) => mockUpdateDoc(a, b),
   query: jest.fn(),
   where: jest.fn(),
   onSnapshot: jest.fn(),
@@ -26,8 +26,8 @@ jest.mock("firebase/firestore", () => ({
 
 jest.mock("firebase/storage", () => ({
   ref: (_storage: any, path: string) => ({ path }),
-  uploadBytes: (...args: any[]) => mockUploadBytes(...args),
-  getDownloadURL: (...args: any[]) => mockGetDownloadURL(...args),
+  uploadBytes: (a: any, b: any) => mockUploadBytes(a, b),
+  getDownloadURL: (a: any) => mockGetDownloadURL(a),
 }));
 
 jest.mock("../src/backendServices/firebase", () => ({
@@ -43,7 +43,7 @@ jest.mock("../src/backendServices/firebase", () => ({
 jest.mock("../src/backendServices/RateLimiter", () => ({
   RATE_LIMIT_BUCKETS: { infoFormSubmit: "info" },
   RATE_LIMIT_WINDOW_MS: 60000,
-  throwIfRateLimited: (...args: any[]) => mockThrowIfRateLimited(...args),
+  throwIfRateLimited: (a: any, b: any) => mockThrowIfRateLimited(a, b),
 }));
 
 import { detectEmergency } from "../src/emergency/core/EmergencyAlertSystem";
@@ -96,10 +96,10 @@ describe("basic performance checks", () => {
     });
     const defaultEnd = Date.now();
 
-    expect(heuristic.scenarioId).toBe("heuristic_high_risk");
-    expect(heuristic.isEmergency).toBe(true);
+    expect(heuristic.scenarioId).toBeNull();
+    expect(heuristic.isEmergency).toBe(false);
     expect(nonEmergency.isEmergency).toBe(false);
-    expect(nonEmergency.dispatchProtocol).toBe("NONE");
+    expect(nonEmergency.dispatchProtocol).toBe("NO_DISPATCH_REQUIRED");
     expect(heuristicEnd - heuristicStart).toBeLessThan(100);
     expect(defaultEnd - defaultStart).toBeLessThan(100);
   });
@@ -114,6 +114,8 @@ describe("basic performance checks", () => {
         phoneNumber: "1234567890",
         emailAddress: "perf@test.com",
         additionalDetails: "Quick benchmark",
+        serviceType: "",
+        severity: "",
       },
       [new Blob(["image"])],
       { skipRateLimit: true },

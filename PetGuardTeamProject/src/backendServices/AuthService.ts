@@ -50,6 +50,7 @@ export const register = async (
       fullName,
       phoneNumber,
       createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     });
     return cred.user;
   } catch (error) {

@@ -90,7 +90,7 @@ describe("EmergencyHome", () => {
     fireEvent.press(getByText("Vaccination"));
 
     expect(mockProtectedNavigate).toHaveBeenCalledWith({
-      pathname: "/emergency/report",
+      pathname: "/non-emergency/report",
       params: { prefillType: "Vaccination" },
     });
   });
@@ -117,11 +117,11 @@ describe("EmergencyHome", () => {
       params: { prefillType: "Animal Cruelty" },
     });
     expect(mockProtectedNavigate).toHaveBeenCalledWith({
-      pathname: "/emergency/report",
+      pathname: "/non-emergency/report",
       params: { prefillType: "Adopt / Surrender" },
     });
     expect(mockProtectedNavigate).toHaveBeenCalledWith({
-      pathname: "/emergency/report",
+      pathname: "/non-emergency/report",
       params: { prefillType: "Spay / Neuter" },
     });
   });
@@ -163,21 +163,25 @@ describe("EmergencyHome", () => {
     });
   });
 
-  it("pressing dev navigation triggers navigation", () => {
+  it("pressing non-emergency tiles triggers correct router navigation", () => {
     const { getByText } = render(<EmergencyHome />);
-    const { router } = require("expo-router");
 
-    fireEvent.press(getByText("Go to Login Screen"));
-    fireEvent.press(getByText("Go to Profile Screen"));
-    fireEvent.press(getByText("Go to Firebase test screen"));
-    fireEvent.press(getByText("Go to Info Form Screen"));
-    fireEvent.press(getByText("Go to Confirmation screen"));
+    fireEvent.press(getByText("Vaccination"));
+    fireEvent.press(getByText("Adopt / Surrender"));
+    fireEvent.press(getByText("Spay / Neuter"));
 
-    expect(router.push).toHaveBeenCalledWith("/auth/LoginScreen");
-    expect(router.push).toHaveBeenCalledWith("/screens/UserProfileScreen");
-    expect(mockProtectedNavigate).toHaveBeenCalledWith("/formscreens/FirebaseTestScreen");
-    expect(mockProtectedNavigate).toHaveBeenCalledWith("/formscreens/info-form");
-    expect(mockProtectedNavigate).toHaveBeenCalledWith("/formscreens/ConfirmationPage");
+    expect(mockProtectedNavigate).toHaveBeenCalledWith({
+      pathname: "/non-emergency/report",
+      params: { prefillType: "Vaccination" },
+    });
+    expect(mockProtectedNavigate).toHaveBeenCalledWith({
+      pathname: "/non-emergency/report",
+      params: { prefillType: "Adopt / Surrender" },
+    });
+    expect(mockProtectedNavigate).toHaveBeenCalledWith({
+      pathname: "/non-emergency/report",
+      params: { prefillType: "Spay / Neuter" },
+    });
   });
 
   it("shows a web alert when logout fails on web", async () => {

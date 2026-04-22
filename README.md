@@ -1,5 +1,8 @@
 # PetGuard - Comprehensive Care at the Tap of a Paw
 
+## Note
+Check presentation slide for demo video and other links like apk.
+
 ## Tech stack:
 React Native (expo), TypeScript, Firebase
 

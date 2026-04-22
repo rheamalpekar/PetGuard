@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert } from "react-native";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { logoutUser, getUserProfileWithCache } from "@/backendServices/ApiService";
 import { useProtectedNavigation } from "@/hooks/useProtectedNavigation";
-import { useAuth } from "@/context/AuthContext";
 import { auth } from "@/backendServices/firebase";
 import DisclaimerText from "@/components/DisclaimerText";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "@/context/AuthContext";
 
 export default function EmergencyHome() {
   const { protectedNavigate } = useProtectedNavigation();
@@ -38,6 +38,13 @@ export default function EmergencyHome() {
   const goReport = (serviceLabel: string) => {
     protectedNavigate({
       pathname: "/emergency/report",
+      params: { prefillType: serviceLabel },
+    } as never);
+  };
+
+  const goNonEmergencyReport = (serviceLabel: string) => {
+    protectedNavigate({
+      pathname: "/non-emergency/report",
       params: { prefillType: serviceLabel },
     } as never);
   };
@@ -154,47 +161,27 @@ export default function EmergencyHome() {
           <Text style={styles.bannerText}>NON-EMERGENCY SERVICES</Text>
         </View>
 
-        <View style={styles.tileRow}>
-          <ServiceTile
-            title="Vaccination"
-            bg="#1e78ff"
-            icon={<MaterialCommunityIcons name="needle" size={30} color="#fff" />}
-            onPress={() => goReport("Vaccination")}
-          />
-          <ServiceTile
-            title="Adopt / Surrender"
-            bg="#2e7d32"
-            icon={<Ionicons name="heart" size={30} color="#fff" />}
-            onPress={() => goReport("Adopt / Surrender")}
-          />
-          <ServiceTile
-            title="Spay / Neuter"
-            bg="#7e57c2"
-            icon={<MaterialCommunityIcons name="scissors-cutting" size={30} color="#fff" />}
-            onPress={() => goReport("Spay / Neuter")}
-          />
-        </View>
-
-        <Pressable onPress={() => protectedNavigate("/formscreens/FirebaseTestScreen" as never)} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Firebase test screen</Text>
-        </Pressable>
-
-        <Pressable onPress={() => router.push("/auth/LoginScreen" as never)} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Login Screen</Text>
-        </Pressable>
-
-        <Pressable onPress={() => router.push("/screens/UserProfileScreen" as never)} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Profile Screen</Text>
-        </Pressable>
-
-        <Pressable onPress={() => protectedNavigate("/formscreens/info-form" as never)} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Info Form Screen</Text>
-        </Pressable>
-
-        <Pressable onPress={() => protectedNavigate("/formscreens/ConfirmationPage" as never)} style={styles.navigation}>
-          <Text style={styles.navigationText}>Go to Confirmation screen</Text>
-        </Pressable>
-
+      {/* Non-Emergency Tiles */}
+      <View style={styles.tileRow}>
+        <ServiceTile
+          title="Vaccination"
+          bg="#1e78ff"
+          icon={<MaterialCommunityIcons name="needle" size={30} color="#fff" />}
+          onPress={() => goNonEmergencyReport("Vaccination")}
+        />
+        <ServiceTile
+          title="Adopt / Surrender"
+          bg="#2e7d32"
+          icon={<Ionicons name="heart" size={30} color="#fff" />}
+          onPress={() => goNonEmergencyReport("Adopt / Surrender")}
+        />
+        <ServiceTile
+          title="Spay / Neuter"
+          bg="#7e57c2"
+          icon={<MaterialCommunityIcons name="scissors-cutting" size={30} color="#fff" />}
+          onPress={() => goNonEmergencyReport("Spay / Neuter")}
+        />
+      </View>
         <View style={{ height: 14 }} />
         <DisclaimerText />
       </ScrollView>
@@ -357,18 +344,6 @@ const styles = StyleSheet.create({
     color: "#8b949e",
     fontSize: 12,
     textAlign: "center",
-  },
-  navigation: {
-    backgroundColor: "#233244",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    alignSelf: "center",
-    marginTop: 12,
-  },
-  navigationText: {
-    color: "#ffffff",
-    fontSize: 14,
   },
   profileBtn: {
     flexDirection: "row",

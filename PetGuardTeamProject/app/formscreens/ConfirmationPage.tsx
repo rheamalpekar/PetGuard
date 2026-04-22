@@ -46,7 +46,8 @@ export default function ConfirmationScreen() {
     : formId ?? "UNKNOWN";
 
   const showVectorAssets = isOnline;
-  console.log(requestId);
+
+  const synced = isQueuedRequest && justSynced;
 
   const dummyData: ConfirmationDisplayData = {
     yourName: "Demo User",
@@ -57,6 +58,13 @@ export default function ConfirmationScreen() {
   };
 
   const displayData: ConfirmationDisplayData = formData || dummyData;
+
+  const isEmergency = formData?.requestType === 'emergency' || 
+                      (formData as any)?.emergencyContext !== undefined ||
+                      (!formData?.requestType && !formData?.serviceType);
+
+  const requestTypeLabel = isEmergency ? 'Emergency' : 'Non-Emergency';
+  const requestTypeColor = isEmergency ? '#EF4444' : '#3B82F6';
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
@@ -161,7 +169,7 @@ export default function ConfirmationScreen() {
           : displayData.location ?? "N/A";
 
       await Share.share({
-        message: `PetGuard Non-Emergency Request\nRequest ID: ${requestId}\nEstimated Response Time: 0hrs 59mins\nContact: ${displayData.yourName} | ${displayData.phoneNumber}\nEmail: ${displayData.emailAddress}\nDescription: ${displayData.additionalDetails}\nLocation: ${location}`,
+        message: `PetGuard ${requestTypeLabel} Request\nRequest ID: ${requestId}\nEstimated Response Time: 0hrs 59mins\nContact: ${displayData.yourName} | ${displayData.phoneNumber}\nEmail: ${displayData.emailAddress}\nDescription: ${displayData.additionalDetails}\nLocation: ${location}`,
         title: "PetGuard Request Details",
       });
     } catch (error) {
@@ -172,11 +180,29 @@ export default function ConfirmationScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {isQueuedRequest && !synced && (
+          <View style={styles.offlineBanner}>
+            <Ionicons name="cloud-offline-outline" size={20} color="#FBBF24" />
+            <Text style={styles.offlineBannerText}>
+              This request has not been sent to the server yet. It will be uploaded when you are back online.
+            </Text>
+          </View>
+        )}
+
+        {isQueuedRequest && synced && (
+          <View style={styles.syncedBanner}>
+            <Ionicons name="checkmark-circle-outline" size={20} color="#34D399" />
+            <Text style={styles.syncedBannerText}>
+              This request has been successfully uploaded to the server.
+            </Text>
+          </View>
+        )}
+
         <View style={styles.topSection}>
           <View style={styles.topTextArea}>
             <Text style={styles.heading}>Request Confirmed</Text>
             <Text style={styles.subHeading}>
-              This is a Non-Emergency request{"\n"}for service.
+              This is a <Text style={{ color: requestTypeColor, fontWeight: '700' }}>{requestTypeLabel}</Text> request{"\n"}for service.
             </Text>
           </View>
 
@@ -187,7 +213,7 @@ export default function ConfirmationScreen() {
                 <Ionicons
                   name="checkmark-circle"
                   size={34}
-                  color="#3B82F6"
+                  color={requestTypeColor}
                   style={styles.checkIcon}
                 />
               </>
@@ -578,5 +604,37 @@ const styles = StyleSheet.create({
     color: "#60A5FA",
     fontSize: 15,
     fontWeight: "500",
+  },
+
+  offlineBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#78350F",
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
+    gap: 10,
+  },
+  offlineBannerText: {
+    color: "#FDE68A",
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 18,
+  },
+
+  syncedBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#064E3B",
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
+    gap: 10,
+  },
+  syncedBannerText: {
+    color: "#A7F3D0",
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 18,
   },
 });

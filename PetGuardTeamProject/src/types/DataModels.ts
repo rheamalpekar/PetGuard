@@ -50,6 +50,10 @@ export type InfoFormData = {
   phoneNumber: string;
   emailAddress: string;
   additionalDetails: string;
+  emergencyContext?: EmergencyContext;
+  serviceType: string;
+  severity: string;
+  requestType?: ServiceCategory;
 };
 
 export type ConfirmationDisplayData = InfoFormData | {
@@ -94,6 +98,7 @@ export type ServiceRequest = {
   priority?: PriorityLevel;
   status: RequestStatus;
   createdAt: Date | { toDate?: () => Date };
+  requestType?: ServiceCategory;
 };
 
 export type UserProfile = {
@@ -123,12 +128,15 @@ export type AuthContextValue = {
 
 export type EmergencyScenario = {
   id: string;
+  title?: string;
   keywords: string[];
   severity: PriorityLevel;
   classification: EmergencyClassification;
   isEmergency: boolean;
   checklist?: string[];
   dispatchProtocol?: string;
+  requiredFields?: string[];
+  responseTimeEstimateMin?: number;
 };
 
 export type EmergencyDetectionInput = {
@@ -145,9 +153,21 @@ export type EmergencyDetectionResult = {
   dispatchProtocol: string;
   countdownSeconds: number;
   detectionMs: number;
+  matchedKeywords: string[];
 };
 
 export type EmergencyReportSeverityUI = "Low" | "Medium" | "High";
+
+export type EmergencyContext = {
+  emergencyType?: string;
+  description?: string;
+  severity?: string;
+  classification?: string;
+  scenarioId?: string | null;
+  dispatchProtocol?: string;
+  checklist?: string[];
+  countdownSeconds?: number;
+};
 
 export type EmergencyReportData = {
   type: string;
