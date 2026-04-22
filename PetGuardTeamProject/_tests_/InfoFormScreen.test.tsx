@@ -176,7 +176,7 @@ describe("InfoFormScreen", () => {
     fireEvent.changeText(emailInput, "test@test.com");
 
     expect(nameInput.props.value).toBe("John");
-    expect(phoneInput.props.value).toBe("1234567890");
+    expect(phoneInput.props.value).toBe("(123) 456-7890");
     expect(emailInput.props.value).toBe("test@test.com");
   });
 
@@ -186,11 +186,11 @@ describe("InfoFormScreen", () => {
     fireEvent.press(getByText("Submit Report"));
 
     expect(
-      await findByText("Please select a location on the map"),
+      await findByText("Location: This field is required"),
     ).toBeTruthy();
-    expect(await findByText("Name is required")).toBeTruthy();
-    expect(await findByText("Phone number is required")).toBeTruthy();
-    expect(await findByText("Email address is required")).toBeTruthy();
+    expect(await findByText("Your Name: This field is required")).toBeTruthy();
+    expect(await findByText("Phone Number: This field is required")).toBeTruthy();
+    expect(await findByText("Email Address: This field is required")).toBeTruthy();
     expect(mockSubmitInfoForm).not.toHaveBeenCalled();
     expect(mockEnqueue).not.toHaveBeenCalled();
   });
@@ -204,9 +204,13 @@ describe("InfoFormScreen", () => {
   });
 
   it("requires transportation selection before contact field focus can proceed cleanly", async () => {
-    const { getByPlaceholderText, findByText } = render(<InfoFormScreen />);
+    const { getByPlaceholderText, getByText, findByText } = render(<InfoFormScreen />);
 
-    fireEvent(getByPlaceholderText("Your name"), "focus");
+    fireEvent.changeText(getByPlaceholderText("Your name"), "John");
+    fireEvent.changeText(getByPlaceholderText("Phone number"), "1234567890");
+    fireEvent.changeText(getByPlaceholderText("Email address"), "test@test.com");
+    fireEvent.press(getByText("Use My Location"));
+    fireEvent.press(getByText("Submit Report"));
 
     expect(
       await findByText("Please select a transportation option"),
@@ -312,7 +316,11 @@ describe("InfoFormScreen", () => {
       <InfoFormScreen />,
     );
 
-    fireEvent(getByPlaceholderText("Phone number"), "focus");
+    fireEvent.changeText(getByPlaceholderText("Your name"), "John");
+    fireEvent.changeText(getByPlaceholderText("Phone number"), "1234567890");
+    fireEvent.changeText(getByPlaceholderText("Email address"), "test@test.com");
+    fireEvent.press(getByText("Use My Location"));
+    fireEvent.press(getByText("Submit Report"));
     await waitFor(() =>
       expect(
         getByText("Please select a transportation option"),
@@ -327,9 +335,13 @@ describe("InfoFormScreen", () => {
   });
 
   it("shows the transport error when the email field is focused before a selection is made", async () => {
-    const { getByPlaceholderText, findByText } = render(<InfoFormScreen />);
+    const { getByPlaceholderText, getByText, findByText } = render(<InfoFormScreen />);
 
-    fireEvent(getByPlaceholderText("Email address"), "focus");
+    fireEvent.changeText(getByPlaceholderText("Your name"), "John");
+    fireEvent.changeText(getByPlaceholderText("Phone number"), "1234567890");
+    fireEvent.changeText(getByPlaceholderText("Email address"), "test@test.com");
+    fireEvent.press(getByText("Use My Location"));
+    fireEvent.press(getByText("Submit Report"));
 
     expect(
       await findByText("Please select a transportation option"),
@@ -337,9 +349,13 @@ describe("InfoFormScreen", () => {
   });
 
   it("shows the transport error when additional details is focused before a selection is made", async () => {
-    const { getAllByDisplayValue, findByText } = render(<InfoFormScreen />);
+    const { getByPlaceholderText, getByText, findByText } = render(<InfoFormScreen />);
 
-    fireEvent(getAllByDisplayValue("").at(-1)!, "focus");
+    fireEvent.changeText(getByPlaceholderText("Your name"), "John");
+    fireEvent.changeText(getByPlaceholderText("Phone number"), "1234567890");
+    fireEvent.changeText(getByPlaceholderText("Email address"), "test@test.com");
+    fireEvent.press(getByText("Use My Location"));
+    fireEvent.press(getByText("Submit Report"));
 
     expect(
       await findByText("Please select a transportation option"),
@@ -427,7 +443,7 @@ describe("InfoFormScreen", () => {
       expect(mockSubmitInfoForm).toHaveBeenCalledWith(
         expect.objectContaining({
           yourName: "John",
-          phoneNumber: "1234567890",
+          phoneNumber: "(123) 456-7890",
           emailAddress: "test@test.com",
           location: expect.objectContaining({ address: "Test Address" }),
         }),
