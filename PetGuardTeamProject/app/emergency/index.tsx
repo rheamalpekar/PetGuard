@@ -42,6 +42,13 @@ export default function EmergencyHome() {
     } as never);
   };
 
+  const goNonEmergencyReport = (serviceLabel: string) => {
+    protectedNavigate({
+      pathname: "/non-emergency/report",
+      params: { prefillType: serviceLabel },
+    } as never);
+  };
+
   const handleLogout = async () => {
     const confirmed = Platform.OS === "web" 
       ? window.confirm("Are you sure you want to logout?")
@@ -160,19 +167,19 @@ export default function EmergencyHome() {
           title="Vaccination"
           bg="#1e78ff"
           icon={<MaterialCommunityIcons name="needle" size={30} color="#fff" />}
-          onPress={() => router.push("/non-emergency/vaccination")}
+          onPress={() => goNonEmergencyReport("Vaccination")}
         />
         <ServiceTile
           title="Adopt / Surrender"
           bg="#2e7d32"
           icon={<Ionicons name="heart" size={30} color="#fff" />}
-          onPress={() => router.push("/non-emergency/adopt")}
+          onPress={() => goNonEmergencyReport("Adopt / Surrender")}
         />
         <ServiceTile
           title="Spay / Neuter"
           bg="#7e57c2"
           icon={<MaterialCommunityIcons name="scissors-cutting" size={30} color="#fff" />}
-          onPress={() => router.push("/non-emergency/spay")}
+          onPress={() => goNonEmergencyReport("Spay / Neuter")}
         />
       </View>
         <View style={{ height: 14 }} />

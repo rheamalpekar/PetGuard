@@ -23,6 +23,7 @@ function RootLayoutNav() {
         <>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="emergency" options={{ headerShown: false }} />
+          <Stack.Screen name="non-emergency" options={{ headerShown: false }} />
           <Stack.Screen name="formscreens" options={{ headerShown: false }} />
         </>
       ) : (

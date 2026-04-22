@@ -80,7 +80,11 @@ export default function InfoFormScreen() {
     dispatchProtocol?: string;
     checklist?: string;
     countdownSeconds?: string;
+    serviceType?: string;
   }>();
+
+  const serviceType = typeof params.serviceType === 'string' ? params.serviceType : '';
+  const nonEmergencySeverity = typeof params.severity === 'string' ? params.severity : '';
 
   const emergencyContext: EmergencyContext | undefined =
     params.emergencyType
@@ -139,6 +143,8 @@ export default function InfoFormScreen() {
       phoneNumber: '',
       emailAddress: '',
       additionalDetails: '',
+      serviceType: '',
+      severity: '',
     },
   });
 
@@ -194,10 +200,19 @@ export default function InfoFormScreen() {
       { setMapRegion, setIsLoadingLocation },
       isWeb
     );
-    
+
     // Load draft on component mount
     loadDraft();
   }, [isWeb, loadDraft]);
+
+  useEffect(() => {
+    if (serviceType) {
+      setValue('serviceType', serviceType);
+    }
+    if (nonEmergencySeverity) {
+      setValue('severity', nonEmergencySeverity);
+    }
+  }, [serviceType, nonEmergencySeverity, setValue]);
 
   const getCurrentLocation = () => {
     LocationService.getCurrentLocationWithAddress({
@@ -471,6 +486,25 @@ export default function InfoFormScreen() {
       contentContainerStyle={styles.contentContainer}
       keyboardShouldPersistTaps="handled"
     >
+      {(serviceType || nonEmergencySeverity) && (
+        <View style={styles.section}>
+          <View style={styles.serviceSummaryCard}>
+            {serviceType ? (
+              <View style={styles.serviceSummaryRow}>
+                <Text style={styles.serviceSummaryLabel}>Service</Text>
+                <Text style={styles.serviceSummaryValue}>{serviceType}</Text>
+              </View>
+            ) : null}
+            {nonEmergencySeverity ? (
+              <View style={styles.serviceSummaryRow}>
+                <Text style={styles.serviceSummaryLabel}>Priority</Text>
+                <Text style={styles.serviceSummaryValue}>{nonEmergencySeverity}</Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      )}
+
       {/* Location */}
       <View style={styles.section}>
         <View style={styles.labelContainer}>
@@ -892,6 +926,31 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 20,
+  },
+  serviceSummaryCard: {
+    backgroundColor: '#eef3fb',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#c9d8ef',
+    gap: 6,
+  },
+  serviceSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  serviceSummaryLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1f5ea8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  serviceSummaryValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111',
   },
   labelContainer: {
     flexDirection: 'row',
