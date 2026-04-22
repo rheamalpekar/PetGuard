@@ -1,0 +1,1121 @@
+﻿2026-04-21T23:53:25.0719696Z Current runner version: '2.333.1'
+2026-04-21T23:53:25.0744287Z ##[group]Runner Image Provisioner
+2026-04-21T23:53:25.0745026Z Hosted Compute Agent
+2026-04-21T23:53:25.0746029Z Version: 20260213.493
+2026-04-21T23:53:25.0746853Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+2026-04-21T23:53:25.0747540Z Build Date: 2026-02-13T00:28:41Z
+2026-04-21T23:53:25.0748326Z Worker ID: {5b3291f1-09d5-4fdf-9bb8-93fb658db0d6}
+2026-04-21T23:53:25.0748973Z Azure Region: westus
+2026-04-21T23:53:25.0749487Z ##[endgroup]
+2026-04-21T23:53:25.0751056Z ##[group]Operating System
+2026-04-21T23:53:25.0751642Z Ubuntu
+2026-04-21T23:53:25.0752101Z 24.04.4
+2026-04-21T23:53:25.0752619Z LTS
+2026-04-21T23:53:25.0753032Z ##[endgroup]
+2026-04-21T23:53:25.0753534Z ##[group]Runner Image
+2026-04-21T23:53:25.0754129Z Image: ubuntu-24.04
+2026-04-21T23:53:25.0754599Z Version: 20260413.86.1
+2026-04-21T23:53:25.0756187Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260413.86/images/ubuntu/Ubuntu2404-Readme.md
+2026-04-21T23:53:25.0757678Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260413.86
+2026-04-21T23:53:25.0758561Z ##[endgroup]
+2026-04-21T23:53:25.0759641Z ##[group]GITHUB_TOKEN Permissions
+2026-04-21T23:53:25.0761470Z Contents: read
+2026-04-21T23:53:25.0762075Z Metadata: read
+2026-04-21T23:53:25.0762556Z Packages: read
+2026-04-21T23:53:25.0763050Z ##[endgroup]
+2026-04-21T23:53:25.0765028Z Secret source: Actions
+2026-04-21T23:53:25.0766229Z Prepare workflow directory
+2026-04-21T23:53:25.1207032Z Prepare all required actions
+2026-04-21T23:53:25.1264108Z Getting action download info
+2026-04-21T23:53:25.6038835Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-04-21T23:53:25.7212527Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-04-21T23:53:25.8063035Z Download action repository 'codecov/codecov-action@v4' (SHA:b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238)
+2026-04-21T23:53:26.3453409Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-04-21T23:53:26.5579468Z Complete job name: Run Test Suite
+2026-04-21T23:53:26.6312620Z ##[group]Run actions/checkout@v4
+2026-04-21T23:53:26.6313523Z with:
+2026-04-21T23:53:26.6313966Z   repository: rheamalpekar/PetGuard
+2026-04-21T23:53:26.6314713Z   token: ***
+2026-04-21T23:53:26.6315131Z   ssh-strict: true
+2026-04-21T23:53:26.6315541Z   ssh-user: git
+2026-04-21T23:53:26.6316189Z   persist-credentials: true
+2026-04-21T23:53:26.6316656Z   clean: true
+2026-04-21T23:53:26.6317088Z   sparse-checkout-cone-mode: true
+2026-04-21T23:53:26.6317591Z   fetch-depth: 1
+2026-04-21T23:53:26.6318010Z   fetch-tags: false
+2026-04-21T23:53:26.6318434Z   show-progress: true
+2026-04-21T23:53:26.6318882Z   lfs: false
+2026-04-21T23:53:26.6319287Z   submodules: false
+2026-04-21T23:53:26.6319725Z   set-safe-directory: true
+2026-04-21T23:53:26.6320438Z env:
+2026-04-21T23:53:26.6320842Z   NODE_VERSION: 20
+2026-04-21T23:53:26.6321302Z   EXPO_CLI_VERSION: latest
+2026-04-21T23:53:26.6321751Z ##[endgroup]
+2026-04-21T23:53:26.7411021Z Syncing repository: rheamalpekar/PetGuard
+2026-04-21T23:53:26.7412971Z ##[group]Getting Git version info
+2026-04-21T23:53:26.7413713Z Working directory is '/home/runner/work/PetGuard/PetGuard'
+2026-04-21T23:53:26.7414681Z [command]/usr/bin/git version
+2026-04-21T23:53:26.7459272Z git version 2.53.0
+2026-04-21T23:53:26.7486624Z ##[endgroup]
+2026-04-21T23:53:26.7503112Z Temporarily overriding HOME='/home/runner/work/_temp/fa94798b-bb51-480e-96d3-d2698bdcc54d' before making global git config changes
+2026-04-21T23:53:26.7505539Z Adding repository directory to the temporary git global config as a safe directory
+2026-04-21T23:53:26.7510130Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PetGuard/PetGuard
+2026-04-21T23:53:26.7542980Z Deleting the contents of '/home/runner/work/PetGuard/PetGuard'
+2026-04-21T23:53:26.7548430Z ##[group]Initializing the repository
+2026-04-21T23:53:26.7553596Z [command]/usr/bin/git init /home/runner/work/PetGuard/PetGuard
+2026-04-21T23:53:26.7652222Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-04-21T23:53:26.7654050Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-04-21T23:53:26.7656024Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-04-21T23:53:26.7657408Z hint: call:
+2026-04-21T23:53:26.7658092Z hint:
+2026-04-21T23:53:26.7659010Z hint: 	git config --global init.defaultBranch <name>
+2026-04-21T23:53:26.7660128Z hint:
+2026-04-21T23:53:26.7661118Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-04-21T23:53:26.7662686Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-04-21T23:53:26.7664039Z hint:
+2026-04-21T23:53:26.7664772Z hint: 	git branch -m <name>
+2026-04-21T23:53:26.7665645Z hint:
+2026-04-21T23:53:26.7667442Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-04-21T23:53:26.7669267Z Initialized empty Git repository in /home/runner/work/PetGuard/PetGuard/.git/
+2026-04-21T23:53:26.7671985Z [command]/usr/bin/git remote add origin https://github.com/rheamalpekar/PetGuard
+2026-04-21T23:53:26.7697361Z ##[endgroup]
+2026-04-21T23:53:26.7698656Z ##[group]Disabling automatic garbage collection
+2026-04-21T23:53:26.7702568Z [command]/usr/bin/git config --local gc.auto 0
+2026-04-21T23:53:26.7731078Z ##[endgroup]
+2026-04-21T23:53:26.7732445Z ##[group]Setting up auth
+2026-04-21T23:53:26.7739148Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-04-21T23:53:26.7769569Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-04-21T23:53:26.8058929Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-04-21T23:53:26.8088264Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-04-21T23:53:26.8301199Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-04-21T23:53:26.8340824Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-04-21T23:53:26.8559108Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-04-21T23:53:26.8593990Z ##[endgroup]
+2026-04-21T23:53:26.8594790Z ##[group]Fetching the repository
+2026-04-21T23:53:26.8603034Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +af63cc200f7b3f97746b76d277b6f163c228eee6:refs/remotes/pull/26/merge
+2026-04-21T23:53:27.5028009Z From https://github.com/rheamalpekar/PetGuard
+2026-04-21T23:53:27.5029020Z  * [new ref]         af63cc200f7b3f97746b76d277b6f163c228eee6 -> pull/26/merge
+2026-04-21T23:53:27.5055592Z ##[endgroup]
+2026-04-21T23:53:27.5056722Z ##[group]Determining the checkout info
+2026-04-21T23:53:27.5057930Z ##[endgroup]
+2026-04-21T23:53:27.5062767Z [command]/usr/bin/git sparse-checkout disable
+2026-04-21T23:53:27.5100062Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-04-21T23:53:27.5125320Z ##[group]Checking out the ref
+2026-04-21T23:53:27.5129468Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/26/merge
+2026-04-21T23:53:27.5285388Z Note: switching to 'refs/remotes/pull/26/merge'.
+2026-04-21T23:53:27.5286469Z 
+2026-04-21T23:53:27.5286942Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-04-21T23:53:27.5287952Z changes and commit them, and you can discard any commits you make in this
+2026-04-21T23:53:27.5288952Z state without impacting any branches by switching back to a branch.
+2026-04-21T23:53:27.5289779Z 
+2026-04-21T23:53:27.5290905Z If you want to create a new branch to retain commits you create, you may
+2026-04-21T23:53:27.5292568Z do so (now or later) by using -c with the switch command. Example:
+2026-04-21T23:53:27.5293587Z 
+2026-04-21T23:53:27.5293982Z   git switch -c <new-branch-name>
+2026-04-21T23:53:27.5294649Z 
+2026-04-21T23:53:27.5295029Z Or undo this operation with:
+2026-04-21T23:53:27.5295995Z 
+2026-04-21T23:53:27.5296391Z   git switch -
+2026-04-21T23:53:27.5296888Z 
+2026-04-21T23:53:27.5297647Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-04-21T23:53:27.5298637Z 
+2026-04-21T23:53:27.5299788Z HEAD is now at af63cc2 Merge 540aa0b57d736feffa537c1a8e09c0f3cd748a5b into d3db19d3539a3489d8a0fce8321e46a87193651c
+2026-04-21T23:53:27.5303063Z ##[endgroup]
+2026-04-21T23:53:27.5332021Z [command]/usr/bin/git log -1 --format=%H
+2026-04-21T23:53:27.5353881Z af63cc200f7b3f97746b76d277b6f163c228eee6
+2026-04-21T23:53:27.5684228Z ##[group]Run actions/setup-node@v4
+2026-04-21T23:53:27.5684791Z with:
+2026-04-21T23:53:27.5685188Z   node-version: 20
+2026-04-21T23:53:27.5685598Z   cache: npm
+2026-04-21T23:53:27.5686370Z   cache-dependency-path: ./PetGuardTeamProject/package-lock.json
+2026-04-21T23:53:27.5687036Z   always-auth: false
+2026-04-21T23:53:27.5687459Z   check-latest: false
+2026-04-21T23:53:27.5688051Z   token: ***
+2026-04-21T23:53:27.5688425Z env:
+2026-04-21T23:53:27.5688779Z   NODE_VERSION: 20
+2026-04-21T23:53:27.5689197Z   EXPO_CLI_VERSION: latest
+2026-04-21T23:53:27.5689643Z ##[endgroup]
+2026-04-21T23:53:27.7484747Z Found in cache @ /opt/hostedtoolcache/node/20.20.2/x64
+2026-04-21T23:53:27.7491223Z ##[group]Environment details
+2026-04-21T23:53:31.3443782Z node: v20.20.2
+2026-04-21T23:53:31.3444314Z npm: 10.8.2
+2026-04-21T23:53:31.3444674Z yarn: 1.22.22
+2026-04-21T23:53:31.3448516Z ##[endgroup]
+2026-04-21T23:53:31.3472187Z [command]/opt/hostedtoolcache/node/20.20.2/x64/bin/npm config get cache
+2026-04-21T23:53:31.5818895Z /home/runner/.npm
+2026-04-21T23:53:31.8549592Z Cache hit for: node-cache-Linux-x64-npm-ea5552a877022e53dd9178d88da3b91972efd0944d8221769ba405baacb022c7
+2026-04-21T23:53:33.1256000Z Received 4194304 of 124403328 (3.4%), 4.0 MBs/sec
+2026-04-21T23:53:34.1267370Z Received 109051904 of 124403328 (87.7%), 52.0 MBs/sec
+2026-04-21T23:53:34.2826705Z Received 124403328 of 124403328 (100.0%), 55.0 MBs/sec
+2026-04-21T23:53:34.2828189Z Cache Size: ~119 MB (124403328 B)
+2026-04-21T23:53:34.2967626Z [command]/usr/bin/tar -xf /home/runner/work/_temp/f56106c5-9889-475c-9c3e-62fc60328386/cache.tzst -P -C /home/runner/work/PetGuard/PetGuard --use-compress-program unzstd
+2026-04-21T23:53:34.6682862Z Cache restored successfully
+2026-04-21T23:53:34.6744781Z Cache restored from key: node-cache-Linux-x64-npm-ea5552a877022e53dd9178d88da3b91972efd0944d8221769ba405baacb022c7
+2026-04-21T23:53:34.6908167Z ##[group]Run npm ci
+2026-04-21T23:53:34.6908473Z [36;1mnpm ci[0m
+2026-04-21T23:53:34.6942561Z shell: /usr/bin/bash -e {0}
+2026-04-21T23:53:34.6942842Z env:
+2026-04-21T23:53:34.6943027Z   NODE_VERSION: 20
+2026-04-21T23:53:34.6943279Z   EXPO_CLI_VERSION: latest
+2026-04-21T23:53:34.6943498Z ##[endgroup]
+2026-04-21T23:53:41.3692621Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-04-21T23:53:41.6407482Z npm warn deprecated whatwg-encoding@2.0.0: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+2026-04-21T23:53:41.6518345Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2026-04-21T23:53:41.6807827Z npm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+2026-04-21T23:53:41.7977459Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:53:41.7988409Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:53:41.8001682Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:53:41.8027353Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:53:41.8036351Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:53:41.8063851Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:53:41.8092498Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:53:41.9067637Z npm warn deprecated domexception@4.0.0: Use your platform's native DOMException instead
+2026-04-21T23:53:53.1210737Z 
+2026-04-21T23:53:53.1215083Z added 1224 packages, and audited 1226 packages in 18s
+2026-04-21T23:53:53.1216025Z 
+2026-04-21T23:53:53.1216339Z 192 packages are looking for funding
+2026-04-21T23:53:53.1217067Z   run `npm fund` for details
+2026-04-21T23:53:53.1471320Z 
+2026-04-21T23:53:53.1472250Z 14 vulnerabilities (5 low, 2 moderate, 7 high)
+2026-04-21T23:53:53.1472870Z 
+2026-04-21T23:53:53.1473164Z To address issues that do not require attention, run:
+2026-04-21T23:53:53.1473499Z   npm audit fix
+2026-04-21T23:53:53.1473635Z 
+2026-04-21T23:53:53.1473863Z To address all issues (including breaking changes), run:
+2026-04-21T23:53:53.1474198Z   npm audit fix --force
+2026-04-21T23:53:53.1474332Z 
+2026-04-21T23:53:53.1474448Z Run `npm audit` for details.
+2026-04-21T23:53:53.2271938Z ##[group]Run npm test -- --passWithNoTests
+2026-04-21T23:53:53.2272315Z [36;1mnpm test -- --passWithNoTests[0m
+2026-04-21T23:53:53.2294253Z shell: /usr/bin/bash -e {0}
+2026-04-21T23:53:53.2294496Z env:
+2026-04-21T23:53:53.2294659Z   NODE_VERSION: 20
+2026-04-21T23:53:53.2294867Z   EXPO_CLI_VERSION: latest
+2026-04-21T23:53:53.2295086Z ##[endgroup]
+2026-04-21T23:53:53.3531173Z 
+2026-04-21T23:53:53.3533476Z > petguardteamproject@1.0.0 test
+2026-04-21T23:53:53.3534007Z > jest --passWithNoTests
+2026-04-21T23:53:53.3534235Z 
+2026-04-21T23:53:58.2495945Z PASS _tests_/ApiService.test.ts
+2026-04-21T23:53:59.0970104Z FAIL _tests_/InfoFormScreen.test.tsx
+2026-04-21T23:53:59.0975606Z   ● Test suite failed to run
+2026-04-21T23:53:59.0976566Z 
+2026-04-21T23:53:59.0983129Z     [@RNC/AsyncStorage]: NativeModule: AsyncStorage is null.
+2026-04-21T23:53:59.0983849Z 
+2026-04-21T23:53:59.1018366Z     To fix this issue try these steps:
+2026-04-21T23:53:59.1018967Z 
+2026-04-21T23:53:59.1019688Z       • Uninstall, rebuild and restart the app.
+2026-04-21T23:53:59.1020205Z 
+2026-04-21T23:53:59.1020835Z       • Run the packager with `--reset-cache` flag.
+2026-04-21T23:53:59.1021407Z 
+2026-04-21T23:53:59.1029528Z       • If you are using CocoaPods on iOS, run `pod install` in the `ios` directory, then rebuild and re-run the app.
+2026-04-21T23:53:59.1030814Z 
+2026-04-21T23:53:59.1040405Z       • Make sure your project's `package.json` depends on `@react-native-async-storage/async-storage`, even if you only depend on it indirectly through other dependencies. CLI only autolinks native modules found in your `package.json`.
+2026-04-21T23:53:59.1042463Z 
+2026-04-21T23:53:59.1044113Z       • If this happens while testing with Jest, check out how to integrate AsyncStorage here: https://react-native-async-storage.github.io/async-storage/docs/advanced/jest
+2026-04-21T23:53:59.1045455Z 
+2026-04-21T23:53:59.1046925Z     If none of these fix the issue, please open an issue on the GitHub repository: https://github.com/react-native-async-storage/async-storage/issues
+2026-04-21T23:53:59.1048126Z 
+2026-04-21T23:53:59.1049326Z     [0m [90m 34 |[39m [36mimport[39m type { [33mEmergencyContext[39m } [36mfrom[39m [32m"@/types/DataModels"[39m[33m;[39m
+2026-04-21T23:53:59.1051540Z      [90m 35 |[39m [36mimport[39m { createFormValidator[33m,[39m [33mPhoneFormatter[39m } [36mfrom[39m [32m'../../services/FormValidation'[39m[33m;[39m
+2026-04-21T23:53:59.1053944Z     [31m[1m>[22m[39m[90m 36 |[39m [36mimport[39m [33mAsyncStorage[39m [36mfrom[39m [32m'@react-native-async-storage/async-storage'[39m[33m;[39m
+2026-04-21T23:53:59.1055396Z      [90m    |[39m [31m[1m^[22m[39m
+2026-04-21T23:53:59.1056365Z      [90m 37 |[39m
+2026-04-21T23:53:59.1057370Z      [90m 38 |[39m [90m// Conditionally import MapView only on mobile platforms[39m
+2026-04-21T23:53:59.1058653Z      [90m 39 |[39m [36mlet[39m [33mMapView[39m[33m:[39m any[33m;[39m[0m
+2026-04-21T23:53:59.1059347Z 
+2026-04-21T23:53:59.1060282Z       at Object.<anonymous> (node_modules/@react-native-async-storage/async-storage/src/AsyncStorage.native.ts:23:9)
+2026-04-21T23:53:59.1062031Z       at Object.require (node_modules/@react-native-async-storage/async-storage/src/index.ts:1:1)
+2026-04-21T23:53:59.1063245Z       at Object.require (app/formscreens/info-form.tsx:36:1)
+2026-04-21T23:53:59.1064522Z       at Object.require (_tests_/InfoFormScreen.test.tsx:4:1)
+2026-04-21T23:53:59.1065235Z 
+2026-04-21T23:53:59.6606143Z FAIL __tests__/EmergencyAlertSystem.test.ts
+2026-04-21T23:53:59.6607946Z   ● Emergency Detection › fallback cruelty path triggers from neglect keyword
+2026-04-21T23:53:59.6609073Z 
+2026-04-21T23:53:59.6609566Z     expect(received).toBe(expected) // Object.is equality
+2026-04-21T23:53:59.6610461Z 
+2026-04-21T23:53:59.6610848Z     Expected: "fallback_cruelty"
+2026-04-21T23:53:59.6611769Z     Received: "animal_cruelty"
+2026-04-21T23:53:59.6621850Z 
+2026-04-21T23:53:59.6623456Z     [0m [90m 149 |[39m     expect(res[33m.[39misEmergency)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+2026-04-21T23:53:59.6625198Z      [90m 150 |[39m     expect(res[33m.[39mclassification)[33m.[39mtoBe([32m"cruelty"[39m)[33m;[39m
+2026-04-21T23:53:59.6627286Z     [31m[1m>[22m[39m[90m 151 |[39m     expect(res[33m.[39mscenarioId)[33m.[39mtoBe([32m"fallback_cruelty"[39m)[33m;[39m
+2026-04-21T23:53:59.6628668Z      [90m     |[39m                            [31m[1m^[22m[39m
+2026-04-21T23:53:59.6630130Z      [90m 152 |[39m     expect(res[33m.[39mdispatchProtocol)[33m.[39mtoBe([32m"NOTIFY_ADMIN_AND_DISPATCH"[39m)[33m;[39m
+2026-04-21T23:53:59.6631725Z      [90m 153 |[39m     expect(res[33m.[39mseverity)[33m.[39mtoBe([32m"high"[39m)[33m;[39m
+2026-04-21T23:53:59.6632969Z      [90m 154 |[39m   })[33m;[39m[0m
+2026-04-21T23:53:59.6633502Z 
+2026-04-21T23:53:59.6653943Z       at Object.toBe (__tests__/EmergencyAlertSystem.test.ts:151:28)
+2026-04-21T23:53:59.6654730Z 
+2026-04-21T23:53:59.6655655Z   ● Emergency Detection › fallback accident path triggers from road keyword
+2026-04-21T23:53:59.6656739Z 
+2026-04-21T23:53:59.6657279Z     expect(received).toBe(expected) // Object.is equality
+2026-04-21T23:53:59.6657888Z 
+2026-04-21T23:53:59.6658454Z     Expected: "fallback_accident"
+2026-04-21T23:53:59.6659260Z     Received: "road_accident"
+2026-04-21T23:53:59.6684660Z 
+2026-04-21T23:53:59.6686126Z     [0m [90m 162 |[39m     expect(res[33m.[39misEmergency)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+2026-04-21T23:53:59.6687929Z      [90m 163 |[39m     expect(res[33m.[39mclassification)[33m.[39mtoBe([32m"accident"[39m)[33m;[39m
+2026-04-21T23:53:59.6689851Z     [31m[1m>[22m[39m[90m 164 |[39m     expect(res[33m.[39mscenarioId)[33m.[39mtoBe([32m"fallback_accident"[39m)[33m;[39m
+2026-04-21T23:53:59.6691397Z      [90m     |[39m                            [31m[1m^[22m[39m
+2026-04-21T23:53:59.6693087Z      [90m 165 |[39m     expect(res[33m.[39mdispatchProtocol)[33m.[39mtoBe([32m"DISPATCH_RESCUE_IMMEDIATELY"[39m)[33m;[39m
+2026-04-21T23:53:59.6694950Z      [90m 166 |[39m     expect(res[33m.[39mseverity)[33m.[39mtoBe([32m"critical"[39m)[33m;[39m
+2026-04-21T23:53:59.6696436Z      [90m 167 |[39m   })[33m;[39m[0m
+2026-04-21T23:53:59.6697080Z 
+2026-04-21T23:53:59.6697690Z       at Object.toBe (__tests__/EmergencyAlertSystem.test.ts:164:28)
+2026-04-21T23:53:59.6698471Z 
+2026-04-21T23:53:59.6699294Z   ● Emergency Detection › fallback sick path triggers from fever keyword
+2026-04-21T23:53:59.6700096Z 
+2026-04-21T23:53:59.6700644Z     expect(received).toBe(expected) // Object.is equality
+2026-04-21T23:53:59.6701335Z 
+2026-04-21T23:53:59.6701695Z     Expected: "fallback_sick"
+2026-04-21T23:53:59.6702369Z     Received: "sick_animal"
+2026-04-21T23:53:59.6702848Z 
+2026-04-21T23:53:59.6703822Z     [0m [90m 175 |[39m     expect(res[33m.[39misEmergency)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+2026-04-21T23:53:59.6705528Z      [90m 176 |[39m     expect(res[33m.[39mclassification)[33m.[39mtoBe([32m"sick"[39m)[33m;[39m
+2026-04-21T23:53:59.6707901Z     [31m[1m>[22m[39m[90m 177 |[39m     expect(res[33m.[39mscenarioId)[33m.[39mtoBe([32m"fallback_sick"[39m)[33m;[39m
+2026-04-21T23:53:59.6712352Z      [90m     |[39m                            [31m[1m^[22m[39m
+2026-04-21T23:53:59.6713977Z      [90m 178 |[39m     expect(res[33m.[39mdispatchProtocol)[33m.[39mtoBe([32m"SEND_HEALTH_ALERT"[39m)[33m;[39m
+2026-04-21T23:53:59.6715990Z      [90m 179 |[39m     expect(res[33m.[39mseverity)[33m.[39mtoBe([32m"medium"[39m)[33m;[39m
+2026-04-21T23:53:59.6717219Z      [90m 180 |[39m   })[33m;[39m[0m
+2026-04-21T23:53:59.6717776Z 
+2026-04-21T23:53:59.6718414Z       at Object.toBe (__tests__/EmergencyAlertSystem.test.ts:177:28)
+2026-04-21T23:53:59.6719154Z 
+2026-04-21T23:53:59.6720092Z   ● Emergency Detection › matchedKeywords defaults to empty array for fallback match
+2026-04-21T23:53:59.6720975Z 
+2026-04-21T23:53:59.6721823Z     expect(received).toEqual(expected) // deep equality
+2026-04-21T23:53:59.6722517Z 
+2026-04-21T23:53:59.6722875Z     - Expected  - 1
+2026-04-21T23:53:59.6723468Z     + Received  + 3
+2026-04-21T23:53:59.6723926Z 
+2026-04-21T23:53:59.6724245Z     - Array []
+2026-04-21T23:53:59.6724807Z     + Array [
+2026-04-21T23:53:59.6725337Z     +   "neglect",
+2026-04-21T23:53:59.6726208Z     + ]
+2026-04-21T23:53:59.6726602Z 
+2026-04-21T23:53:59.6727142Z     [0m [90m 186 |[39m     })[33m;[39m
+2026-04-21T23:53:59.6727925Z      [90m 187 |[39m
+2026-04-21T23:53:59.6729210Z     [31m[1m>[22m[39m[90m 188 |[39m     expect(res[33m.[39mmatchedKeywords)[33m.[39mtoEqual([])[33m;[39m
+2026-04-21T23:53:59.6730649Z      [90m     |[39m                                 [31m[1m^[22m[39m
+2026-04-21T23:53:59.6731699Z      [90m 189 |[39m   })[33m;[39m
+2026-04-21T23:53:59.6732499Z      [90m 190 |[39m
+2026-04-21T23:53:59.6733957Z      [90m 191 |[39m   test([32m"returns unknown when both inputs are non-emergency text"[39m[33m,[39m () [33m=>[39m {[0m
+2026-04-21T23:53:59.6735018Z 
+2026-04-21T23:53:59.6735669Z       at Object.toEqual (__tests__/EmergencyAlertSystem.test.ts:188:33)
+2026-04-21T23:53:59.6736696Z 
+2026-04-21T23:54:03.8387024Z FAIL _tests_/EmergencyHome.test.tsx
+2026-04-21T23:54:03.8857189Z   ● Console
+2026-04-21T23:54:03.8897587Z 
+2026-04-21T23:54:03.8926564Z     console.error
+2026-04-21T23:54:03.8942444Z       An update to EmergencyHome inside a test was not wrapped in act(...).
+2026-04-21T23:54:03.8955988Z       
+2026-04-21T23:54:03.8957024Z       When testing, code that causes React state updates should be wrapped into act(...):
+2026-04-21T23:54:03.8958043Z       
+2026-04-21T23:54:03.8958610Z       act(() => {
+2026-04-21T23:54:03.8959300Z         /* fire events that update state */
+2026-04-21T23:54:03.8960029Z       });
+2026-04-21T23:54:03.8960638Z       /* assert on the output */
+2026-04-21T23:54:03.8961287Z       
+2026-04-21T23:54:03.8962628Z       This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-04-21T23:54:03.8963835Z 
+2026-04-21T23:54:03.8964501Z     [0m [90m 24 |[39m       [36mtry[39m {
+2026-04-21T23:54:03.8966242Z      [90m 25 |[39m         [36mconst[39m data [33m=[39m [36mawait[39m getUserProfileWithCache(uid)[33m;[39m
+2026-04-21T23:54:03.8967897Z     [31m[1m>[22m[39m[90m 26 |[39m         setFullName(data[33m.[39mfullName)[33m;[39m
+2026-04-21T23:54:03.8969098Z      [90m    |[39m         [31m[1m^[22m[39m
+2026-04-21T23:54:03.8970065Z      [90m 27 |[39m       } [36mcatch[39m (e) {
+2026-04-21T23:54:03.8971394Z      [90m 28 |[39m         console[33m.[39mlog([32m"Name load error"[39m[33m,[39m e)[33m;[39m
+2026-04-21T23:54:03.8972544Z      [90m 29 |[39m       }[0m
+2026-04-21T23:54:03.8973058Z 
+2026-04-21T23:54:03.8973848Z       at node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11801:19
+2026-04-21T23:54:03.8975552Z       at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+2026-04-21T23:54:03.8977799Z       at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11800:9)
+2026-04-21T23:54:03.8979796Z       at scheduleUpdateOnFiber (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10326:9)
+2026-04-21T23:54:03.8981705Z       at dispatchSetStateInternal (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4148:13)
+2026-04-21T23:54:03.8983570Z       at dispatchSetState (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4107:7)
+2026-04-21T23:54:03.8984906Z       at setFullName (app/emergency/index.tsx:26:9)
+2026-04-21T23:54:03.8986355Z       at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:03.8987718Z       at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:03.8988514Z 
+2026-04-21T23:54:03.8988851Z     console.error
+2026-04-21T23:54:03.8990050Z       An update to EmergencyHome inside a test was not wrapped in act(...).
+2026-04-21T23:54:03.8991001Z       
+2026-04-21T23:54:03.8991929Z       When testing, code that causes React state updates should be wrapped into act(...):
+2026-04-21T23:54:03.8992900Z       
+2026-04-21T23:54:03.8993433Z       act(() => {
+2026-04-21T23:54:03.8994125Z         /* fire events that update state */
+2026-04-21T23:54:03.8994835Z       });
+2026-04-21T23:54:03.8995420Z       /* assert on the output */
+2026-04-21T23:54:03.8996322Z       
+2026-04-21T23:54:03.8997622Z       This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-04-21T23:54:03.8998823Z 
+2026-04-21T23:54:03.8999400Z     [0m [90m 24 |[39m       [36mtry[39m {
+2026-04-21T23:54:03.9000833Z      [90m 25 |[39m         [36mconst[39m data [33m=[39m [36mawait[39m getUserProfileWithCache(uid)[33m;[39m
+2026-04-21T23:54:03.9010786Z     [31m[1m>[22m[39m[90m 26 |[39m         setFullName(data[33m.[39mfullName)[33m;[39m
+2026-04-21T23:54:03.9012078Z      [90m    |[39m         [31m[1m^[22m[39m
+2026-04-21T23:54:03.9013044Z      [90m 27 |[39m       } [36mcatch[39m (e) {
+2026-04-21T23:54:03.9014316Z      [90m 28 |[39m         console[33m.[39mlog([32m"Name load error"[39m[33m,[39m e)[33m;[39m
+2026-04-21T23:54:03.9016078Z      [90m 29 |[39m       }[0m
+2026-04-21T23:54:03.9016792Z 
+2026-04-21T23:54:03.9017632Z       at node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11801:19
+2026-04-21T23:54:03.9019282Z       at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+2026-04-21T23:54:03.9021226Z       at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11800:9)
+2026-04-21T23:54:03.9023164Z       at scheduleUpdateOnFiber (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10326:9)
+2026-04-21T23:54:03.9025034Z       at dispatchSetStateInternal (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4148:13)
+2026-04-21T23:54:03.9027054Z       at dispatchSetState (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4107:7)
+2026-04-21T23:54:03.9028340Z       at setFullName (app/emergency/index.tsx:26:9)
+2026-04-21T23:54:03.9029517Z       at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:03.9030823Z       at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:03.9031618Z 
+2026-04-21T23:54:03.9031946Z     console.error
+2026-04-21T23:54:03.9032801Z       An update to EmergencyHome inside a test was not wrapped in act(...).
+2026-04-21T23:54:03.9033708Z       
+2026-04-21T23:54:03.9034611Z       When testing, code that causes React state updates should be wrapped into act(...):
+2026-04-21T23:54:03.9035977Z       
+2026-04-21T23:54:03.9036560Z       act(() => {
+2026-04-21T23:54:03.9037195Z         /* fire events that update state */
+2026-04-21T23:54:03.9037875Z       });
+2026-04-21T23:54:03.9038407Z       /* assert on the output */
+2026-04-21T23:54:03.9039242Z       
+2026-04-21T23:54:03.9040648Z       This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-04-21T23:54:03.9041887Z 
+2026-04-21T23:54:03.9042448Z     [0m [90m 24 |[39m       [36mtry[39m {
+2026-04-21T23:54:03.9043851Z      [90m 25 |[39m         [36mconst[39m data [33m=[39m [36mawait[39m getUserProfileWithCache(uid)[33m;[39m
+2026-04-21T23:54:03.9046946Z     [31m[1m>[22m[39m[90m 26 |[39m         setFullName(data[33m.[39mfullName)[33m;[39m
+2026-04-21T23:54:03.9052309Z      [90m    |[39m         [31m[1m^[22m[39m
+2026-04-21T23:54:03.9053481Z      [90m 27 |[39m       } [36mcatch[39m (e) {
+2026-04-21T23:54:03.9054845Z      [90m 28 |[39m         console[33m.[39mlog([32m"Name load error"[39m[33m,[39m e)[33m;[39m
+2026-04-21T23:54:03.9056600Z      [90m 29 |[39m       }[0m
+2026-04-21T23:54:03.9057281Z 
+2026-04-21T23:54:03.9058030Z       at node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11801:19
+2026-04-21T23:54:03.9059676Z       at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+2026-04-21T23:54:03.9061601Z       at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11800:9)
+2026-04-21T23:54:03.9063593Z       at scheduleUpdateOnFiber (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10326:9)
+2026-04-21T23:54:03.9065449Z       at dispatchSetStateInternal (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4148:13)
+2026-04-21T23:54:03.9067490Z       at dispatchSetState (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4107:7)
+2026-04-21T23:54:03.9068951Z       at setFullName (app/emergency/index.tsx:26:9)
+2026-04-21T23:54:03.9070125Z       at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:03.9071515Z       at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:03.9072299Z 
+2026-04-21T23:54:03.9072625Z     console.error
+2026-04-21T23:54:03.9073457Z       An update to EmergencyHome inside a test was not wrapped in act(...).
+2026-04-21T23:54:03.9076843Z       
+2026-04-21T23:54:03.9077770Z       When testing, code that causes React state updates should be wrapped into act(...):
+2026-04-21T23:54:03.9078761Z       
+2026-04-21T23:54:03.9079245Z       act(() => {
+2026-04-21T23:54:03.9079860Z         /* fire events that update state */
+2026-04-21T23:54:03.9080575Z       });
+2026-04-21T23:54:03.9081127Z       /* assert on the output */
+2026-04-21T23:54:03.9081735Z       
+2026-04-21T23:54:03.9082996Z       This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-04-21T23:54:03.9084208Z 
+2026-04-21T23:54:03.9084779Z     [0m [90m 24 |[39m       [36mtry[39m {
+2026-04-21T23:54:03.9086515Z      [90m 25 |[39m         [36mconst[39m data [33m=[39m [36mawait[39m getUserProfileWithCache(uid)[33m;[39m
+2026-04-21T23:54:03.9088099Z     [31m[1m>[22m[39m[90m 26 |[39m         setFullName(data[33m.[39mfullName)[33m;[39m
+2026-04-21T23:54:03.9089277Z      [90m    |[39m         [31m[1m^[22m[39m
+2026-04-21T23:54:03.9090210Z      [90m 27 |[39m       } [36mcatch[39m (e) {
+2026-04-21T23:54:03.9091503Z      [90m 28 |[39m         console[33m.[39mlog([32m"Name load error"[39m[33m,[39m e)[33m;[39m
+2026-04-21T23:54:03.9092643Z      [90m 29 |[39m       }[0m
+2026-04-21T23:54:03.9093163Z 
+2026-04-21T23:54:03.9093906Z       at node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11801:19
+2026-04-21T23:54:03.9095559Z       at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+2026-04-21T23:54:03.9097749Z       at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11800:9)
+2026-04-21T23:54:03.9099766Z       at scheduleUpdateOnFiber (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10326:9)
+2026-04-21T23:54:03.9101664Z       at dispatchSetStateInternal (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4148:13)
+2026-04-21T23:54:03.9103515Z       at dispatchSetState (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4107:7)
+2026-04-21T23:54:03.9104852Z       at setFullName (app/emergency/index.tsx:26:9)
+2026-04-21T23:54:03.9106366Z       at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:03.9107828Z       at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:03.9108637Z 
+2026-04-21T23:54:03.9108970Z     console.error
+2026-04-21T23:54:03.9110060Z       An update to EmergencyHome inside a test was not wrapped in act(...).
+2026-04-21T23:54:03.9111006Z       
+2026-04-21T23:54:03.9111893Z       When testing, code that causes React state updates should be wrapped into act(...):
+2026-04-21T23:54:03.9112889Z       
+2026-04-21T23:54:03.9113397Z       act(() => {
+2026-04-21T23:54:03.9113997Z         /* fire events that update state */
+2026-04-21T23:54:03.9114709Z       });
+2026-04-21T23:54:03.9115242Z       /* assert on the output */
+2026-04-21T23:54:03.9116075Z       
+2026-04-21T23:54:03.9117334Z       This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-04-21T23:54:03.9118426Z 
+2026-04-21T23:54:03.9118963Z     [0m [90m 24 |[39m       [36mtry[39m {
+2026-04-21T23:54:03.9120269Z      [90m 25 |[39m         [36mconst[39m data [33m=[39m [36mawait[39m getUserProfileWithCache(uid)[33m;[39m
+2026-04-21T23:54:03.9121768Z     [31m[1m>[22m[39m[90m 26 |[39m         setFullName(data[33m.[39mfullName)[33m;[39m
+2026-04-21T23:54:03.9122908Z      [90m    |[39m         [31m[1m^[22m[39m
+2026-04-21T23:54:03.9123763Z      [90m 27 |[39m       } [36mcatch[39m (e) {
+2026-04-21T23:54:03.9125065Z      [90m 28 |[39m         console[33m.[39mlog([32m"Name load error"[39m[33m,[39m e)[33m;[39m
+2026-04-21T23:54:03.9126355Z      [90m 29 |[39m       }[0m
+2026-04-21T23:54:03.9127108Z 
+2026-04-21T23:54:03.9127794Z       at node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11801:19
+2026-04-21T23:54:03.9129327Z       at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+2026-04-21T23:54:03.9217137Z       at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11800:9)
+2026-04-21T23:54:03.9227089Z       at scheduleUpdateOnFiber (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10326:9)
+2026-04-21T23:54:03.9246935Z       at dispatchSetStateInternal (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4148:13)
+2026-04-21T23:54:03.9264853Z       at dispatchSetState (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4107:7)
+2026-04-21T23:54:03.9266349Z       at setFullName (app/emergency/index.tsx:26:9)
+2026-04-21T23:54:03.9267491Z       at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:03.9268740Z       at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:03.9269452Z 
+2026-04-21T23:54:03.9269708Z     console.error
+2026-04-21T23:54:03.9270249Z       Logout error: Error: network down
+2026-04-21T23:54:03.9271457Z           at Object.<anonymous> (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/_tests_/EmergencyHome.test.tsx:188:38)
+2026-04-21T23:54:03.9272766Z           at Generator.next (<anonymous>)
+2026-04-21T23:54:03.9274325Z           at asyncGeneratorStep (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:03.9276767Z           at _next (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:03.9278813Z           at /home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:22:7
+2026-04-21T23:54:03.9280129Z           at new Promise (<anonymous>)
+2026-04-21T23:54:03.9281600Z           at Object.<anonymous> (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:14:12)
+2026-04-21T23:54:03.9283737Z           at Promise.then.completed (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/utils.js:298:28)
+2026-04-21T23:54:03.9285170Z           at new Promise (<anonymous>)
+2026-04-21T23:54:03.9286851Z           at callAsyncCircusFn (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/utils.js:231:10)
+2026-04-21T23:54:03.9289217Z           at _callCircusTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:316:40)
+2026-04-21T23:54:03.9291217Z           at _runTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:252:3)
+2026-04-21T23:54:03.9293244Z           at _runTestsForDescribeBlock (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:126:9)
+2026-04-21T23:54:03.9295437Z           at _runTestsForDescribeBlock (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:121:9)
+2026-04-21T23:54:03.9297661Z           at run (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:71:3)
+2026-04-21T23:54:03.9300027Z           at runAndTransformResultsToJestFormat (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+2026-04-21T23:54:03.9302550Z           at jestAdapter (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+2026-04-21T23:54:03.9304682Z           at runTestInternal (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/runTest.js:367:16)
+2026-04-21T23:54:03.9307045Z           at runTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/runTest.js:444:34)
+2026-04-21T23:54:03.9308914Z           at Object.worker (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/testWorker.js:106:12)
+2026-04-21T23:54:03.9318811Z 
+2026-04-21T23:54:03.9319860Z     [0m [90m 64 |[39m         router[33m.[39mreplace([32m"/auth/LoginScreen"[39m [36mas[39m never)[33m;[39m
+2026-04-21T23:54:03.9321024Z      [90m 65 |[39m       } [36mcatch[39m (error) {
+2026-04-21T23:54:03.9322378Z     [31m[1m>[22m[39m[90m 66 |[39m         console[33m.[39merror([32m"Logout error:"[39m[33m,[39m error)[33m;[39m
+2026-04-21T23:54:03.9323565Z      [90m    |[39m                 [31m[1m^[22m[39m
+2026-04-21T23:54:03.9324885Z      [90m 67 |[39m         [36mif[39m ([33mPlatform[39m[33m.[39m[33mOS[39m [33m!==[39m [32m"web"[39m) {
+2026-04-21T23:54:03.9326992Z      [90m 68 |[39m           [33mAlert[39m[33m.[39malert([32m"Error"[39m[33m,[39m [32m"Failed to logout. Please try again."[39m)[33m;[39m
+2026-04-21T23:54:03.9328285Z      [90m 69 |[39m         } [36melse[39m {[0m
+2026-04-21T23:54:03.9328729Z 
+2026-04-21T23:54:03.9329059Z       at error (app/emergency/index.tsx:66:17)
+2026-04-21T23:54:03.9329714Z           at Generator.throw (<anonymous>)
+2026-04-21T23:54:03.9330670Z       at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:03.9331810Z       at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+2026-04-21T23:54:03.9332459Z 
+2026-04-21T23:54:03.9333228Z   ● EmergencyHome › navigates with selected non-emergency service when tile pressed
+2026-04-21T23:54:03.9333934Z 
+2026-04-21T23:54:03.9334376Z     expect(jest.fn()).toHaveBeenCalledWith(...expected)
+2026-04-21T23:54:03.9334927Z 
+2026-04-21T23:54:03.9335577Z     Expected: {"params": {"prefillType": "Vaccination"}, "pathname": "/emergency/report"}
+2026-04-21T23:54:03.9336660Z 
+2026-04-21T23:54:03.9339873Z     Number of calls: 0
+2026-04-21T23:54:03.9340343Z 
+2026-04-21T23:54:03.9341202Z     [0m [90m 90 |[39m     fireEvent[33m.[39mpress(getByText([32m"Vaccination"[39m))[33m;[39m
+2026-04-21T23:54:03.9342098Z      [90m 91 |[39m
+2026-04-21T23:54:03.9343183Z     [31m[1m>[22m[39m[90m 92 |[39m     expect(mockProtectedNavigate)[33m.[39mtoHaveBeenCalledWith({
+2026-04-21T23:54:03.9344412Z      [90m    |[39m                                   [31m[1m^[22m[39m
+2026-04-21T23:54:03.9345575Z      [90m 93 |[39m       pathname[33m:[39m [32m"/emergency/report"[39m[33m,[39m
+2026-04-21T23:54:03.9347868Z      [90m 94 |[39m       params[33m:[39m { prefillType[33m:[39m [32m"Vaccination"[39m }[33m,[39m
+2026-04-21T23:54:03.9386729Z      [90m 95 |[39m     })[33m;[39m[0m
+2026-04-21T23:54:03.9388078Z 
+2026-04-21T23:54:03.9388720Z       at Object.toHaveBeenCalledWith (_tests_/EmergencyHome.test.tsx:92:35)
+2026-04-21T23:54:03.9389417Z 
+2026-04-21T23:54:03.9390280Z   ● EmergencyHome › routes the remaining service buttons through protected navigation
+2026-04-21T23:54:03.9391020Z 
+2026-04-21T23:54:03.9391468Z     expect(jest.fn()).toHaveBeenCalledWith(...expected)
+2026-04-21T23:54:03.9391978Z 
+2026-04-21T23:54:03.9392613Z     Expected: {"params": {"prefillType": "Adopt / Surrender"}, "pathname": "/emergency/report"}
+2026-04-21T23:54:03.9393459Z     Received
+2026-04-21T23:54:03.9393905Z            1
+2026-04-21T23:54:03.9394318Z               Object {
+2026-04-21T23:54:03.9394821Z                 "params": Object {
+2026-04-21T23:54:03.9395452Z             -     "prefillType": "Adopt / Surrender",
+2026-04-21T23:54:03.9396471Z             +     "prefillType": "Emergency Services",
+2026-04-21T23:54:03.9397110Z                 },
+2026-04-21T23:54:03.9397623Z                 "pathname": "/emergency/report",
+2026-04-21T23:54:03.9426093Z               },
+2026-04-21T23:54:03.9426722Z            2
+2026-04-21T23:54:03.9430261Z               Object {
+2026-04-21T23:54:03.9431577Z                 "params": Object {
+2026-04-21T23:54:03.9432372Z             -     "prefillType": "Adopt / Surrender",
+2026-04-21T23:54:03.9433150Z             +     "prefillType": "Car Accident",
+2026-04-21T23:54:03.9433788Z                 },
+2026-04-21T23:54:03.9434379Z                 "pathname": "/emergency/report",
+2026-04-21T23:54:03.9434966Z               },
+2026-04-21T23:54:03.9435410Z            3
+2026-04-21T23:54:03.9436135Z               Object {
+2026-04-21T23:54:03.9437062Z                 "params": Object {
+2026-04-21T23:54:03.9437659Z             -     "prefillType": "Adopt / Surrender",
+2026-04-21T23:54:03.9438311Z             +     "prefillType": "Animal Cruelty",
+2026-04-21T23:54:03.9438812Z                 },
+2026-04-21T23:54:03.9439251Z                 "pathname": "/emergency/report",
+2026-04-21T23:54:03.9454707Z               },
+2026-04-21T23:54:03.9454959Z 
+2026-04-21T23:54:03.9455108Z     Number of calls: 3
+2026-04-21T23:54:03.9455315Z 
+2026-04-21T23:54:03.9456361Z     [0m [90m 117 |[39m       params[33m:[39m { prefillType[33m:[39m [32m"Animal Cruelty"[39m }[33m,[39m
+2026-04-21T23:54:03.9457194Z      [90m 118 |[39m     })[33m;[39m
+2026-04-21T23:54:03.9458130Z     [31m[1m>[22m[39m[90m 119 |[39m     expect(mockProtectedNavigate)[33m.[39mtoHaveBeenCalledWith({
+2026-04-21T23:54:03.9459117Z      [90m     |[39m                                   [31m[1m^[22m[39m
+2026-04-21T23:54:03.9459958Z      [90m 120 |[39m       pathname[33m:[39m [32m"/emergency/report"[39m[33m,[39m
+2026-04-21T23:54:03.9461096Z      [90m 121 |[39m       params[33m:[39m { prefillType[33m:[39m [32m"Adopt / Surrender"[39m }[33m,[39m
+2026-04-21T23:54:03.9461914Z      [90m 122 |[39m     })[33m;[39m[0m
+2026-04-21T23:54:03.9462192Z 
+2026-04-21T23:54:03.9462571Z       at Object.toHaveBeenCalledWith (_tests_/EmergencyHome.test.tsx:119:35)
+2026-04-21T23:54:03.9463050Z 
+2026-04-21T23:54:03.9463496Z   ● EmergencyHome › pressing dev navigation triggers navigation
+2026-04-21T23:54:03.9463887Z 
+2026-04-21T23:54:03.9464177Z     Unable to find an element with text: Go to Login Screen
+2026-04-21T23:54:03.9464531Z 
+2026-04-21T23:54:03.9464772Z     [36m<RNCSafeAreaView>[39m
+2026-04-21T23:54:03.9465233Z       [36m<RCTScrollView>[39m
+2026-04-21T23:54:03.9465634Z         [36m<View>[39m
+2026-04-21T23:54:03.9466275Z           [36m<View>[39m
+2026-04-21T23:54:03.9466727Z             [36m<View>[39m
+2026-04-21T23:54:03.9467223Z               [36m<View>[39m
+2026-04-21T23:54:03.9467776Z                 [36m<Ionicons />[39m
+2026-04-21T23:54:03.9468340Z               [36m</View>[39m
+2026-04-21T23:54:03.9468862Z               [36m<Text>[39m
+2026-04-21T23:54:03.9469727Z                 [0mPetGuard[0m
+2026-04-21T23:54:03.9470280Z               [36m</Text>[39m
+2026-04-21T23:54:03.9470769Z             [36m</View>[39m
+2026-04-21T23:54:03.9471244Z             [36m<View[39m
+2026-04-21T23:54:03.9471824Z               [33maccessible[39m=[32m{true}[39m
+2026-04-21T23:54:03.9472381Z             [36m>[39m
+2026-04-21T23:54:03.9472868Z               [36m<Ionicons />[39m
+2026-04-21T23:54:03.9473415Z               [36m<View>[39m
+2026-04-21T23:54:03.9473928Z                 [36m<Text>[39m
+2026-04-21T23:54:03.9474394Z                   [0m1[0m
+2026-04-21T23:54:03.9474886Z                 [36m</Text>[39m
+2026-04-21T23:54:03.9475389Z               [36m</View>[39m
+2026-04-21T23:54:03.9511751Z             [36m</View>[39m
+2026-04-21T23:54:03.9512254Z           [36m</View>[39m
+2026-04-21T23:54:03.9512708Z           [36m<View>[39m
+2026-04-21T23:54:03.9513149Z             [36m<View>[39m
+2026-04-21T23:54:03.9546715Z               [36m<Text>[39m
+2026-04-21T23:54:03.9547324Z                 [0mWelcome, [0m
+2026-04-21T23:54:03.9547914Z                 [0mGuest User[0m
+2026-04-21T23:54:03.9548440Z                 [0m![0m
+2026-04-21T23:54:03.9549050Z               [36m</Text>[39m
+2026-04-21T23:54:03.9549562Z             [36m</View>[39m
+2026-04-21T23:54:03.9550668Z             [36m<View[39m
+2026-04-21T23:54:03.9551289Z               [33maccessible[39m=[32m{true}[39m
+2026-04-21T23:54:03.9551862Z             [36m>[39m
+2026-04-21T23:54:03.9552400Z               [36m<Ionicons />[39m
+2026-04-21T23:54:03.9552930Z               [36m<Text>[39m
+2026-04-21T23:54:03.9553468Z                 [0mProfile[0m
+2026-04-21T23:54:03.9554014Z               [36m</Text>[39m
+2026-04-21T23:54:03.9554497Z             [36m</View>[39m
+2026-04-21T23:54:03.9554966Z             [36m<View[39m
+2026-04-21T23:54:03.9555566Z               [33maccessible[39m=[32m{true}[39m
+2026-04-21T23:54:03.9556592Z             [36m>[39m
+2026-04-21T23:54:03.9557141Z               [36m<Text>[39m
+2026-04-21T23:54:03.9557625Z                 [0mLogout[0m
+2026-04-21T23:54:03.9558108Z               [36m</Text>[39m
+2026-04-21T23:54:03.9558548Z             [36m</View>[39m
+2026-04-21T23:54:03.9558973Z           [36m</View>[39m
+2026-04-21T23:54:03.9559406Z           [36m<View />[39m
+2026-04-21T23:54:03.9559865Z           [36m<View>[39m
+2026-04-21T23:54:03.9560305Z             [36m<Text>[39m
+2026-04-21T23:54:03.9560853Z               [0mSelect a Service Option[0m
+2026-04-21T23:54:03.9561376Z             [36m</Text>[39m
+2026-04-21T23:54:03.9561815Z             [36m<Text>[39m
+2026-04-21T23:54:03.9562431Z               [0mHow can we help your animal today?[0m
+2026-04-21T23:54:03.9562988Z             [36m</Text>[39m
+2026-04-21T23:54:03.9563441Z           [36m</View>[39m
+2026-04-21T23:54:03.9563880Z           [36m<View />[39m
+2026-04-21T23:54:03.9564321Z           [36m<View[39m
+2026-04-21T23:54:03.9564878Z             [33maccessible[39m=[32m{true}[39m
+2026-04-21T23:54:03.9565408Z           [36m>[39m
+2026-04-21T23:54:03.9566227Z             [36m<MaterialCommunityIcons />[39m
+2026-04-21T23:54:03.9566803Z             [36m<Text>[39m
+2026-04-21T23:54:03.9567334Z               [0mEMERGENCY SERVICES[0m
+2026-04-21T23:54:03.9567842Z             [36m</Text>[39m
+2026-04-21T23:54:03.9568308Z           [36m</View>[39m
+2026-04-21T23:54:03.9568747Z           [36m<View>[39m
+2026-04-21T23:54:03.9569179Z             [36m<View[39m
+2026-04-21T23:54:03.9569732Z               [33maccessible[39m=[32m{true}[39m
+2026-04-21T23:54:03.9570256Z             [36m>[39m
+2026-04-21T23:54:03.9570719Z               [36m<View>[39m
+2026-04-21T23:54:03.9571259Z                 [36m<FontAwesome5 />[39m
+2026-04-21T23:54:03.9571785Z               [36m</View>[39m
+2026-04-21T23:54:03.9572259Z               [36m<Text>[39m
+2026-04-21T23:54:03.9572745Z                 [0mSick Animal[0m
+2026-04-21T23:54:03.9573248Z               [36m</Text>[39m
+2026-04-21T23:54:03.9573918Z             [36m</View>[39m
+2026-04-21T23:54:03.9574360Z             [36m<View[39m
+2026-04-21T23:54:03.9574895Z               [33maccessible[39m=[32m{true}[39m
+2026-04-21T23:54:03.9575401Z             [36m>[39m
+2026-04-21T23:54:03.9576067Z               [36m<View>[39m
+2026-04-21T23:54:03.9576573Z                 [36m<FontAwesome5 />[39m
+2026-04-21T23:54:03.9577101Z               [36m</View>[39m
+2026-04-21T23:54:03.9577567Z               [36m<Text>[39m
+2026-04-21T23:54:03.9578045Z                 [0mCar Accident[0m
+2026-04-21T23:54:03.9578535Z               [36m</Text>[39m
+2026-04-21T23:54:03.9578974Z             [36m</View>[39m
+2026-04-21T23:54:03.9579394Z             [36m<View[39m
+2026-04-21T23:54:03.9579924Z               [33maccessible[39m=[32m{true}[39m
+2026-04-21T23:54:03.9580409Z             [36m>[39m
+2026-04-21T23:54:03.9580835Z               [36m<View>[39m
+2026-04-21T23:54:03.9581400Z                 [36m<MaterialCommunityIcons />[39m
+2026-04-21T23:54:03.9581957Z               [36m</View>[39m
+2026-04-21T23:54:03.9582407Z               [36m<Text>[39m
+2026-04-21T23:54:03.9582898Z                 [0mAnimal Cruelty[0m
+2026-04-21T23:54:03.9583405Z               [36m</Text>[39m
+2026-04-21T23:54:03.9583838Z             [36m</View>[39m
+2026-04-21T23:54:03.9584252Z           [36m</View>[39m
+2026-04-21T23:54:03.9584865Z           [36m<View />[39m
+2026-04-21T23:54:03.9585302Z           [36m<View>[39m
+2026-04-21T23:54:03.9586123Z             [36m<Ionicons />[39m
+2026-04-21T23:54:03.9586651Z             [36m<Text>[39m
+2026-04-21T23:54:03.9587243Z               [0mNON-EMERGENCY SERVICES[0m
+2026-04-21T23:54:03.9587844Z             [36m</Text>[39m
+2026-04-21T23:54:03.9588337Z           [36m</View>[39m
+2026-04-21T23:54:03.9588791Z           [36m<View>[39m
+2026-04-21T23:54:03.9589222Z             [36m<View[39m
+2026-04-21T23:54:03.9589812Z               [33maccessible[39m=[32m{true}[39m
+2026-04-21T23:54:03.9590364Z             [36m>[39m
+2026-04-21T23:54:03.9590838Z               [36m<View>[39m
+2026-04-21T23:54:03.9591469Z                 [36m<MaterialCommunityIcons />[39m
+2026-04-21T23:54:03.9592128Z               [36m</View>[39m
+2026-04-21T23:54:03.9592665Z               [36m<Text>[39m
+2026-04-21T23:54:03.9593220Z                 [0mVaccination[0m
+2026-04-21T23:54:03.9593807Z               [36m</Text>[39m
+2026-04-21T23:54:03.9594303Z             [36m</View>[39m
+2026-04-21T23:54:03.9594797Z             [36m<View[39m
+2026-04-21T23:54:03.9595415Z               [33maccessible[39m=[32m{true}[39m
+2026-04-21T23:54:03.9596317Z             [36m>[39m
+2026-04-21T23:54:03.9596828Z               [36m<View>[39m
+2026-04-21T23:54:03.9597405Z                 [36m<Ionicons />[39m
+2026-04-21T23:54:03.9597993Z               [36m</View>[39m
+2026-04-21T23:54:03.9598534Z               [36m<Text>[39m
+2026-04-21T23:54:03.9599127Z                 [0mAdopt / Surrender[0m
+2026-04-21T23:54:03.9599735Z               [36m</Text>[39m
+2026-04-21T23:54:03.9600234Z             [36m</View>[39m
+2026-04-21T23:54:03.9600724Z             [36m<View[39m
+2026-04-21T23:54:03.9601315Z               [33maccessible[39m=[32m{true}[39m
+2026-04-21T23:54:03.9601903Z             [36m>[39m
+2026-04-21T23:54:03.9602396Z               [36m<View>[39m
+2026-04-21T23:54:03.9603078Z                 [36m<MaterialCommunityIcons />[39m
+2026-04-21T23:54:03.9603764Z               [36m</View>[39m
+2026-04-21T23:54:03.9604288Z               [36m<Text>[39m
+2026-04-21T23:54:03.9604836Z                 [0mSpay / Neuter[0m
+2026-04-21T23:54:03.9605397Z               [36m</Text>[39m
+2026-04-21T23:54:03.9606161Z             [36m</View>[39m
+2026-04-21T23:54:03.9606649Z           [36m</View>[39m
+2026-04-21T23:54:03.9607135Z           [36m<View />[39m
+2026-04-21T23:54:03.9607613Z           [36m<View>[39m
+2026-04-21T23:54:03.9608065Z             [36m<Text>[39m
+2026-04-21T23:54:03.9608819Z               [0mDemo / Educational use only — no real team dispatch.[0m
+2026-04-21T23:54:03.9609824Z             [36m</Text>[39m
+2026-04-21T23:54:03.9610312Z             [36m<View[39m
+2026-04-21T23:54:03.9610838Z               [33maccessible[39m=[32m{true}[39m
+2026-04-21T23:54:03.9611392Z             [36m>[39m
+2026-04-21T23:54:03.9611897Z               [36m<Text>[39m
+2026-04-21T23:54:03.9612467Z                 [0mLearn more[0m
+2026-04-21T23:54:03.9613019Z               [36m</Text>[39m
+2026-04-21T23:54:03.9613504Z             [36m</View>[39m
+2026-04-21T23:54:03.9613961Z           [36m</View>[39m
+2026-04-21T23:54:03.9614363Z         [36m</View>[39m
+2026-04-21T23:54:03.9614905Z       [36m</RCTScrollView>[39m
+2026-04-21T23:54:03.9615464Z     [36m</RNCSafeAreaView>[39m
+2026-04-21T23:54:03.9616126Z 
+2026-04-21T23:54:03.9616928Z     [0m [90m 168 |[39m     [36mconst[39m { router } [33m=[39m require([32m"expo-router"[39m)[33m;[39m
+2026-04-21T23:54:03.9617817Z      [90m 169 |[39m
+2026-04-21T23:54:03.9618944Z     [31m[1m>[22m[39m[90m 170 |[39m     fireEvent[33m.[39mpress(getByText([32m"Go to Login Screen"[39m))[33m;[39m
+2026-04-21T23:54:03.9620128Z      [90m     |[39m                     [31m[1m^[22m[39m
+2026-04-21T23:54:03.9621276Z      [90m 171 |[39m     fireEvent[33m.[39mpress(getByText([32m"Go to Profile Screen"[39m))[33m;[39m
+2026-04-21T23:54:03.9623048Z      [90m 172 |[39m     fireEvent[33m.[39mpress(getByText([32m"Go to Firebase test screen"[39m))[33m;[39m
+2026-04-21T23:54:03.9624571Z      [90m 173 |[39m     fireEvent[33m.[39mpress(getByText([32m"Go to Info Form Screen"[39m))[33m;[39m[0m
+2026-04-21T23:54:03.9625269Z 
+2026-04-21T23:54:03.9625673Z       at Object.getByText (_tests_/EmergencyHome.test.tsx:170:21)
+2026-04-21T23:54:03.9626466Z 
+2026-04-21T23:54:04.2333170Z PASS _tests_/LoginScreen.test.tsx (5.961 s)
+2026-04-21T23:54:04.2607361Z PASS _tests_/AuthContext.test.tsx
+2026-04-21T23:54:04.2643040Z   ● Console
+2026-04-21T23:54:04.2643401Z 
+2026-04-21T23:54:04.2643772Z     console.log
+2026-04-21T23:54:04.2644338Z       Auth restore: false
+2026-04-21T23:54:04.2644773Z 
+2026-04-21T23:54:04.2645209Z       at log (src/context/AuthContext.tsx:25:15)
+2026-04-21T23:54:04.2646154Z 
+2026-04-21T23:54:04.2646498Z     console.log
+2026-04-21T23:54:04.2647032Z       Auth restore: false
+2026-04-21T23:54:04.2647436Z 
+2026-04-21T23:54:04.2647982Z       at log (src/context/AuthContext.tsx:25:15)
+2026-04-21T23:54:04.2648547Z 
+2026-04-21T23:54:04.2648860Z     console.log
+2026-04-21T23:54:04.2649424Z       Auth restore: true
+2026-04-21T23:54:04.2649858Z 
+2026-04-21T23:54:04.2650291Z       at log (src/context/AuthContext.tsx:25:15)
+2026-04-21T23:54:04.2650864Z 
+2026-04-21T23:54:04.2651170Z     console.log
+2026-04-21T23:54:04.2651688Z       Auth restore: false
+2026-04-21T23:54:04.2652133Z 
+2026-04-21T23:54:04.2652545Z       at log (src/context/AuthContext.tsx:25:15)
+2026-04-21T23:54:04.2653056Z 
+2026-04-21T23:54:04.2653341Z     console.log
+2026-04-21T23:54:04.2653818Z       Auth restore: false
+2026-04-21T23:54:04.2654198Z 
+2026-04-21T23:54:04.2654604Z       at log (src/context/AuthContext.tsx:25:15)
+2026-04-21T23:54:04.2655102Z 
+2026-04-21T23:54:04.2655369Z     console.log
+2026-04-21T23:54:04.2656170Z       Auth restore: false
+2026-04-21T23:54:04.2656571Z 
+2026-04-21T23:54:04.2656958Z       at log (src/context/AuthContext.tsx:25:15)
+2026-04-21T23:54:04.2657510Z 
+2026-04-21T23:54:04.3360203Z PASS _tests_/UserProfileScreen.test.tsx (9.389 s)
+2026-04-21T23:54:04.3361442Z   ● Console
+2026-04-21T23:54:04.3361866Z 
+2026-04-21T23:54:04.3362149Z     console.log
+2026-04-21T23:54:04.3362829Z       Clear profile cache error Error: cache-failed
+2026-04-21T23:54:04.3364356Z           at Object.<anonymous> (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/_tests_/UserProfileScreen.test.tsx:209:7)
+2026-04-21T23:54:04.3365994Z           at Generator.next (<anonymous>)
+2026-04-21T23:54:04.3367646Z           at asyncGeneratorStep (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:04.3370459Z           at _next (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:04.3372733Z           at /home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:22:7
+2026-04-21T23:54:04.3374132Z           at new Promise (<anonymous>)
+2026-04-21T23:54:04.3375966Z           at Object.<anonymous> (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:14:12)
+2026-04-21T23:54:04.3378205Z           at Promise.then.completed (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/utils.js:298:28)
+2026-04-21T23:54:04.3379649Z           at new Promise (<anonymous>)
+2026-04-21T23:54:04.3381029Z           at callAsyncCircusFn (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/utils.js:231:10)
+2026-04-21T23:54:04.3383124Z           at _callCircusTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:316:40)
+2026-04-21T23:54:04.3385026Z           at _runTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:252:3)
+2026-04-21T23:54:04.3387375Z           at _runTestsForDescribeBlock (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:126:9)
+2026-04-21T23:54:04.3389838Z           at _runTestsForDescribeBlock (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:121:9)
+2026-04-21T23:54:04.3436696Z           at run (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:71:3)
+2026-04-21T23:54:04.3439028Z           at runAndTransformResultsToJestFormat (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+2026-04-21T23:54:04.3441655Z           at jestAdapter (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+2026-04-21T23:54:04.3443765Z           at runTestInternal (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/runTest.js:367:16)
+2026-04-21T23:54:04.3446714Z           at runTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/runTest.js:444:34)
+2026-04-21T23:54:04.3448727Z           at Object.worker (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/testWorker.js:106:12)
+2026-04-21T23:54:04.3449819Z 
+2026-04-21T23:54:04.3450228Z       at log (app/screens/UserProfileScreen.tsx:173:15)
+2026-04-21T23:54:04.3450937Z           at Generator.throw (<anonymous>)
+2026-04-21T23:54:04.3451400Z 
+2026-04-21T23:54:04.3451625Z     console.log
+2026-04-21T23:54:04.3452064Z       Error: boom
+2026-04-21T23:54:04.3453253Z           at Object.<anonymous> (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/_tests_/UserProfileScreen.test.tsx:275:60)
+2026-04-21T23:54:04.3454691Z           at Generator.next (<anonymous>)
+2026-04-21T23:54:04.3456551Z           at asyncGeneratorStep (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:04.3458805Z           at _next (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:04.3460824Z           at /home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:22:7
+2026-04-21T23:54:04.3462230Z           at new Promise (<anonymous>)
+2026-04-21T23:54:04.3463734Z           at Object.<anonymous> (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:14:12)
+2026-04-21T23:54:04.3466656Z           at Promise.then.completed (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/utils.js:298:28)
+2026-04-21T23:54:04.3468109Z           at new Promise (<anonymous>)
+2026-04-21T23:54:04.3469597Z           at callAsyncCircusFn (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/utils.js:231:10)
+2026-04-21T23:54:04.3471665Z           at _callCircusTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:316:40)
+2026-04-21T23:54:04.3473818Z           at _runTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:252:3)
+2026-04-21T23:54:04.3476201Z           at _runTestsForDescribeBlock (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:126:9)
+2026-04-21T23:54:04.3478397Z           at _runTestsForDescribeBlock (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:121:9)
+2026-04-21T23:54:04.3547149Z           at run (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:71:3)
+2026-04-21T23:54:04.3567523Z           at runAndTransformResultsToJestFormat (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+2026-04-21T23:54:04.3570098Z           at jestAdapter (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+2026-04-21T23:54:04.3572439Z           at runTestInternal (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/runTest.js:367:16)
+2026-04-21T23:54:04.3574086Z           at runTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/runTest.js:444:34)
+2026-04-21T23:54:04.3575979Z           at Object.worker (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/testWorker.js:106:12)
+2026-04-21T23:54:04.3576898Z 
+2026-04-21T23:54:04.3577187Z       at log (app/screens/UserProfileScreen.tsx:150:15)
+2026-04-21T23:54:04.3577757Z           at Generator.throw (<anonymous>)
+2026-04-21T23:54:04.3578065Z 
+2026-04-21T23:54:04.4833925Z PASS _tests_/offlineQueue.test.ts
+2026-04-21T23:54:04.4946809Z   ● Console
+2026-04-21T23:54:04.4991711Z 
+2026-04-21T23:54:04.5016290Z     console.log
+2026-04-21T23:54:04.5017051Z       submitInfoForm called {
+2026-04-21T23:54:04.5017642Z         formId: 'queued_1',
+2026-04-21T23:54:04.5018379Z         location: { latitude: 1, longitude: 2, address: 'Test Address' },
+2026-04-21T23:54:04.5019121Z         yourName: 'Test User',
+2026-04-21T23:54:04.5019660Z         phoneNumber: '1234567890',
+2026-04-21T23:54:04.5020236Z         emailAddress: 'test@test.com',
+2026-04-21T23:54:04.5020843Z         additionalDetails: 'Queue test'
+2026-04-21T23:54:04.5021362Z       }
+2026-04-21T23:54:04.5021621Z 
+2026-04-21T23:54:04.5021993Z       at log (src/backendServices/ApiService.ts:71:11)
+2026-04-21T23:54:04.5022662Z           at _loop.next (<anonymous>)
+2026-04-21T23:54:04.5023053Z 
+2026-04-21T23:54:04.5023288Z     console.log
+2026-04-21T23:54:04.5023713Z       user exists: user-1
+2026-04-21T23:54:04.5024041Z 
+2026-04-21T23:54:04.5024413Z       at log (src/backendServices/ApiService.ts:88:11)
+2026-04-21T23:54:04.5025068Z           at _loop.next (<anonymous>)
+2026-04-21T23:54:04.5025461Z 
+2026-04-21T23:54:04.5025999Z     console.log
+2026-04-21T23:54:04.5026518Z       firestore doc created: server-form-1
+2026-04-21T23:54:04.5026936Z 
+2026-04-21T23:54:04.5027302Z       at log (src/backendServices/ApiService.ts:100:13)
+2026-04-21T23:54:04.5027774Z 
+2026-04-21T23:54:04.5028000Z     console.log
+2026-04-21T23:54:04.5028432Z       photos uploaded: 1
+2026-04-21T23:54:04.5028769Z 
+2026-04-21T23:54:04.5029144Z       at log (src/backendServices/ApiService.ts:108:13)
+2026-04-21T23:54:04.5029619Z 
+2026-04-21T23:54:04.5029843Z     console.log
+2026-04-21T23:54:04.5030324Z       document updated with photos
+2026-04-21T23:54:04.5030707Z 
+2026-04-21T23:54:04.5031479Z       at log (src/backendServices/ApiService.ts:115:13)
+2026-04-21T23:54:04.5031987Z 
+2026-04-21T23:54:04.5032205Z     console.log
+2026-04-21T23:54:04.5032621Z       Synced: queued_1
+2026-04-21T23:54:04.5032932Z 
+2026-04-21T23:54:04.5033301Z       at log (src/backendServices/ApiService.ts:210:17)
+2026-04-21T23:54:04.5033968Z           at _loop.next (<anonymous>)
+2026-04-21T23:54:04.5034367Z 
+2026-04-21T23:54:04.5034592Z     console.log
+2026-04-21T23:54:04.5035017Z       submitInfoForm called {
+2026-04-21T23:54:04.5035514Z         formId: 'queued_1',
+2026-04-21T23:54:04.5036491Z         location: { latitude: 1, longitude: 2, address: 'Test Address' },
+2026-04-21T23:54:04.5037232Z         yourName: 'Test User',
+2026-04-21T23:54:04.5037768Z         phoneNumber: '1234567890',
+2026-04-21T23:54:04.5038342Z         emailAddress: 'test@test.com',
+2026-04-21T23:54:04.5038922Z         additionalDetails: 'Queue test'
+2026-04-21T23:54:04.5039433Z       }
+2026-04-21T23:54:04.5039684Z 
+2026-04-21T23:54:04.5040056Z       at log (src/backendServices/ApiService.ts:71:11)
+2026-04-21T23:54:04.5040749Z           at _loop.next (<anonymous>)
+2026-04-21T23:54:04.5041158Z 
+2026-04-21T23:54:04.5041393Z     console.log
+2026-04-21T23:54:04.5041850Z       user exists: user-1
+2026-04-21T23:54:04.5042209Z 
+2026-04-21T23:54:04.5042594Z       at log (src/backendServices/ApiService.ts:88:11)
+2026-04-21T23:54:04.5043632Z           at _loop.next (<anonymous>)
+2026-04-21T23:54:04.5044054Z 
+2026-04-21T23:54:04.5044277Z     console.log
+2026-04-21T23:54:04.5044760Z       submit failed: Error: offline
+2026-04-21T23:54:04.5046193Z           at Object.<anonymous> (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/_tests_/offlineQueue.test.ts:136:38)
+2026-04-21T23:54:04.5047379Z           at Generator.next (<anonymous>)
+2026-04-21T23:54:04.5048885Z           at asyncGeneratorStep (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:04.5050945Z           at _next (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:04.5052888Z           at /home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:22:7
+2026-04-21T23:54:04.5054121Z           at new Promise (<anonymous>)
+2026-04-21T23:54:04.5055532Z           at Object.<anonymous> (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:14:12)
+2026-04-21T23:54:04.5057833Z           at Promise.then.completed (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/utils.js:298:28)
+2026-04-21T23:54:04.5059157Z           at new Promise (<anonymous>)
+2026-04-21T23:54:04.5060474Z           at callAsyncCircusFn (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/utils.js:231:10)
+2026-04-21T23:54:04.5062434Z           at _callCircusTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:316:40)
+2026-04-21T23:54:04.5063907Z           at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-04-21T23:54:04.5065390Z           at _runTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:252:3)
+2026-04-21T23:54:04.5067561Z           at _runTestsForDescribeBlock (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:126:9)
+2026-04-21T23:54:04.5069572Z           at _runTestsForDescribeBlock (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:121:9)
+2026-04-21T23:54:04.5071381Z           at run (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:71:3)
+2026-04-21T23:54:04.5073660Z           at runAndTransformResultsToJestFormat (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+2026-04-21T23:54:04.5076672Z           at jestAdapter (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+2026-04-21T23:54:04.5078817Z           at runTestInternal (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/runTest.js:367:16)
+2026-04-21T23:54:04.5080683Z           at runTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/runTest.js:444:34)
+2026-04-21T23:54:04.5082614Z           at Object.worker (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/testWorker.js:106:12)
+2026-04-21T23:54:04.5083654Z 
+2026-04-21T23:54:04.5084022Z       at log (src/backendServices/ApiService.ts:119:13)
+2026-04-21T23:54:04.5084712Z           at Generator.throw (<anonymous>)
+2026-04-21T23:54:04.5085133Z 
+2026-04-21T23:54:04.5085343Z     console.log
+2026-04-21T23:54:04.5086131Z       Still failed: queued_1 Error: offline
+2026-04-21T23:54:04.5087383Z           at Object.<anonymous> (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/_tests_/offlineQueue.test.ts:136:38)
+2026-04-21T23:54:04.5088543Z           at Generator.next (<anonymous>)
+2026-04-21T23:54:04.5089959Z           at asyncGeneratorStep (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:04.5092200Z           at _next (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:04.5094063Z           at /home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:22:7
+2026-04-21T23:54:04.5095233Z           at new Promise (<anonymous>)
+2026-04-21T23:54:04.5096851Z           at Object.<anonymous> (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/@babel/runtime/helpers/asyncToGenerator.js:14:12)
+2026-04-21T23:54:04.5098975Z           at Promise.then.completed (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/utils.js:298:28)
+2026-04-21T23:54:04.5100313Z           at new Promise (<anonymous>)
+2026-04-21T23:54:04.5101653Z           at callAsyncCircusFn (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/utils.js:231:10)
+2026-04-21T23:54:04.5103609Z           at _callCircusTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:316:40)
+2026-04-21T23:54:04.5105112Z           at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-04-21T23:54:04.5106961Z           at _runTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:252:3)
+2026-04-21T23:54:04.5108890Z           at _runTestsForDescribeBlock (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:126:9)
+2026-04-21T23:54:04.5110951Z           at _runTestsForDescribeBlock (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:121:9)
+2026-04-21T23:54:04.5112879Z           at run (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/run.js:71:3)
+2026-04-21T23:54:04.5115222Z           at runAndTransformResultsToJestFormat (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+2026-04-21T23:54:04.5118131Z           at jestAdapter (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+2026-04-21T23:54:04.5120299Z           at runTestInternal (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/runTest.js:367:16)
+2026-04-21T23:54:04.5122217Z           at runTest (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/runTest.js:444:34)
+2026-04-21T23:54:04.5124309Z           at Object.worker (/home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/jest-runner/build/testWorker.js:106:12)
+2026-04-21T23:54:04.5125351Z 
+2026-04-21T23:54:04.5126003Z       at log (src/backendServices/ApiService.ts:212:17)
+2026-04-21T23:54:04.5126739Z           at _loop.throw (<anonymous>)
+2026-04-21T23:54:04.5127362Z           at Generator.throw (<anonymous>)
+2026-04-21T23:54:04.5127814Z 
+2026-04-21T23:54:04.5461496Z FAIL _tests_/FormSubmission.integration.test.tsx
+2026-04-21T23:54:04.5468910Z   ● Test suite failed to run
+2026-04-21T23:54:04.5473637Z 
+2026-04-21T23:54:04.5474237Z     [@RNC/AsyncStorage]: NativeModule: AsyncStorage is null.
+2026-04-21T23:54:04.5474946Z 
+2026-04-21T23:54:04.5475372Z     To fix this issue try these steps:
+2026-04-21T23:54:04.5476268Z 
+2026-04-21T23:54:04.5476911Z       • Uninstall, rebuild and restart the app.
+2026-04-21T23:54:04.5477523Z 
+2026-04-21T23:54:04.5478130Z       • Run the packager with `--reset-cache` flag.
+2026-04-21T23:54:04.5478804Z 
+2026-04-21T23:54:04.5479948Z       • If you are using CocoaPods on iOS, run `pod install` in the `ios` directory, then rebuild and re-run the app.
+2026-04-21T23:54:04.5480958Z 
+2026-04-21T23:54:04.5483081Z       • Make sure your project's `package.json` depends on `@react-native-async-storage/async-storage`, even if you only depend on it indirectly through other dependencies. CLI only autolinks native modules found in your `package.json`.
+2026-04-21T23:54:04.5485397Z 
+2026-04-21T23:54:04.5487268Z       • If this happens while testing with Jest, check out how to integrate AsyncStorage here: https://react-native-async-storage.github.io/async-storage/docs/advanced/jest
+2026-04-21T23:54:04.5488661Z 
+2026-04-21T23:54:04.5489780Z     If none of these fix the issue, please open an issue on the GitHub repository: https://github.com/react-native-async-storage/async-storage/issues
+2026-04-21T23:54:04.5490948Z 
+2026-04-21T23:54:04.5492102Z     [0m [90m 34 |[39m [36mimport[39m type { [33mEmergencyContext[39m } [36mfrom[39m [32m"@/types/DataModels"[39m[33m;[39m
+2026-04-21T23:54:04.5494273Z      [90m 35 |[39m [36mimport[39m { createFormValidator[33m,[39m [33mPhoneFormatter[39m } [36mfrom[39m [32m'../../services/FormValidation'[39m[33m;[39m
+2026-04-21T23:54:04.5496804Z     [31m[1m>[22m[39m[90m 36 |[39m [36mimport[39m [33mAsyncStorage[39m [36mfrom[39m [32m'@react-native-async-storage/async-storage'[39m[33m;[39m
+2026-04-21T23:54:04.5498251Z      [90m    |[39m [31m[1m^[22m[39m
+2026-04-21T23:54:04.5498903Z      [90m 37 |[39m
+2026-04-21T23:54:04.5499880Z      [90m 38 |[39m [90m// Conditionally import MapView only on mobile platforms[39m
+2026-04-21T23:54:04.5501148Z      [90m 39 |[39m [36mlet[39m [33mMapView[39m[33m:[39m any[33m;[39m[0m
+2026-04-21T23:54:04.5501786Z 
+2026-04-21T23:54:04.5502677Z       at Object.<anonymous> (node_modules/@react-native-async-storage/async-storage/src/AsyncStorage.native.ts:23:9)
+2026-04-21T23:54:04.5504331Z       at Object.require (node_modules/@react-native-async-storage/async-storage/src/index.ts:1:1)
+2026-04-21T23:54:04.5505616Z       at Object.require (app/formscreens/info-form.tsx:36:1)
+2026-04-21T23:54:04.5507043Z       at Object.require (_tests_/FormSubmission.integration.test.tsx:4:1)
+2026-04-21T23:54:04.5507787Z 
+2026-04-21T23:54:04.6917039Z FAIL _tests_/Performance.test.ts
+2026-04-21T23:54:04.6947488Z   ● basic performance checks › detectEmergency uses the heuristic high-risk fallback and the safe default quickly
+2026-04-21T23:54:04.6948531Z 
+2026-04-21T23:54:04.6976611Z     expect(received).toBe(expected) // Object.is equality
+2026-04-21T23:54:04.6988139Z 
+2026-04-21T23:54:04.6988600Z     Expected: "heuristic_high_risk"
+2026-04-21T23:54:04.6989288Z     Received: null
+2026-04-21T23:54:04.6989689Z 
+2026-04-21T23:54:04.6990731Z     [0m [90m  97 |[39m     [36mconst[39m defaultEnd [33m=[39m [33mDate[39m[33m.[39mnow()[33m;[39m
+2026-04-21T23:54:04.6991819Z      [90m  98 |[39m
+2026-04-21T23:54:04.6993731Z     [31m[1m>[22m[39m[90m  99 |[39m     expect(heuristic[33m.[39mscenarioId)[33m.[39mtoBe([32m"heuristic_high_risk"[39m)[33m;[39m
+2026-04-21T23:54:04.6995333Z      [90m     |[39m                                  [31m[1m^[22m[39m
+2026-04-21T23:54:04.6997163Z      [90m 100 |[39m     expect(heuristic[33m.[39misEmergency)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+2026-04-21T23:54:04.6998846Z      [90m 101 |[39m     expect(nonEmergency[33m.[39misEmergency)[33m.[39mtoBe([36mfalse[39m)[33m;[39m
+2026-04-21T23:54:04.7000652Z      [90m 102 |[39m     expect(nonEmergency[33m.[39mdispatchProtocol)[33m.[39mtoBe([32m"NONE"[39m)[33m;[39m[0m
+2026-04-21T23:54:04.7001621Z 
+2026-04-21T23:54:04.7002129Z       at Object.toBe (_tests_/Performance.test.ts:99:34)
+2026-04-21T23:54:04.7002725Z 
+2026-04-21T23:54:04.8087084Z PASS __tests__/offlineQueue.test.ts
+2026-04-21T23:54:04.9097770Z PASS _tests_/requestTracking.test.ts
+2026-04-21T23:54:05.1089963Z PASS _tests_/RegisterScreen.test.tsx
+2026-04-21T23:54:05.2100729Z PASS _tests_/RateLimiter.test.ts
+2026-04-21T23:54:05.2437246Z PASS _tests_/AuthFlow.integration.test.tsx
+2026-04-21T23:54:05.2496808Z PASS _tests_/ConfirmationScreen.test.tsx
+2026-04-21T23:54:05.2546796Z   ● Console
+2026-04-21T23:54:05.2547250Z 
+2026-04-21T23:54:05.2547544Z     console.warn
+2026-04-21T23:54:05.2549235Z       SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
+2026-04-21T23:54:05.2551187Z 
+2026-04-21T23:54:05.2551747Z     [0m [90m 122 |[39m   [36mif[39m (loading) {
+2026-04-21T23:54:05.2552583Z      [90m 123 |[39m     [36mreturn[39m (
+2026-04-21T23:54:05.2553996Z     [31m[1m>[22m[39m[90m 124 |[39m       [33m<[39m[33mSafeAreaView[39m style[33m=[39m{styles[33m.[39mcontainer}[33m>[39m
+2026-04-21T23:54:05.2555253Z      [90m     |[39m        [31m[1m^[22m[39m
+2026-04-21T23:54:05.2556327Z      [90m 125 |[39m         [33m<[39m[33mView[39m
+2026-04-21T23:54:05.2558011Z      [90m 126 |[39m           style[33m=[39m{{ flex[33m:[39m [35m1[39m[33m,[39m justifyContent[33m:[39m [32m"center"[39m[33m,[39m alignItems[33m:[39m [32m"center"[39m }}
+2026-04-21T23:54:05.2559477Z      [90m 127 |[39m         [33m>[39m[0m
+2026-04-21T23:54:05.2559989Z 
+2026-04-21T23:54:05.2560592Z       at warn (node_modules/react-native/Libraries/Utilities/warnOnce.js:27:11)
+2026-04-21T23:54:05.2561767Z       at Object.warnOnce [as SafeAreaView] (node_modules/react-native/index.js:92:5)
+2026-04-21T23:54:05.2562920Z       at SafeAreaView (app/formscreens/ConfirmationPage.tsx:124:8)
+2026-04-21T23:54:05.2564394Z       at Object.react-stack-bottom-frame (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:13976:20)
+2026-04-21T23:54:05.2566393Z       at renderWithHooks (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2866:22)
+2026-04-21T23:54:05.2570018Z       at updateFunctionComponent (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6006:19)
+2026-04-21T23:54:05.2571744Z       at beginWork (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:7474:18)
+2026-04-21T23:54:05.2573352Z       at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+2026-04-21T23:54:05.2575000Z       at performUnitOfWork (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10972:22)
+2026-04-21T23:54:05.2576939Z       at workLoopSync (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10816:41)
+2026-04-21T23:54:05.2578491Z       at renderRootSync (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10797:11)
+2026-04-21T23:54:05.2580084Z       at performWorkOnRoot (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10349:13)
+2026-04-21T23:54:05.2581858Z       at performWorkOnRootViaSchedulerTask (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2094:7)
+2026-04-21T23:54:05.2583650Z       at flushActQueue (node_modules/react/cjs/react.development.js:566:34)
+2026-04-21T23:54:05.2585046Z       at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:859:10)
+2026-04-21T23:54:05.2586807Z       at actImplementation (node_modules/@testing-library/react-native/src/act.ts:30:25)
+2026-04-21T23:54:05.2588124Z       at renderWithAct (node_modules/@testing-library/react-native/src/render-act.ts:13:11)
+2026-04-21T23:54:05.2589449Z       at renderInternal (node_modules/@testing-library/react-native/src/render.tsx:69:33)
+2026-04-21T23:54:05.2590741Z       at renderInternal (node_modules/@testing-library/react-native/src/render.tsx:44:10)
+2026-04-21T23:54:05.2591867Z       at Object.<anonymous> (_tests_/ConfirmationScreen.test.tsx:67:33)
+2026-04-21T23:54:05.2593035Z       at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:05.2594243Z       at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:05.2595306Z       at node_modules/@babel/runtime/helpers/asyncToGenerator.js:22:7
+2026-04-21T23:54:05.2596832Z       at Object.<anonymous> (node_modules/@babel/runtime/helpers/asyncToGenerator.js:14:12)
+2026-04-21T23:54:05.2597628Z 
+2026-04-21T23:54:05.3476386Z PASS _tests_/emergencyScenarios.test.ts
+2026-04-21T23:54:05.3646889Z PASS _tests_/DataModels.test.ts
+2026-04-21T23:54:05.4374235Z PASS __tests__/emergencyScenarios.test.ts
+2026-04-21T23:54:05.4598729Z PASS _tests_/QueuedConfirmation.integration.test.tsx
+2026-04-21T23:54:05.4684648Z   ● Console
+2026-04-21T23:54:05.4684868Z 
+2026-04-21T23:54:05.4685008Z     console.warn
+2026-04-21T23:54:05.4686724Z       SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
+2026-04-21T23:54:05.4688035Z 
+2026-04-21T23:54:05.4688448Z     [0m [90m 122 |[39m   [36mif[39m (loading) {
+2026-04-21T23:54:05.4689082Z      [90m 123 |[39m     [36mreturn[39m (
+2026-04-21T23:54:05.4690265Z     [31m[1m>[22m[39m[90m 124 |[39m       [33m<[39m[33mSafeAreaView[39m style[33m=[39m{styles[33m.[39mcontainer}[33m>[39m
+2026-04-21T23:54:05.4691366Z      [90m     |[39m        [31m[1m^[22m[39m
+2026-04-21T23:54:05.4692106Z      [90m 125 |[39m         [33m<[39m[33mView[39m
+2026-04-21T23:54:05.4693742Z      [90m 126 |[39m           style[33m=[39m{{ flex[33m:[39m [35m1[39m[33m,[39m justifyContent[33m:[39m [32m"center"[39m[33m,[39m alignItems[33m:[39m [32m"center"[39m }}
+2026-04-21T23:54:05.4694885Z      [90m 127 |[39m         [33m>[39m[0m
+2026-04-21T23:54:05.4695172Z 
+2026-04-21T23:54:05.4695635Z       at warn (node_modules/react-native/Libraries/Utilities/warnOnce.js:27:11)
+2026-04-21T23:54:05.4696904Z       at Object.warnOnce [as SafeAreaView] (node_modules/react-native/index.js:92:5)
+2026-04-21T23:54:05.4697692Z       at SafeAreaView (app/formscreens/ConfirmationPage.tsx:124:8)
+2026-04-21T23:54:05.4698898Z       at Object.react-stack-bottom-frame (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:13976:20)
+2026-04-21T23:54:05.4700395Z       at renderWithHooks (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2866:22)
+2026-04-21T23:54:05.4701863Z       at updateFunctionComponent (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6006:19)
+2026-04-21T23:54:05.4703150Z       at beginWork (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:7474:18)
+2026-04-21T23:54:05.4704385Z       at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+2026-04-21T23:54:05.4705916Z       at performUnitOfWork (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10972:22)
+2026-04-21T23:54:05.4707180Z       at workLoopSync (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10816:41)
+2026-04-21T23:54:05.4709179Z       at renderRootSync (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10797:11)
+2026-04-21T23:54:05.4710861Z       at performWorkOnRoot (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10349:13)
+2026-04-21T23:54:05.4712666Z       at performWorkOnRootViaSchedulerTask (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2094:7)
+2026-04-21T23:54:05.4714246Z       at flushActQueue (node_modules/react/cjs/react.development.js:566:34)
+2026-04-21T23:54:05.4715645Z       at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:859:10)
+2026-04-21T23:54:05.4717439Z       at actImplementation (node_modules/@testing-library/react-native/src/act.ts:30:25)
+2026-04-21T23:54:05.4718767Z       at renderWithAct (node_modules/@testing-library/react-native/src/render-act.ts:13:11)
+2026-04-21T23:54:05.4720047Z       at renderInternal (node_modules/@testing-library/react-native/src/render.tsx:69:33)
+2026-04-21T23:54:05.4721371Z       at renderInternal (node_modules/@testing-library/react-native/src/render.tsx:44:10)
+2026-04-21T23:54:05.4722668Z       at Object.<anonymous> (_tests_/QueuedConfirmation.integration.test.tsx:59:26)
+2026-04-21T23:54:05.4723956Z       at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+2026-04-21T23:54:05.4725428Z       at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+2026-04-21T23:54:05.4726633Z       at node_modules/@babel/runtime/helpers/asyncToGenerator.js:22:7
+2026-04-21T23:54:05.4727773Z       at Object.<anonymous> (node_modules/@babel/runtime/helpers/asyncToGenerator.js:14:12)
+2026-04-21T23:54:05.4728495Z 
+2026-04-21T23:54:05.5825171Z --------------------------|---------|----------|---------|---------|-------------------
+2026-04-21T23:54:05.5826410Z File                      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+2026-04-21T23:54:05.5827065Z --------------------------|---------|----------|---------|---------|-------------------
+2026-04-21T23:54:05.5830579Z All files                 |   91.42 |    79.62 |     100 |   91.04 |                   
+2026-04-21T23:54:05.5831736Z  src/emergency/core       |    92.1 |       78 |     100 |   91.66 |                   
+2026-04-21T23:54:05.5833258Z   EmergencyAlertSystem.ts |   89.65 |    77.08 |     100 |   89.65 | 63,79,130         
+2026-04-21T23:54:05.5834526Z   emergencyScenarios.ts   |     100 |      100 |     100 |     100 |                   
+2026-04-21T23:54:05.5835434Z  utils                    |   90.62 |      100 |     100 |   90.32 |                   
+2026-04-21T23:54:05.5836453Z   offlineQueue.ts         |   90.62 |      100 |     100 |   90.32 | 53-54,62          
+2026-04-21T23:54:05.5837397Z --------------------------|---------|----------|---------|---------|-------------------
+2026-04-21T23:54:05.6031487Z 
+2026-04-21T23:54:05.6035054Z Test Suites: 5 failed, 15 passed, 20 total
+2026-04-21T23:54:05.6035851Z Tests:       8 failed, 140 passed, 148 total
+2026-04-21T23:54:05.6036296Z Snapshots:   0 total
+2026-04-21T23:54:05.6036642Z Time:        11.4 s
+2026-04-21T23:54:05.6036956Z Ran all test suites.
+2026-04-21T23:54:05.6194400Z ##[error]Process completed with exit code 1.
+2026-04-21T23:54:05.6283063Z ##[group]Run actions/upload-artifact@v4
+2026-04-21T23:54:05.6283356Z with:
+2026-04-21T23:54:05.6283536Z   name: test-results
+2026-04-21T23:54:05.6283771Z   path: ./PetGuardTeamProject/coverage/
+2026-04-21T23:54:05.6284023Z   retention-days: 7
+2026-04-21T23:54:05.6284217Z   if-no-files-found: warn
+2026-04-21T23:54:05.6284421Z   compression-level: 6
+2026-04-21T23:54:05.6284628Z   overwrite: false
+2026-04-21T23:54:05.6284834Z   include-hidden-files: false
+2026-04-21T23:54:05.6285042Z env:
+2026-04-21T23:54:05.6285214Z   NODE_VERSION: 20
+2026-04-21T23:54:05.6285402Z   EXPO_CLI_VERSION: latest
+2026-04-21T23:54:05.6285602Z ##[endgroup]
+2026-04-21T23:54:05.8527221Z With the provided path, there will be 16 files uploaded
+2026-04-21T23:54:05.8532445Z Artifact name is valid!
+2026-04-21T23:54:05.8533662Z Root directory input is valid!
+2026-04-21T23:54:06.1493376Z Beginning upload of artifact content to blob storage
+2026-04-21T23:54:06.5227014Z Uploaded bytes 32626
+2026-04-21T23:54:06.5977343Z Finished uploading artifact content to blob storage!
+2026-04-21T23:54:06.5981383Z SHA256 digest of uploaded artifact zip is 9af52b9f57c4377c75051050f78e28018a9c676c7a1eca4303a4a6da3a7df41a
+2026-04-21T23:54:06.5982693Z Finalizing artifact upload
+2026-04-21T23:54:06.7717590Z Artifact test-results.zip successfully finalized. Artifact ID 6567694896
+2026-04-21T23:54:06.7719266Z Artifact test-results has been successfully uploaded! Final size is 32626 bytes. Artifact ID is 6567694896
+2026-04-21T23:54:06.7726566Z Artifact download URL: https://github.com/rheamalpekar/PetGuard/actions/runs/24752586963/artifacts/6567694896
+2026-04-21T23:54:06.7885560Z Post job cleanup.
+2026-04-21T23:54:06.8844629Z [command]/usr/bin/git version
+2026-04-21T23:54:06.8886964Z git version 2.53.0
+2026-04-21T23:54:06.8942322Z Temporarily overriding HOME='/home/runner/work/_temp/3502183d-5540-45ae-81b2-0463ea37a2ff' before making global git config changes
+2026-04-21T23:54:06.8944033Z Adding repository directory to the temporary git global config as a safe directory
+2026-04-21T23:54:06.8949173Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PetGuard/PetGuard
+2026-04-21T23:54:06.8993065Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-04-21T23:54:06.9031437Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-04-21T23:54:06.9287128Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-04-21T23:54:06.9302626Z http.https://github.com/.extraheader
+2026-04-21T23:54:06.9319802Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-04-21T23:54:06.9353775Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-04-21T23:54:06.9590527Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-04-21T23:54:06.9626780Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-04-21T23:54:06.9989362Z Cleaning up orphan processes
+2026-04-21T23:54:07.0364173Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

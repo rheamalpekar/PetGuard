@@ -1,0 +1,384 @@
+From 08100b0fa1e01d01a82d75830918121259511ffa Mon Sep 17 00:00:00 2001
+From: Devin AI <158243242+devin-ai-integration[bot]@users.noreply.github.com>
+Date: Wed, 22 Apr 2026 00:28:07 +0000
+Subject: [PATCH] Route non-emergency tiles to info-form and remove redundant
+ fields
+
+Add dedicated non-emergency intake screen that only collects service type
+and priority, then hands off to info-form which now receives those params,
+displays them as read-only context, and submits them alongside its fields.
+
+Co-Authored-By: Kyle Henry <kylehenry7000@gmail.com>
+---
+ PetGuardTeamProject/app/_layout.tsx           |   1 +
+ PetGuardTeamProject/app/emergency/index.tsx   |  13 +-
+ .../app/formscreens/info-form.tsx             |  62 ++++++-
+ .../app/non-emergency/report.tsx              | 173 ++++++++++++++++++
+ .../src/hooks/useProtectedNavigation.ts       |   7 +-
+ 5 files changed, 251 insertions(+), 5 deletions(-)
+ create mode 100644 PetGuardTeamProject/app/non-emergency/report.tsx
+
+diff --git a/PetGuardTeamProject/app/_layout.tsx b/PetGuardTeamProject/app/_layout.tsx
+index 44bc0c1..85e1495 100644
+--- a/PetGuardTeamProject/app/_layout.tsx
++++ b/PetGuardTeamProject/app/_layout.tsx
+@@ -22,6 +22,7 @@ function RootLayoutNav() {
+         <>
+           <Stack.Screen name="index" options={{ headerShown: false }} />
+           <Stack.Screen name="emergency" options={{ headerShown: false }} />
++          <Stack.Screen name="non-emergency" options={{ headerShown: false }} />
+           <Stack.Screen name="formscreens" options={{ headerShown: false }} />
+         </>
+       ) : (
+diff --git a/PetGuardTeamProject/app/emergency/index.tsx b/PetGuardTeamProject/app/emergency/index.tsx
+index 75a391d..ccb5a78 100644
+--- a/PetGuardTeamProject/app/emergency/index.tsx
++++ b/PetGuardTeamProject/app/emergency/index.tsx
+@@ -18,6 +18,13 @@ export default function EmergencyHome() {
+     } as never);
+   };
+ 
++  const goNonEmergencyReport = (serviceLabel: string) => {
++    protectedNavigate({
++      pathname: "/non-emergency/report",
++      params: { prefillType: serviceLabel },
++    } as never);
++  };
++
+   const handleLogout = async () => {
+     const confirmed = Platform.OS === "web" 
+       ? window.confirm("Are you sure you want to logout?")
+@@ -140,19 +147,19 @@ export default function EmergencyHome() {
+           title="Vaccination"
+           bg="#1e78ff"
+           icon={<MaterialCommunityIcons name="syringe" size={30} color="#fff" />}
+-          onPress={() => goReport("Vaccination")}
++          onPress={() => goNonEmergencyReport("Vaccination")}
+         />
+         <ServiceTile
+           title="Adopt / Surrender"
+           bg="#2e7d32"
+           icon={<Ionicons name="heart" size={30} color="#fff" />}
+-          onPress={() => goReport("Adopt / Surrender")}
++          onPress={() => goNonEmergencyReport("Adopt / Surrender")}
+         />
+         <ServiceTile
+           title="Spay / Neuter"
+           bg="#7e57c2"
+           icon={<MaterialCommunityIcons name="scissors-cutting" size={30} color="#fff" />}
+-          onPress={() => goReport("Spay / Neuter")}
++          onPress={() => goNonEmergencyReport("Spay / Neuter")}
+         />
+       </View>
+ 
+diff --git a/PetGuardTeamProject/app/formscreens/info-form.tsx b/PetGuardTeamProject/app/formscreens/info-form.tsx
+index 9705101..0d218c9 100644
+--- a/PetGuardTeamProject/app/formscreens/info-form.tsx
++++ b/PetGuardTeamProject/app/formscreens/info-form.tsx
+@@ -25,7 +25,7 @@ import {
+   submitInfoForm,
+ } from "@/backendServices/ApiService";
+ import { auth } from "@/backendServices/firebase";
+-import { useRouter } from "expo-router";
++import { useLocalSearchParams, useRouter } from "expo-router";
+ 
+ // Conditionally import MapView only on mobile platforms
+ let MapView: any;
+@@ -58,6 +58,8 @@ export type InfoFormData = {
+   emailAddress: string;
+   additionalDetails: string;
+   formId: string;
++  serviceType: string;
++  severity: string;
+ };
+ 
+ type PhotoAsset = {
+@@ -71,6 +73,9 @@ export default function InfoFormScreen() {
+   const colorScheme = useColorScheme();
+   const colors = Colors[colorScheme ?? 'light'];
+   const isWeb = Platform.OS === 'web';
++  const params = useLocalSearchParams();
++  const serviceType = typeof params.serviceType === 'string' ? params.serviceType : '';
++  const severity = typeof params.severity === 'string' ? params.severity : '';
+ 
+   const [hasTransportation, setHasTransportation] = useState<boolean | null>(null);
+   const [transportationError, setTransportationError] = useState<string | null>(null);
+@@ -99,9 +104,20 @@ export default function InfoFormScreen() {
+       emailAddress: '',
+       additionalDetails: '',
+       formId: '',
++      serviceType: '',
++      severity: '',
+     },
+   });
+ 
++  useEffect(() => {
++    if (serviceType) {
++      setValue('serviceType', serviceType);
++    }
++    if (severity) {
++      setValue('severity', severity);
++    }
++  }, [serviceType, severity, setValue]);
++
+   useEffect(() => {
+     // Skip map initialization on web
+     if (isWeb) {
+@@ -493,6 +509,25 @@ export default function InfoFormScreen() {
+       contentContainerStyle={styles.contentContainer}
+       keyboardShouldPersistTaps="handled"
+     >
++      {(serviceType || severity) && (
++        <View style={styles.section}>
++          <View style={styles.serviceSummaryCard}>
++            {serviceType ? (
++              <View style={styles.serviceSummaryRow}>
++                <Text style={styles.serviceSummaryLabel}>Service</Text>
++                <Text style={styles.serviceSummaryValue}>{serviceType}</Text>
++              </View>
++            ) : null}
++            {severity ? (
++              <View style={styles.serviceSummaryRow}>
++                <Text style={styles.serviceSummaryLabel}>Priority</Text>
++                <Text style={styles.serviceSummaryValue}>{severity}</Text>
++              </View>
++            ) : null}
++          </View>
++        </View>
++      )}
++
+       {/* Location */}
+       <View style={styles.section}>
+         <View style={styles.labelContainer}>
+@@ -904,6 +939,31 @@ const styles = StyleSheet.create({
+   section: {
+     marginBottom: 20,
+   },
++  serviceSummaryCard: {
++    backgroundColor: '#eef3fb',
++    borderRadius: 12,
++    padding: 14,
++    borderWidth: 1,
++    borderColor: '#c9d8ef',
++    gap: 6,
++  },
++  serviceSummaryRow: {
++    flexDirection: 'row',
++    alignItems: 'center',
++    justifyContent: 'space-between',
++  },
++  serviceSummaryLabel: {
++    fontSize: 13,
++    fontWeight: '700',
++    color: '#1f5ea8',
++    textTransform: 'uppercase',
++    letterSpacing: 0.5,
++  },
++  serviceSummaryValue: {
++    fontSize: 15,
++    fontWeight: '700',
++    color: '#111',
++  },
+   labelContainer: {
+     flexDirection: 'row',
+     alignItems: 'center',
+diff --git a/PetGuardTeamProject/app/non-emergency/report.tsx b/PetGuardTeamProject/app/non-emergency/report.tsx
+new file mode 100644
+index 0000000..28c3ff0
+--- /dev/null
++++ b/PetGuardTeamProject/app/non-emergency/report.tsx
+@@ -0,0 +1,173 @@
++import React, { useEffect, useState } from "react";
++import {
++  View,
++  Text,
++  TextInput,
++  StyleSheet,
++  Pressable,
++  ScrollView,
++  Alert,
++} from "react-native";
++import { router, useLocalSearchParams } from "expo-router";
++
++type SeverityUI = "Low" | "Medium" | "High";
++
++export default function NonEmergencyReport() {
++  const params = useLocalSearchParams();
++  const prefillType = String(params.prefillType ?? "");
++
++  const [type, setType] = useState<string>(prefillType);
++  const [severity, setSeverity] = useState<SeverityUI>("Medium");
++
++  useEffect(() => {
++    if (prefillType) setType(prefillType);
++  }, [prefillType]);
++
++  const handleContinue = () => {
++    const trimmedType = type.trim();
++
++    if (!trimmedType) {
++      Alert.alert("Missing info", "Please fill in the Service Type.");
++      return;
++    }
++
++    router.push({
++      pathname: "/formscreens/info-form",
++      params: {
++        serviceType: trimmedType,
++        severity,
++      },
++    } as never);
++  };
++
++  const confirmCancel = () => {
++    Alert.alert("Cancel request?", "Your entered details will be lost.", [
++      { text: "Keep editing", style: "cancel" },
++      { text: "Cancel", style: "destructive", onPress: () => router.back() },
++    ]);
++  };
++
++  return (
++    <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
++      <View style={styles.header}>
++        <Text style={styles.headerIcon}>🐾</Text>
++        <Text style={styles.headerTitle}>Request Non-Emergency Service</Text>
++      </View>
++
++      <Text style={styles.helper}>
++        Tell us what service you need. You&apos;ll provide location, contact,
++        and additional details on the next screen.
++      </Text>
++
++      <Text style={styles.label}>
++        Service Type <Text style={styles.required}>*</Text>
++      </Text>
++      <TextInput
++        value={type}
++        onChangeText={setType}
++        placeholder="Vaccination / Adopt / Spay / Neuter..."
++        placeholderTextColor="#999"
++        style={styles.input}
++      />
++
++      <Text style={[styles.label, { marginTop: 16 }]}>Priority</Text>
++      <View style={styles.severityRow}>
++        <SeverityPill
++          label="Low"
++          selected={severity === "Low"}
++          onPress={() => setSeverity("Low")}
++        />
++        <SeverityPill
++          label="Medium"
++          selected={severity === "Medium"}
++          onPress={() => setSeverity("Medium")}
++        />
++        <SeverityPill
++          label="High"
++          selected={severity === "High"}
++          onPress={() => setSeverity("High")}
++        />
++      </View>
++
++      <Pressable style={styles.submitBtn} onPress={handleContinue}>
++        <Text style={styles.submitText}>Continue</Text>
++      </Pressable>
++
++      <Pressable onPress={confirmCancel} style={styles.cancelBtn}>
++        <Text style={styles.cancelText}>Cancel</Text>
++      </Pressable>
++    </ScrollView>
++  );
++}
++
++function SeverityPill({
++  label,
++  selected,
++  onPress,
++}: {
++  label: SeverityUI;
++  selected: boolean;
++  onPress: () => void;
++}) {
++  return (
++    <Pressable
++      onPress={onPress}
++      style={[styles.pill, selected ? styles.pillSelected : styles.pillUnselected]}
++    >
++      <Text
++        style={[
++          styles.pillText,
++          selected ? styles.pillTextSelected : styles.pillTextUnselected,
++        ]}
++      >
++        {label}
++      </Text>
++    </Pressable>
++  );
++}
++
++const styles = StyleSheet.create({
++  screen: { flex: 1, backgroundColor: "#fff" },
++  container: { padding: 16, paddingBottom: 28 },
++
++  header: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
++  headerIcon: { fontSize: 22 },
++  headerTitle: { fontSize: 22, fontWeight: "800", color: "#111" },
++
++  helper: { fontSize: 14, color: "#555", marginBottom: 18, lineHeight: 20 },
++
++  label: { fontSize: 14, fontWeight: "700", color: "#222", marginBottom: 8 },
++  required: { color: "#c00" },
++
++  input: {
++    borderWidth: 1,
++    borderColor: "#ddd",
++    borderRadius: 12,
++    paddingHorizontal: 14,
++    paddingVertical: 12,
++    fontSize: 15,
++    color: "#111",
++    backgroundColor: "#fff",
++  },
++
++  severityRow: { flexDirection: "row", gap: 10, marginTop: 2 },
++
++  pill: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1 },
++  pillSelected: { backgroundColor: "#1f5ea8", borderColor: "#1f5ea8" },
++  pillUnselected: { backgroundColor: "#fff", borderColor: "#ddd" },
++  pillText: { fontWeight: "800", fontSize: 14 },
++  pillTextSelected: { color: "#fff" },
++  pillTextUnselected: { color: "#111" },
++
++  submitBtn: {
++    marginTop: 18,
++    backgroundColor: "#1f5ea8",
++    paddingVertical: 16,
++    borderRadius: 14,
++    alignItems: "center",
++  },
++  submitText: { color: "#fff", fontWeight: "900", fontSize: 16 },
++
++  cancelBtn: { marginTop: 14, alignItems: "center", paddingVertical: 10 },
++  cancelText: { color: "#111", fontWeight: "700" },
++});
+diff --git a/PetGuardTeamProject/src/hooks/useProtectedNavigation.ts b/PetGuardTeamProject/src/hooks/useProtectedNavigation.ts
+index 9bd6b57..68182b6 100644
+--- a/PetGuardTeamProject/src/hooks/useProtectedNavigation.ts
++++ b/PetGuardTeamProject/src/hooks/useProtectedNavigation.ts
+@@ -2,7 +2,12 @@ import { useRouter } from "expo-router";
+ import { useAuth } from "@/context/AuthContext";
+ import { useCallback } from "react";
+ 
+-const PROTECTED_ROUTES = ["/emergency", "/formscreens", "/index"];
++const PROTECTED_ROUTES = [
++  "/emergency",
++  "/non-emergency",
++  "/formscreens",
++  "/index",
++];
+ 
+ export function useProtectedNavigation() {
+   const router = useRouter();
+-- 
+2.34.1
+

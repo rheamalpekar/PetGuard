@@ -97,6 +97,7 @@ export type ServiceRequest = {
   priority?: PriorityLevel;
   status: RequestStatus;
   createdAt: Date | { toDate?: () => Date };
+  requestType?: ServiceCategory;
 };
 
 export type UserProfile = {

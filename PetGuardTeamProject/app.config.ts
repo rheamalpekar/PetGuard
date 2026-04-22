@@ -23,7 +23,7 @@ export default {
       package: "com.anonymous.PetGuardTeamProject",
       config: {
         googleMaps: {
-          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyB2Zl-ZgH0vgffkdsSW6uy1Bt5Ju7YwVsg",
         },
       },
     },

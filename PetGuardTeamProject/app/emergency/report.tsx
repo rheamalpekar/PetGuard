@@ -8,10 +8,12 @@ import {
   ScrollView,
   Alert,
   Switch,
+  useColorScheme,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { detectEmergency } from "../../src/emergency/core/EmergencyAlertSystem";
 import { EmergencyReportSeverityUI } from "@/types/DataModels";
+import { Colors } from "@/constants/theme";
 
 type AnalysisResult = {
   isEmergency: boolean;
@@ -28,6 +30,8 @@ type AnalysisResult = {
 const TARGET_FORM_PATH = "/formscreens/info-form";
 
 export default function ReportEmergency() {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
   const params = useLocalSearchParams();
   const prefillType = String(params.prefillType ?? "");
 
@@ -105,13 +109,13 @@ export default function ReportEmergency() {
   const checklist = previewAnalysis?.checklist ?? [];
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
+    <ScrollView style={[styles.screen, { backgroundColor: colors.background }]} contentContainerStyle={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerIcon}>📝</Text>
-        <Text style={styles.headerTitle}>Report Emergency</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Report Emergency</Text>
       </View>
 
-      <Text style={styles.label}>
+      <Text style={[styles.label, { color: colors.text }]}>
         Emergency Type <Text style={styles.required}>*</Text>
       </Text>
       <TextInput
@@ -119,34 +123,37 @@ export default function ReportEmergency() {
         onChangeText={setType}
         placeholder="Injury / Road accident / Stray attack..."
         placeholderTextColor="#999"
-        style={styles.input}
+        style={[styles.input, { color: colors.text, backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#fff', borderColor: colorScheme === 'dark' ? '#374151' : '#ddd' }]}
       />
 
-      <Text style={[styles.label, { marginTop: 16 }]}>Severity</Text>
+      <Text style={[styles.label, { color: colors.text, marginTop: 16 }]}>Severity</Text>
       <View style={styles.severityRow}>
         <SeverityPill
           label="Low"
           selected={severity === "Low"}
           onPress={() => setSeverity("Low")}
+          colorScheme={colorScheme}
         />
         <SeverityPill
           label="Medium"
           selected={severity === "Medium"}
           onPress={() => setSeverity("Medium")}
+          colorScheme={colorScheme}
         />
         <SeverityPill
           label="High"
           selected={severity === "High"}
           onPress={() => setSeverity("High")}
+          colorScheme={colorScheme}
         />
       </View>
 
-      <View style={styles.switchCard}>
-        <Text style={styles.switchLabel}>Enable emergency detection</Text>
+      <View style={[styles.switchCard, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#f8faff', borderColor: colorScheme === 'dark' ? '#374151' : '#d7e6ff' }]}>
+        <Text style={[styles.switchLabel, { color: colors.text }]}>Enable emergency detection</Text>
         <Switch value={enableDetection} onValueChange={setEnableDetection} />
       </View>
 
-      <Text style={[styles.label, { marginTop: 16 }]}>
+      <Text style={[styles.label, { color: colors.text, marginTop: 16 }]}>
         Description <Text style={styles.required}>*</Text>
       </Text>
       <TextInput
@@ -154,33 +161,33 @@ export default function ReportEmergency() {
         onChangeText={setDescription}
         placeholder="Describe what happened..."
         placeholderTextColor="#999"
-        style={[styles.input, styles.textarea]}
+        style={[styles.input, styles.textarea, { color: colors.text, backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#fff', borderColor: colorScheme === 'dark' ? '#374151' : '#ddd' }]}
         multiline
         textAlignVertical="top"
       />
 
       {enableDetection && (
         <>
-          <View style={styles.previewCard}>
-            <Text style={styles.previewTitle}>Emergency Detection Preview</Text>
-            <Text style={styles.previewText}>
+          <View style={[styles.previewCard, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#f8f8f8', borderColor: colorScheme === 'dark' ? '#374151' : '#e6e6e6' }]}>
+            <Text style={[styles.previewTitle, { color: colors.text }]}>Emergency Detection Preview</Text>
+            <Text style={[styles.previewText, { color: colors.text }]}>
               Detected Severity: {detectedSeverity}
             </Text>
-            <Text style={styles.previewText}>
+            <Text style={[styles.previewText, { color: colors.text }]}>
               Classification: {detectedClassification}
             </Text>
             {previewAnalysis?.detectionMs !== undefined && (
-              <Text style={styles.previewSubText}>
+              <Text style={[styles.previewSubText, { color: colors.icon }]}>
                 Detection Time: {previewAnalysis.detectionMs} ms
               </Text>
             )}
           </View>
 
           {checklist.length > 0 && (
-            <View style={styles.checklistCard}>
-              <Text style={styles.checklistTitle}>Critical Information Checklist</Text>
+            <View style={[styles.checklistCard, { backgroundColor: colorScheme === 'dark' ? '#3D1A1A' : '#fff8f8', borderColor: colorScheme === 'dark' ? '#7F2D2D' : '#ffd6d6' }]}>
+              <Text style={[styles.checklistTitle, { color: colorScheme === 'dark' ? '#FCA5A5' : '#b00020' }]}>Critical Information Checklist</Text>
               {checklist.map((item, index) => (
-                <Text key={index} style={styles.checklistItem}>
+                <Text key={index} style={[styles.checklistItem, { color: colors.text }]}>
                   • {item}
                 </Text>
               ))}
@@ -194,7 +201,7 @@ export default function ReportEmergency() {
       </Pressable>
 
       <Pressable onPress={() => router.back()} style={styles.cancelBtn}>
-        <Text style={styles.cancelText}>Cancel</Text>
+        <Text style={[styles.cancelText, { color: colors.text }]}>Cancel</Text>
       </Pressable>
     </ScrollView>
   );
@@ -204,20 +211,22 @@ function SeverityPill({
   label,
   selected,
   onPress,
+  colorScheme,
 }: {
   label: EmergencyReportSeverityUI;
   selected: boolean;
   onPress: () => void;
+  colorScheme: 'light' | 'dark' | null | undefined;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.pill, selected ? styles.pillSelected : styles.pillUnselected]}
+      style={[styles.pill, selected ? styles.pillSelected : (colorScheme === 'dark' ? styles.pillUnselectedDark : styles.pillUnselected)]}
     >
       <Text
         style={[
           styles.pillText,
-          selected ? styles.pillTextSelected : styles.pillTextUnselected,
+          selected ? styles.pillTextSelected : (colorScheme === 'dark' ? styles.pillTextUnselectedDark : styles.pillTextUnselected),
         ]}
       >
         {label}
@@ -227,26 +236,23 @@ function SeverityPill({
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#fff" },
+  screen: { flex: 1 },
   container: { padding: 16, paddingBottom: 32 },
 
   header: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 14 },
   headerIcon: { fontSize: 22 },
-  headerTitle: { fontSize: 22, fontWeight: "800", color: "#111" },
+  headerTitle: { fontSize: 22, fontWeight: "800" },
 
-  label: { fontSize: 14, fontWeight: "700", color: "#222", marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: "700", marginBottom: 8 },
   required: { color: "#c00" },
   optional: { color: "#666", fontWeight: "600" },
 
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    color: "#111",
-    backgroundColor: "#fff",
   },
   textarea: { minHeight: 120, paddingTop: 12 },
 
@@ -260,49 +266,44 @@ const styles = StyleSheet.create({
   },
   pillSelected: { backgroundColor: "#ff2d2d", borderColor: "#ff2d2d" },
   pillUnselected: { backgroundColor: "#fff", borderColor: "#ddd" },
+  pillUnselectedDark: { backgroundColor: "#1F2937", borderColor: "#374151" },
   pillText: { fontWeight: "800", fontSize: 14 },
   pillTextSelected: { color: "#fff" },
   pillTextUnselected: { color: "#111" },
+  pillTextUnselectedDark: { color: "#ECEDEE" },
 
   switchCard: {
     marginTop: 16,
-    backgroundColor: "#f8faff",
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#d7e6ff",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   switchLabel: {
     fontSize: 14,
-    color: "#222",
     fontWeight: "700",
   },
 
   previewCard: {
     marginTop: 18,
-    backgroundColor: "#f8f8f8",
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#e6e6e6",
   },
-  previewTitle: { fontSize: 16, fontWeight: "800", color: "#111", marginBottom: 8 },
-  previewText: { fontSize: 14, color: "#222", marginBottom: 4, fontWeight: "600" },
-  previewSubText: { fontSize: 13, color: "#666", marginTop: 4 },
+  previewTitle: { fontSize: 16, fontWeight: "800", marginBottom: 8 },
+  previewText: { fontSize: 14, marginBottom: 4, fontWeight: "600" },
+  previewSubText: { fontSize: 13, marginTop: 4 },
 
   checklistCard: {
     marginTop: 14,
-    backgroundColor: "#fff8f8",
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#ffd6d6",
   },
-  checklistTitle: { fontSize: 16, fontWeight: "800", color: "#b00020", marginBottom: 8 },
-  checklistItem: { fontSize: 14, color: "#222", marginBottom: 6 },
+  checklistTitle: { fontSize: 16, fontWeight: "800", marginBottom: 8 },
+  checklistItem: { fontSize: 14, marginBottom: 6 },
 
   submitBtn: {
     marginTop: 18,
@@ -314,5 +315,5 @@ const styles = StyleSheet.create({
   submitText: { color: "#fff", fontWeight: "900", fontSize: 16 },
 
   cancelBtn: { marginTop: 14, alignItems: "center", paddingVertical: 10 },
-  cancelText: { color: "#111", fontWeight: "700" },
+  cancelText: { fontWeight: "700" },
 });

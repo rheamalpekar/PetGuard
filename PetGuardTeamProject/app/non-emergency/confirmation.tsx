@@ -1,8 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, useColorScheme } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { Colors } from "@/constants/theme";
 
 export default function ConfirmationScreen() {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
   const params = useLocalSearchParams();
 
   const service = String(params.service ?? "Service");
@@ -14,42 +17,42 @@ export default function ConfirmationScreen() {
   const gpsLocation = String(params.gpsLocation ?? "");
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>✅ Booking Confirmed</Text>
-      <Text style={styles.subtitle}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.text }]}>✅ Booking Confirmed</Text>
+      <Text style={[styles.subtitle, { color: colors.icon }]}>
         Your appointment has been booked successfully.
       </Text>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Booking Details</Text>
+      <View style={[styles.card, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#fff' }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Booking Details</Text>
 
-        <Text style={styles.item}>
-          <Text style={styles.label}>Service:</Text> {service}
+        <Text style={[styles.item, { color: colors.text }]}>
+          <Text style={[styles.label, { color: colors.text }]}>Service:</Text> {service}
         </Text>
 
-        <Text style={styles.item}>
-          <Text style={styles.label}>Owner Name:</Text> {ownerName}
+        <Text style={[styles.item, { color: colors.text }]}>
+          <Text style={[styles.label, { color: colors.text }]}>Owner Name:</Text> {ownerName}
         </Text>
 
-        <Text style={styles.item}>
-          <Text style={styles.label}>Pet Name:</Text> {petName}
+        <Text style={[styles.item, { color: colors.text }]}>
+          <Text style={[styles.label, { color: colors.text }]}>Pet Name:</Text> {petName}
         </Text>
 
-        <Text style={styles.item}>
-          <Text style={styles.label}>Phone:</Text> {phone}
+        <Text style={[styles.item, { color: colors.text }]}>
+          <Text style={[styles.label, { color: colors.text }]}>Phone:</Text> {phone}
         </Text>
 
-        <Text style={styles.item}>
-          <Text style={styles.label}>Preferred Date:</Text> {date}
+        <Text style={[styles.item, { color: colors.text }]}>
+          <Text style={[styles.label, { color: colors.text }]}>Preferred Date:</Text> {date}
         </Text>
 
-        <Text style={styles.item}>
-          <Text style={styles.label}>GPS Location:</Text>{" "}
+        <Text style={[styles.item, { color: colors.text }]}>
+          <Text style={[styles.label, { color: colors.text }]}>GPS Location:</Text>{" "}
           {gpsLocation || "Not provided"}
         </Text>
 
-        <Text style={styles.item}>
-          <Text style={styles.label}>Notes:</Text> {notes || "N/A"}
+        <Text style={[styles.item, { color: colors.text }]}>
+          <Text style={[styles.label, { color: colors.text }]}>Notes:</Text> {notes || "N/A"}
         </Text>
       </View>
 
@@ -78,22 +81,18 @@ export default function ConfirmationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
     padding: 20,
   },
   title: {
     fontSize: 26,
     fontWeight: "800",
-    color: "#1f6f2a",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: "#555",
     marginBottom: 20,
   },
   card: {
-    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
@@ -104,11 +103,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     marginBottom: 12,
-    color: "#111",
   },
   item: {
     fontSize: 15,
-    color: "#222",
     marginBottom: 8,
     lineHeight: 22,
   },

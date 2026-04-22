@@ -185,6 +185,9 @@ const UserProfileScreen = () => {
 
   const displayRequests = requests;
 
+  const emergencyCount = requests.filter(r => r.requestType === 'emergency').length;
+  const nonEmergencyCount = requests.filter(r => r.requestType === 'non-emergency').length;
+
   const formatRequestDate = (createdAt: ServiceRequest["createdAt"]) => {
     if (createdAt instanceof Date) return createdAt.toLocaleString();
     return createdAt?.toDate?.().toLocaleString?.() || "N/A";
@@ -278,6 +281,21 @@ const UserProfileScreen = () => {
                   <Text style={styles.profileValue}>{item.value ?? "—"}</Text>
                 </View>
               ))}
+            </View>
+
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Request Statistics</Text>
+              <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{emergencyCount}</Text>
+                  <Text style={styles.statLabel}>Emergency</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{nonEmergencyCount}</Text>
+                  <Text style={styles.statLabel}>Non-Emergency</Text>
+                </View>
+              </View>
             </View>
           </>
         )}
@@ -576,6 +594,31 @@ const styles = StyleSheet.create({
   },
   historyComplete: {
     color: "#10B981",
+  },
+
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingVertical: 8,
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statNumber: {
+    color: "white",
+    fontSize: 28,
+    fontWeight: "700",
+  },
+  statLabel: {
+    color: "#9CA3AF",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: "#374151",
   },
 
   settingRow: {

@@ -31,7 +31,7 @@ import type { InfoFormData, LocationData, PhotoAsset } from "@/types/DataModels"
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import DisclaimerText from '@/components/DisclaimerText';
-import type { EmergencyContext } from "@/types/DataModels";
+import type { EmergencyContext, ServiceCategory } from "@/types/DataModels";
 import { createFormValidator, PhoneFormatter } from '../../services/FormValidation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -103,6 +103,8 @@ export default function InfoFormScreen() {
             : undefined,
         }
       : undefined;
+
+  const requestType: ServiceCategory = emergencyContext ? 'emergency' : (serviceType ? 'non-emergency' : 'emergency');
 
   const [hasTransportation, setHasTransportation] = useState<boolean | null>(null);
   const [transportationError, setTransportationError] = useState<string | null>(null);
@@ -360,8 +362,8 @@ export default function InfoFormScreen() {
 
     // Merge in any emergency context passed from the report screen
     const submissionData: InfoFormData = emergencyContext
-      ? { ...data, emergencyContext }
-      : data;
+      ? { ...data, emergencyContext, requestType }
+      : { ...data, requestType };
 
     try {
       const netState = await NetInfo.fetch();
@@ -488,17 +490,17 @@ export default function InfoFormScreen() {
     >
       {(serviceType || nonEmergencySeverity) && (
         <View style={styles.section}>
-          <View style={styles.serviceSummaryCard}>
+          <View style={[styles.serviceSummaryCard, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#eef3fb', borderColor: colorScheme === 'dark' ? '#374151' : '#c9d8ef' }]}>
             {serviceType ? (
               <View style={styles.serviceSummaryRow}>
-                <Text style={styles.serviceSummaryLabel}>Service</Text>
-                <Text style={styles.serviceSummaryValue}>{serviceType}</Text>
+                <Text style={[styles.serviceSummaryLabel, { color: colorScheme === 'dark' ? '#60A5FA' : '#1f5ea8' }]}>Service</Text>
+                <Text style={[styles.serviceSummaryValue, { color: colors.text }]}>{serviceType}</Text>
               </View>
             ) : null}
             {nonEmergencySeverity ? (
               <View style={styles.serviceSummaryRow}>
-                <Text style={styles.serviceSummaryLabel}>Priority</Text>
-                <Text style={styles.serviceSummaryValue}>{nonEmergencySeverity}</Text>
+                <Text style={[styles.serviceSummaryLabel, { color: colorScheme === 'dark' ? '#60A5FA' : '#1f5ea8' }]}>Priority</Text>
+                <Text style={[styles.serviceSummaryValue, { color: colors.text }]}>{nonEmergencySeverity}</Text>
               </View>
             ) : null}
           </View>
@@ -581,7 +583,7 @@ export default function InfoFormScreen() {
               name="location"
               rules={{}}
               render={({ field: { value } }) => (
-                <View style={[styles.mapContainer, validationErrors.get('location') && styles.mapContainerError]}>
+                <View style={[styles.mapContainer, { borderColor: validationErrors.get('location') ? '#ff4444' : (colorScheme === 'dark' ? '#374151' : '#ddd') }, validationErrors.get('location') && styles.mapContainerError]}>
                   {mapRegion ? (
                     <>
                       <MapView
@@ -605,8 +607,8 @@ export default function InfoFormScreen() {
                         )}
                       </MapView>
                       {isLoadingLocation && (
-                        <View style={styles.mapLoadingOverlay}>
-                          <View style={styles.mapLoadingContainer}>
+                        <View style={[styles.mapLoadingOverlay, { backgroundColor: colorScheme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.9)' }]}>
+                          <View style={[styles.mapLoadingContainer, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#fff' }]}>
                             <ActivityIndicator size="large" color="#3478f6" />
                             <Text style={styles.mapLoadingText}>Getting your location...</Text>
                           </View>
@@ -625,9 +627,9 @@ export default function InfoFormScreen() {
               )}
             />
             {locationAddress !== '' && (
-              <View style={styles.addressContainer}>
-                <Ionicons name="location-outline" size={16} color="#666" />
-                <Text style={styles.addressText}>{locationAddress}</Text>
+              <View style={[styles.addressContainer, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#f8f9fa' }]}>
+                <Ionicons name="location-outline" size={16} color={colorScheme === 'dark' ? '#9CA3AF' : '#666'} />
+                <Text style={[styles.addressText, { color: colors.text }]}>{locationAddress}</Text>
               </View>
             )}
             {locationAccuracy && (
@@ -648,7 +650,7 @@ export default function InfoFormScreen() {
                     '#ff3b30'
                   } 
                 />
-                <Text style={styles.accuracyText}>
+                <Text style={[styles.accuracyText, { color: colors.text }]}>
                   {locationAccuracy.description}
                   {locationAccuracy.meters != null && ` (±${Math.round(locationAccuracy.meters)}m)`}
                 </Text>
@@ -696,7 +698,7 @@ export default function InfoFormScreen() {
               <TextInput
                 style={[
                   styles.contactInput,
-                  { color: colors.text, borderBottomColor: validationErrors.get('yourName') ? '#ff4444' : '#eee' },
+                  { color: colors.text, borderBottomColor: validationErrors.get('yourName') ? '#ff4444' : (colorScheme === 'dark' ? '#374151' : '#eee') },
                 ]}
                 placeholder="Your name"
                 placeholderTextColor={colors.icon}
@@ -720,7 +722,7 @@ export default function InfoFormScreen() {
               <TextInput
                 style={[
                   styles.contactInput,
-                  { color: colors.text, borderBottomColor: validationErrors.get('phoneNumber') ? '#ff4444' : '#eee' },
+                  { color: colors.text, borderBottomColor: validationErrors.get('phoneNumber') ? '#ff4444' : (colorScheme === 'dark' ? '#374151' : '#eee') },
                 ]}
                 placeholder="Phone number"
                 placeholderTextColor={colors.icon}
@@ -746,7 +748,181 @@ export default function InfoFormScreen() {
               <TextInput
                 style={[
                   styles.contactInput,
-                  { color: colors.text, borderBottomColor: validationErrors.get('emailAddress') ? '#ff4444' : '#eee' },
+                  { color: colors.text, borderBottomColor: validationErrors.get('emailAddress') ? '#ff4444' : (colorScheme === 'dark' ? '#374151' : '#eee') },
+                ]}
+                placeholder="Email address"
+                placeholderTextColor={colors.icon}
+                onBlur={onBlur}
+                onChangeText={(text) => {
+                  onChange(text);
+                  handleFieldChange('emailAddress', text);
+                }}
+                value={value}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            )}
+          />
+          {validationErrors.get('emailAddress') && (
+            <Text style={styles.errorText}>{formValidator.getErrorMessage('emailAddress')}</Text>
+          )}
+        </View>
+      </View>
+
+      {/* Transportation Availability */}
+      <View style={styles.section}>
+        <View style={styles.labelContainer}>
+          <Text style={[styles.label, { color: colors.text }]}>Transportation Availability</Text>
+          <Text style={styles.requiredIndicator}>*</Text>
+        </View>
+        <View style={[styles.transportSection, transportationError && styles.transportSectionError]}>
+          <View style={styles.transportButtons}>
+            <TouchableOpacity
+              style={[
+                styles.transportButton,
+                hasTransportation === true && styles.transportButtonActive,
+              ]}
+              onPress={() => {
+                setHasTransportation(true);
+                setTransportationError(null);
+              }}
+            >
+              <Text
+                style={[
+                  styles.transportButtonText,
+                  hasTransportation === true && styles.transportButtonTextActive,
+                ]}
+              >
+                YES
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.transportButton,
+                hasTransportation === false && styles.transportButtonActive,
+              ]}
+              onPress={() => {
+                setHasTransportation(false);
+                setTransportationError(null);
+              }}
+            >
+              <Text
+                style={[
+                  styles.transportButtonText,
+                  hasTransportation === false && styles.transportButtonTextActive,
+                ]}
+              >
+                NO
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        {transportationError && (
+          <Text style={styles.errorText}>{transportationError}</Text>
+        )}
+      </View>
+
+      {/* Additional Details */}
+      <View style={styles.section}>
+        <Text style={[styles.label, { color: colors.text }]}>Additional Details</Text>
+        <Controller
+          control={control}
+          name="additionalDetails"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={[
+                styles.input,
+                styles.multilineInput,
+                { color: colors.text, backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#fff', borderColor: colorScheme === 'dark' ? '#374151' : '#ddd' },
+              ]}
+              placeholder=""
+              placeholderTextColor={colors.icon}
+              onBlur={onBlur}
+              onChangeText={(text) => {
+                onChange(text);
+                handleFieldChange('additionalDetails', text);
+              }}
+              value={value}
+              multiline
+              numberOfLines={4}
+            />
+          )}
+        />
+      </View>
+
+      <TypedPhotoUploadComponent
+        ref={photoUploadRef}
+        colors={colors}
+        isUploading={isSubmitting}
+        uploadProgress={uploadProgress}
+      />
+
+      {/* Contact Details */}
+      <View style={styles.section}>
+        <View style={styles.labelContainer}>
+          <Text style={[styles.label, { color: colors.text }]}>Contact details</Text>
+          <Text style={styles.requiredIndicator}>*</Text>
+        </View>
+        <View style={styles.contactSection}>
+          <Controller
+            control={control}
+            name="yourName"
+            rules={{}}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={[
+                  styles.contactInput,
+                  { color: colors.text, borderBottomColor: validationErrors.get('yourName') ? '#ff4444' : (colorScheme === 'dark' ? '#374151' : '#eee') },
+                ]}
+                placeholder="Your name"
+                placeholderTextColor={colors.icon}
+                onBlur={onBlur}
+                onChangeText={(text) => {
+                  onChange(text);
+                  handleFieldChange('yourName', text);
+                }}
+                value={value}
+              />
+            )}
+          />
+          {validationErrors.get('yourName') && (
+            <Text style={styles.errorText}>{formValidator.getErrorMessage('yourName')}</Text>
+          )}
+          <Controller
+            control={control}
+            name="phoneNumber"
+            rules={{}}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={[
+                  styles.contactInput,
+                  { color: colors.text, borderBottomColor: validationErrors.get('phoneNumber') ? '#ff4444' : (colorScheme === 'dark' ? '#374151' : '#eee') },
+                ]}
+                placeholder="Phone number"
+                placeholderTextColor={colors.icon}
+                onBlur={onBlur}
+                onChangeText={(text) => {
+                  const formatted = formatPhoneNumber(text);
+                  onChange(formatted);
+                  handleFieldChange('phoneNumber', formatted);
+                }}
+                value={value}
+                keyboardType="phone-pad"
+              />
+            )}
+          />
+          {validationErrors.get('phoneNumber') && (
+            <Text style={styles.errorText}>{formValidator.getErrorMessage('phoneNumber')}</Text>
+          )}
+          <Controller
+            control={control}
+            name="emailAddress"
+            rules={{}}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={[
+                  styles.contactInput,
+                  { color: colors.text, borderBottomColor: validationErrors.get('emailAddress') ? '#ff4444' : (colorScheme === 'dark' ? '#374151' : '#eee') },
                 ]}
                 placeholder="Email address"
                 placeholderTextColor={colors.icon}
@@ -928,11 +1104,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   serviceSummaryCard: {
-    backgroundColor: '#eef3fb',
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#c9d8ef',
     gap: 6,
   },
   serviceSummaryRow: {
@@ -943,14 +1117,12 @@ const styles = StyleSheet.create({
   serviceSummaryLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#1f5ea8',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   serviceSummaryValue: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#111',
   },
   labelContainer: {
     flexDirection: 'row',
@@ -982,7 +1154,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
@@ -998,7 +1169,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: '#ddd',
     marginBottom: 12,
   },
   mapContainerError: {
@@ -1018,12 +1188,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   mapLoadingContainer: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 12,
     alignItems: 'center',
@@ -1042,7 +1210,6 @@ const styles = StyleSheet.create({
   addressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
     padding: 12,
     borderRadius: 8,
     gap: 8,
@@ -1051,7 +1218,6 @@ const styles = StyleSheet.create({
   addressText: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
     lineHeight: 20,
   },
   accuracyContainer: {
@@ -1085,7 +1251,6 @@ const styles = StyleSheet.create({
   accuracyText: {
     flex: 1,
     fontSize: 13,
-    color: '#333',
     fontWeight: '500',
   },
   locationActions: {

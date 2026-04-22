@@ -59,6 +59,13 @@ export default function ConfirmationScreen() {
 
   const displayData: ConfirmationDisplayData = formData || dummyData;
 
+  const isEmergency = formData?.requestType === 'emergency' || 
+                      (formData as any)?.emergencyContext !== undefined ||
+                      (!formData?.requestType && !formData?.serviceType);
+
+  const requestTypeLabel = isEmergency ? 'Emergency' : 'Non-Emergency';
+  const requestTypeColor = isEmergency ? '#EF4444' : '#3B82F6';
+
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
       setIsOnline(
@@ -162,7 +169,7 @@ export default function ConfirmationScreen() {
           : displayData.location ?? "N/A";
 
       await Share.share({
-        message: `PetGuard Non-Emergency Request\nRequest ID: ${requestId}\nEstimated Response Time: 0hrs 59mins\nContact: ${displayData.yourName} | ${displayData.phoneNumber}\nEmail: ${displayData.emailAddress}\nDescription: ${displayData.additionalDetails}\nLocation: ${location}`,
+        message: `PetGuard ${requestTypeLabel} Request\nRequest ID: ${requestId}\nEstimated Response Time: 0hrs 59mins\nContact: ${displayData.yourName} | ${displayData.phoneNumber}\nEmail: ${displayData.emailAddress}\nDescription: ${displayData.additionalDetails}\nLocation: ${location}`,
         title: "PetGuard Request Details",
       });
     } catch (error) {
@@ -195,7 +202,7 @@ export default function ConfirmationScreen() {
           <View style={styles.topTextArea}>
             <Text style={styles.heading}>Request Confirmed</Text>
             <Text style={styles.subHeading}>
-              This is a Non-Emergency request{"\n"}for service.
+              This is a <Text style={{ color: requestTypeColor, fontWeight: '700' }}>{requestTypeLabel}</Text> request{"\n"}for service.
             </Text>
           </View>
 
@@ -206,7 +213,7 @@ export default function ConfirmationScreen() {
                 <Ionicons
                   name="checkmark-circle"
                   size={34}
-                  color="#3B82F6"
+                  color={requestTypeColor}
                   style={styles.checkIcon}
                 />
               </>

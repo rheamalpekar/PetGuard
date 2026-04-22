@@ -1,0 +1,260 @@
+﻿2026-04-21T23:40:11.3308352Z Current runner version: '2.333.1'
+2026-04-21T23:40:11.3332860Z ##[group]Runner Image Provisioner
+2026-04-21T23:40:11.3333688Z Hosted Compute Agent
+2026-04-21T23:40:11.3334275Z Version: 20260213.493
+2026-04-21T23:40:11.3334825Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+2026-04-21T23:40:11.3335607Z Build Date: 2026-02-13T00:28:41Z
+2026-04-21T23:40:11.3336272Z Worker ID: {4e9c0ca2-e423-485a-a780-d73b829e7e58}
+2026-04-21T23:40:11.3336901Z Azure Region: westus
+2026-04-21T23:40:11.3337531Z ##[endgroup]
+2026-04-21T23:40:11.3339116Z ##[group]Operating System
+2026-04-21T23:40:11.3339725Z Ubuntu
+2026-04-21T23:40:11.3340247Z 24.04.4
+2026-04-21T23:40:11.3340701Z LTS
+2026-04-21T23:40:11.3341117Z ##[endgroup]
+2026-04-21T23:40:11.3341661Z ##[group]Runner Image
+2026-04-21T23:40:11.3342295Z Image: ubuntu-24.04
+2026-04-21T23:40:11.3342768Z Version: 20260413.86.1
+2026-04-21T23:40:11.3343955Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260413.86/images/ubuntu/Ubuntu2404-Readme.md
+2026-04-21T23:40:11.3345371Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260413.86
+2026-04-21T23:40:11.3346330Z ##[endgroup]
+2026-04-21T23:40:11.3347390Z ##[group]GITHUB_TOKEN Permissions
+2026-04-21T23:40:11.3349735Z Contents: read
+2026-04-21T23:40:11.3350308Z Metadata: read
+2026-04-21T23:40:11.3350791Z Packages: read
+2026-04-21T23:40:11.3351329Z ##[endgroup]
+2026-04-21T23:40:11.3353806Z Secret source: Actions
+2026-04-21T23:40:11.3354540Z Prepare workflow directory
+2026-04-21T23:40:11.3779009Z Prepare all required actions
+2026-04-21T23:40:11.3816933Z Getting action download info
+2026-04-21T23:40:11.8151021Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-04-21T23:40:11.9581201Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-04-21T23:40:12.0477642Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-04-21T23:40:12.4005202Z Complete job name: Performance Benchmarks
+2026-04-21T23:40:12.4843661Z ##[group]Run actions/checkout@v4
+2026-04-21T23:40:12.4844993Z with:
+2026-04-21T23:40:12.4845713Z   repository: rheamalpekar/PetGuard
+2026-04-21T23:40:12.4846929Z   token: ***
+2026-04-21T23:40:12.4847610Z   ssh-strict: true
+2026-04-21T23:40:12.4848316Z   ssh-user: git
+2026-04-21T23:40:12.4849253Z   persist-credentials: true
+2026-04-21T23:40:12.4850083Z   clean: true
+2026-04-21T23:40:12.4850810Z   sparse-checkout-cone-mode: true
+2026-04-21T23:40:12.4851705Z   fetch-depth: 1
+2026-04-21T23:40:12.4852388Z   fetch-tags: false
+2026-04-21T23:40:12.4853120Z   show-progress: true
+2026-04-21T23:40:12.4853861Z   lfs: false
+2026-04-21T23:40:12.4854555Z   submodules: false
+2026-04-21T23:40:12.4855311Z   set-safe-directory: true
+2026-04-21T23:40:12.4856386Z env:
+2026-04-21T23:40:12.4857034Z   NODE_VERSION: 20
+2026-04-21T23:40:12.4857799Z   EXPO_CLI_VERSION: latest
+2026-04-21T23:40:12.4858634Z ##[endgroup]
+2026-04-21T23:40:12.5961999Z Syncing repository: rheamalpekar/PetGuard
+2026-04-21T23:40:12.5964692Z ##[group]Getting Git version info
+2026-04-21T23:40:12.5965961Z Working directory is '/home/runner/work/PetGuard/PetGuard'
+2026-04-21T23:40:12.5967765Z [command]/usr/bin/git version
+2026-04-21T23:40:12.6000803Z git version 2.53.0
+2026-04-21T23:40:12.6029072Z ##[endgroup]
+2026-04-21T23:40:12.6046578Z Temporarily overriding HOME='/home/runner/work/_temp/bcd8f473-3936-4c26-9b17-6ba7f2c231ff' before making global git config changes
+2026-04-21T23:40:12.6051728Z Adding repository directory to the temporary git global config as a safe directory
+2026-04-21T23:40:12.6061409Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PetGuard/PetGuard
+2026-04-21T23:40:12.6095512Z Deleting the contents of '/home/runner/work/PetGuard/PetGuard'
+2026-04-21T23:40:12.6099342Z ##[group]Initializing the repository
+2026-04-21T23:40:12.6104575Z [command]/usr/bin/git init /home/runner/work/PetGuard/PetGuard
+2026-04-21T23:40:12.6199980Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-04-21T23:40:12.6203078Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-04-21T23:40:12.6205359Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-04-21T23:40:12.6207546Z hint: call:
+2026-04-21T23:40:12.6208332Z hint:
+2026-04-21T23:40:12.6209769Z hint: 	git config --global init.defaultBranch <name>
+2026-04-21T23:40:12.6211072Z hint:
+2026-04-21T23:40:12.6212660Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-04-21T23:40:12.6214435Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-04-21T23:40:12.6215887Z hint:
+2026-04-21T23:40:12.6216678Z hint: 	git branch -m <name>
+2026-04-21T23:40:12.6217473Z hint:
+2026-04-21T23:40:12.6218634Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-04-21T23:40:12.6220881Z Initialized empty Git repository in /home/runner/work/PetGuard/PetGuard/.git/
+2026-04-21T23:40:12.6223881Z [command]/usr/bin/git remote add origin https://github.com/rheamalpekar/PetGuard
+2026-04-21T23:40:12.6243374Z ##[endgroup]
+2026-04-21T23:40:12.6244815Z ##[group]Disabling automatic garbage collection
+2026-04-21T23:40:12.6246636Z [command]/usr/bin/git config --local gc.auto 0
+2026-04-21T23:40:12.6277532Z ##[endgroup]
+2026-04-21T23:40:12.6279934Z ##[group]Setting up auth
+2026-04-21T23:40:12.6285630Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-04-21T23:40:12.6317221Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-04-21T23:40:12.6655158Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-04-21T23:40:12.6685957Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-04-21T23:40:12.6903636Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-04-21T23:40:12.6934145Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-04-21T23:40:12.7163497Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-04-21T23:40:12.7199043Z ##[endgroup]
+2026-04-21T23:40:12.7201284Z ##[group]Fetching the repository
+2026-04-21T23:40:12.7211080Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +37b19f8538a1508285ea98673c347efd43970e18:refs/remotes/origin/feature/formatting-&-cleaning
+2026-04-21T23:40:13.3206499Z From https://github.com/rheamalpekar/PetGuard
+2026-04-21T23:40:13.3207269Z  * [new ref]         37b19f8538a1508285ea98673c347efd43970e18 -> origin/feature/formatting-&-cleaning
+2026-04-21T23:40:13.3234946Z ##[endgroup]
+2026-04-21T23:40:13.3235511Z ##[group]Determining the checkout info
+2026-04-21T23:40:13.3236972Z ##[endgroup]
+2026-04-21T23:40:13.3242386Z [command]/usr/bin/git sparse-checkout disable
+2026-04-21T23:40:13.3279508Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-04-21T23:40:13.3303803Z ##[group]Checking out the ref
+2026-04-21T23:40:13.3307701Z [command]/usr/bin/git checkout --progress --force -B feature/formatting-&-cleaning refs/remotes/origin/feature/formatting-&-cleaning
+2026-04-21T23:40:13.3472662Z Switched to a new branch 'feature/formatting-&-cleaning'
+2026-04-21T23:40:13.3474557Z branch 'feature/formatting-&-cleaning' set up to track 'origin/feature/formatting-&-cleaning'.
+2026-04-21T23:40:13.3482936Z ##[endgroup]
+2026-04-21T23:40:13.3521087Z [command]/usr/bin/git log -1 --format=%H
+2026-04-21T23:40:13.3542685Z 37b19f8538a1508285ea98673c347efd43970e18
+2026-04-21T23:40:13.3786009Z ##[group]Run actions/setup-node@v4
+2026-04-21T23:40:13.3786704Z with:
+2026-04-21T23:40:13.3787038Z   node-version: 20
+2026-04-21T23:40:13.3787375Z   cache: npm
+2026-04-21T23:40:13.3787820Z   cache-dependency-path: ./PetGuardTeamProject/package-lock.json
+2026-04-21T23:40:13.3788330Z   always-auth: false
+2026-04-21T23:40:13.3788916Z   check-latest: false
+2026-04-21T23:40:13.3789419Z   token: ***
+2026-04-21T23:40:13.3789737Z env:
+2026-04-21T23:40:13.3790054Z   NODE_VERSION: 20
+2026-04-21T23:40:13.3790397Z   EXPO_CLI_VERSION: latest
+2026-04-21T23:40:13.3790757Z ##[endgroup]
+2026-04-21T23:40:13.5565313Z Found in cache @ /opt/hostedtoolcache/node/20.20.2/x64
+2026-04-21T23:40:13.5572117Z ##[group]Environment details
+2026-04-21T23:40:13.8270289Z node: v20.20.2
+2026-04-21T23:40:13.8270882Z npm: 10.8.2
+2026-04-21T23:40:13.8271262Z yarn: 1.22.22
+2026-04-21T23:40:13.8272382Z ##[endgroup]
+2026-04-21T23:40:13.8292203Z [command]/opt/hostedtoolcache/node/20.20.2/x64/bin/npm config get cache
+2026-04-21T23:40:13.9468443Z /home/runner/.npm
+2026-04-21T23:40:14.2191213Z Cache hit for: node-cache-Linux-x64-npm-ea5552a877022e53dd9178d88da3b91972efd0944d8221769ba405baacb022c7
+2026-04-21T23:40:15.4876869Z Received 4194304 of 124494796 (3.4%), 4.0 MBs/sec
+2026-04-21T23:40:16.4863790Z Received 124494796 of 124494796 (100.0%), 59.4 MBs/sec
+2026-04-21T23:40:16.4865077Z Cache Size: ~119 MB (124494796 B)
+2026-04-21T23:40:16.4980119Z [command]/usr/bin/tar -xf /home/runner/work/_temp/e53bea00-ce51-4245-b48c-3a95cd667dd8/cache.tzst -P -C /home/runner/work/PetGuard/PetGuard --use-compress-program unzstd
+2026-04-21T23:40:16.8476625Z Cache restored successfully
+2026-04-21T23:40:16.8538513Z Cache restored from key: node-cache-Linux-x64-npm-ea5552a877022e53dd9178d88da3b91972efd0944d8221769ba405baacb022c7
+2026-04-21T23:40:16.8681032Z ##[group]Run npm ci
+2026-04-21T23:40:16.8681327Z [36;1mnpm ci[0m
+2026-04-21T23:40:16.8714389Z shell: /usr/bin/bash -e {0}
+2026-04-21T23:40:16.8714660Z env:
+2026-04-21T23:40:16.8714834Z   NODE_VERSION: 20
+2026-04-21T23:40:16.8715026Z   EXPO_CLI_VERSION: latest
+2026-04-21T23:40:16.8715256Z ##[endgroup]
+2026-04-21T23:40:22.0600146Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-04-21T23:40:22.2961674Z npm warn deprecated whatwg-encoding@2.0.0: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+2026-04-21T23:40:22.3024944Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2026-04-21T23:40:22.3381598Z npm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+2026-04-21T23:40:22.5212099Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:40:22.5221093Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:40:22.5241250Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:40:22.5271320Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:40:22.5301360Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:40:22.5310989Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:40:22.5321342Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-04-21T23:40:22.6421009Z npm warn deprecated domexception@4.0.0: Use your platform's native DOMException instead
+2026-04-21T23:40:33.8037173Z 
+2026-04-21T23:40:33.8038306Z added 1224 packages, and audited 1226 packages in 17s
+2026-04-21T23:40:33.8039534Z 
+2026-04-21T23:40:33.8040056Z 192 packages are looking for funding
+2026-04-21T23:40:33.8040782Z   run `npm fund` for details
+2026-04-21T23:40:33.8305724Z 
+2026-04-21T23:40:33.8306732Z 14 vulnerabilities (5 low, 2 moderate, 7 high)
+2026-04-21T23:40:33.8307459Z 
+2026-04-21T23:40:33.8308120Z To address issues that do not require attention, run:
+2026-04-21T23:40:33.8309285Z   npm audit fix
+2026-04-21T23:40:33.8309791Z 
+2026-04-21T23:40:33.8310332Z To address all issues (including breaking changes), run:
+2026-04-21T23:40:33.8311192Z   npm audit fix --force
+2026-04-21T23:40:33.8311619Z 
+2026-04-21T23:40:33.8311960Z Run `npm audit` for details.
+2026-04-21T23:40:33.9214726Z ##[group]Run npm test -- --testPathPattern="Performance" --passWithNoTests
+2026-04-21T23:40:33.9215292Z [36;1mnpm test -- --testPathPattern="Performance" --passWithNoTests[0m
+2026-04-21T23:40:33.9240273Z shell: /usr/bin/bash -e {0}
+2026-04-21T23:40:33.9240518Z env:
+2026-04-21T23:40:33.9240696Z   NODE_VERSION: 20
+2026-04-21T23:40:33.9240895Z   EXPO_CLI_VERSION: latest
+2026-04-21T23:40:33.9241127Z ##[endgroup]
+2026-04-21T23:40:34.0589439Z 
+2026-04-21T23:40:34.0590298Z > petguardteamproject@1.0.0 test
+2026-04-21T23:40:34.0591242Z > jest --testPathPattern=Performance --passWithNoTests
+2026-04-21T23:40:34.0591707Z 
+2026-04-21T23:40:36.0048190Z FAIL _tests_/Performance.test.ts
+2026-04-21T23:40:36.0049702Z   ● Test suite failed to run
+2026-04-21T23:40:36.0049974Z 
+2026-04-21T23:40:36.0050194Z     Jest encountered an unexpected token
+2026-04-21T23:40:36.0050525Z 
+2026-04-21T23:40:36.0051707Z     Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+2026-04-21T23:40:36.0052741Z 
+2026-04-21T23:40:36.0053533Z     Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+2026-04-21T23:40:36.0054331Z 
+2026-04-21T23:40:36.0054674Z     By default "node_modules" folder is ignored by transformers.
+2026-04-21T23:40:36.0055109Z 
+2026-04-21T23:40:36.0055258Z     Here's what you can do:
+2026-04-21T23:40:36.0056498Z      • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+2026-04-21T23:40:36.0058008Z      • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+2026-04-21T23:40:36.0059928Z      • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+2026-04-21T23:40:36.0061385Z      • If you need a custom transformation specify a "transform" option in your config.
+2026-04-21T23:40:36.0062904Z      • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+2026-04-21T23:40:36.0063677Z 
+2026-04-21T23:40:36.0063960Z     You'll find more details and examples of these config options in the docs:
+2026-04-21T23:40:36.0064438Z     https://jestjs.io/docs/configuration
+2026-04-21T23:40:36.0065159Z     For information about custom transformations, see:
+2026-04-21T23:40:36.0065570Z     https://jestjs.io/docs/code-transformation
+2026-04-21T23:40:36.0065795Z 
+2026-04-21T23:40:36.0065885Z     Details:
+2026-04-21T23:40:36.0065998Z 
+2026-04-21T23:40:36.0066556Z     /home/runner/work/PetGuard/PetGuard/PetGuardTeamProject/node_modules/expo-modules-core/src/polyfill/dangerous-internal.ts:1
+2026-04-21T23:40:36.0067713Z     ({"Object.<anonymous>":function(module,exports,require,__dirname,__filename,jest){import { EventEmitter, NativeModule, SharedObject, SharedRef } from './CoreModule';
+2026-04-21T23:40:36.0068514Z                                                                                       ^^^^^^
+2026-04-21T23:40:36.0069029Z 
+2026-04-21T23:40:36.0069331Z     SyntaxError: Cannot use import statement outside a module
+2026-04-21T23:40:36.0069599Z 
+2026-04-21T23:40:36.0069907Z       at Runtime.createScriptFromCode (node_modules/jest-runtime/build/index.js:1505:14)
+2026-04-21T23:40:36.0070504Z       at Object.<anonymous> (node_modules/jest-expo/src/preset/setup.js:318:1)
+2026-04-21T23:40:36.0070797Z 
+2026-04-21T23:40:43.1928401Z --------------------------|---------|----------|---------|---------|-------------------
+2026-04-21T23:40:43.1929781Z File                      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+2026-04-21T23:40:43.1930466Z --------------------------|---------|----------|---------|---------|-------------------
+2026-04-21T23:40:43.1933481Z All files                 |       0 |        0 |       0 |       0 |                   
+2026-04-21T23:40:43.1934600Z  src/emergency/core       |       0 |        0 |       0 |       0 |                   
+2026-04-21T23:40:43.1935957Z   EmergencyAlertSystem.ts |       0 |        0 |       0 |       0 | 1-170             
+2026-04-21T23:40:43.1936836Z   emergencyScenarios.ts   |       0 |        0 |       0 |       0 | 1-88              
+2026-04-21T23:40:43.1937605Z  utils                    |       0 |        0 |       0 |       0 |                   
+2026-04-21T23:40:43.1938865Z   offlineQueue.ts         |       0 |        0 |       0 |       0 | 1-95              
+2026-04-21T23:40:43.1939771Z --------------------------|---------|----------|---------|---------|-------------------
+2026-04-21T23:40:43.2137503Z Test Suites: 1 failed, 1 total
+2026-04-21T23:40:43.2137983Z Tests:       0 total
+2026-04-21T23:40:43.2138350Z Snapshots:   0 total
+2026-04-21T23:40:43.2138650Z Time:        8.033 s
+2026-04-21T23:40:43.2139308Z Ran all test suites matching /Performance/i.
+2026-04-21T23:40:43.2410338Z ##[error]Process completed with exit code 1.
+2026-04-21T23:40:43.2485185Z ##[group]Run actions/upload-artifact@v4
+2026-04-21T23:40:43.2485494Z with:
+2026-04-21T23:40:43.2485711Z   name: performance-results
+2026-04-21T23:40:43.2485960Z   path: ./PetGuardTeamProject/test-results/
+2026-04-21T23:40:43.2486225Z   retention-days: 7
+2026-04-21T23:40:43.2486411Z   if-no-files-found: warn
+2026-04-21T23:40:43.2486629Z   compression-level: 6
+2026-04-21T23:40:43.2486837Z   overwrite: false
+2026-04-21T23:40:43.2487027Z   include-hidden-files: false
+2026-04-21T23:40:43.2487237Z env:
+2026-04-21T23:40:43.2487393Z   NODE_VERSION: 20
+2026-04-21T23:40:43.2487577Z   EXPO_CLI_VERSION: latest
+2026-04-21T23:40:43.2487783Z ##[endgroup]
+2026-04-21T23:40:43.4655839Z ##[warning]No files were found with the provided path: ./PetGuardTeamProject/test-results/. No artifacts will be uploaded.
+2026-04-21T23:40:43.4812812Z Post job cleanup.
+2026-04-21T23:40:43.5772136Z [command]/usr/bin/git version
+2026-04-21T23:40:43.5811455Z git version 2.53.0
+2026-04-21T23:40:43.5855848Z Temporarily overriding HOME='/home/runner/work/_temp/184f1f15-0b94-415b-b3f0-547ad61e5d7e' before making global git config changes
+2026-04-21T23:40:43.5856869Z Adding repository directory to the temporary git global config as a safe directory
+2026-04-21T23:40:43.5871788Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PetGuard/PetGuard
+2026-04-21T23:40:43.5909255Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-04-21T23:40:43.5943291Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-04-21T23:40:43.6170017Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-04-21T23:40:43.6190236Z http.https://github.com/.extraheader
+2026-04-21T23:40:43.6203709Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-04-21T23:40:43.6234367Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-04-21T23:40:43.6465102Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-04-21T23:40:43.6499044Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-04-21T23:40:43.6863110Z Cleaning up orphan processes
+2026-04-21T23:40:43.7169080Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
