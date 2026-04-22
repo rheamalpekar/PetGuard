@@ -8,9 +8,6 @@ import {
   clearOfflineBookings,
 } from "../utils/offlineQueue";
 
-jest.mock("@react-native-async-storage/async-storage", () =>
-  require("@react-native-async-storage/async-storage/jest/async-storage-mock")
-);
 
 describe("Offline Queue", () => {
   beforeEach(async () => {

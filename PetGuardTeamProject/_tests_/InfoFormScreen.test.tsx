@@ -15,6 +15,7 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({
     push: mockPush,
   }),
+  useLocalSearchParams: () => ({}),
 }));
 
 jest.mock("@/backendServices/firebase", () => ({
