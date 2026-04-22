@@ -19,7 +19,13 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.PetGuardTeamProject",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyB2Zl-ZgH0vgffkdsSW6uy1Bt5Ju7YwVsg"
+      }
+  }
     },
     "web": {
       "output": "static",
@@ -38,11 +44,18 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3e57852a-9ff2-4abe-a980-3404da147c37"
+      }
     }
   }
 }

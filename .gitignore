@@ -147,16 +147,9 @@ vite.config.ts.timestamp-*
 *.p12
 *.key
 *.crt
-*.cer
-*.der
-*.pfx
-*.p7b
-*.p7r
-*.log
-*.bak
-*.tmp
-*.swp
-*.swo
-*.swn
-*.swap
-.github/
+.github/prompts/
+.github/skills/
+
+# Project documentation
+PROJECT_REPORT.md
+.windsurf/

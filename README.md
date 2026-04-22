@@ -1,4 +1,7 @@
-# PetGuard - Emergency Care at the Tap of a Paw
+# PetGuard - Comprehensive Care at the Tap of a Paw
+
+## Note
+Check presentation slide for demo video and other links like apk.
 
 ## Tech stack:
 React Native (expo), TypeScript, Firebase
@@ -9,8 +12,16 @@ React Native (expo), TypeScript, Firebase
 `npx expo start`
 
 ## Responsibilities
-Student 1 (Authentication Module): Steven Fitzgerald  
-Student 2 (Home & Navigation Module): Rhea Malpekar  
-Student 3 (Emergency Module): Venkata Pavan Ganesh Pallothu  
-Student 4 (Information Collection Module): Kyle Henry  
-Student 5 (Confirmation and Backend Integration): Spandan Mahat  
+**Student 1 (Authentication Module):** Steven Fitzgerald  
+**Student 2 (Home & Navigation Module):** Rhea Malpekar  
+**Student 3 (Emergency Module):** Venkata Pavan Ganesh Pallothu  
+**Student 4 (Information Collection Module):** Kyle Henry  
+**Student 5 (Confirmation and Backend Integration):** Spandan Mahat  
+
+
+## Running tests
+`npm test`  
+`npm test -- --coverage`  
+
+## Documentation
+Read the attached **FinalReport.pdf** and **DataAndApiDocumentation.pdf** for more details about the project implementation.

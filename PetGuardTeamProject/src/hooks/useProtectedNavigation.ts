@@ -2,7 +2,12 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import { useCallback } from "react";
 
-const PROTECTED_ROUTES = ["/emergency", "/formscreens", "/index"];
+const PROTECTED_ROUTES = [
+  "/emergency",
+  "/non-emergency",
+  "/formscreens",
+  "/index",
+];
 
 export function useProtectedNavigation() {
   const router = useRouter();
@@ -16,7 +21,7 @@ export function useProtectedNavigation() {
 
       if (isProtectedRoute && !isLoggedIn) {
         console.warn("Access denied - not logged in");
-        router.replace("/auth/login" as never);
+        router.replace("/auth/LoginScreen" as never);
         return;
       }
       router.push(href);

@@ -19,6 +19,8 @@ import {
   loadQueuedInfoForms,
   subscribeToActiveReports,
 } from "@/backendServices/ApiService";
+import DisclaimerText from '@/components/DisclaimerText';
+import type { ConfirmationDisplayData, InfoFormData } from "@/types/DataModels";
 
 const DEFAULT_REQUEST_ID = "xh4TG0RzYeqkCjnO0ETb";
 
@@ -26,18 +28,43 @@ export default function ConfirmationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { justSynced } = useAuth();
-  const [formData, setFormData] = useState<any>(null);
+  const [formData, setFormData] = useState<InfoFormData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(false);
   const [activeCount, setActiveCount] = useState(0);
   const { user } = useAuth();
 
   const formId =
-    typeof params.formId === "string" ? params.formId : DEFAULT_REQUEST_ID;
-  const requestId = formId || DEFAULT_REQUEST_ID;
-  const isQueuedRequest = requestId.startsWith("queued_");
+    typeof params.formId === "string" ? params.formId : null;
+
+  const isQueuedRequest = formId?.startsWith("queued_") ?? false;
+
+  const isDemo = !formId && !isQueuedRequest;
+
+  const requestId = isDemo
+    ? "DEMO-REQUEST"
+    : formId ?? "UNKNOWN";
+
   const showVectorAssets = isOnline;
-  console.log(requestId);
+
+  const synced = isQueuedRequest && justSynced;
+
+  const dummyData: ConfirmationDisplayData = {
+    yourName: "Demo User",
+    emailAddress: "demo@petguard.app",
+    phoneNumber: "123-456-7890",
+    additionalDetails: "This is a sample request for demonstration purposes.",
+    location: "Arlington, TX",
+  };
+
+  const displayData: ConfirmationDisplayData = formData || dummyData;
+
+  const isEmergency = formData?.requestType === 'emergency' || 
+                      (formData as any)?.emergencyContext !== undefined ||
+                      (!formData?.requestType && !formData?.serviceType);
+
+  const requestTypeLabel = isEmergency ? 'Emergency' : 'Non-Emergency';
+  const requestTypeColor = isEmergency ? '#EF4444' : '#3B82F6';
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
@@ -69,24 +96,20 @@ export default function ConfirmationScreen() {
           return;
         }
 
-        const data = await getInfoFormDataById(formId);
-        setFormData(data);
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Could not load form data.";
-        const lowered = errorMessage.toLowerCase();
-        const isOfflineError =
-          lowered.includes("offline") ||
-          lowered.includes("unreachable") ||
-          lowered.includes("failed to get document");
-
-        if (!isOfflineError) {
-          Alert.alert("Error", errorMessage);
+        if (formId) {
+          const data = await getInfoFormDataById(formId);
+          setFormData(data);
+          return;
         }
+
+        setFormData(null);
+      } catch (error) {
+        setFormData(null);
       } finally {
         setLoading(false);
       }
     }
+
     fetchData();
   }, [formId, isQueuedRequest, requestId]);
 
@@ -97,6 +120,8 @@ export default function ConfirmationScreen() {
   }, [justSynced, isQueuedRequest]);
 
   useEffect(() => {
+    if (!user) return;
+
     const unsub = subscribeToActiveReports(user.uid, setActiveCount);
     return unsub;
   }, [user]);
@@ -113,7 +138,7 @@ export default function ConfirmationScreen() {
     );
   }
 
-  if (!formData) {
+  if (!displayData) {
     return (
       <SafeAreaView style={styles.container}>
         <View
@@ -129,10 +154,22 @@ export default function ConfirmationScreen() {
     router.push("/emergency");
   };
 
+  const handleViewProfileHistory = () => {
+    router.push({
+      pathname: "/screens/UserProfileScreen",
+      params: { tab: "history" },
+    });
+  };
+
   const handleShareRequest = async () => {
     try {
+      const location =
+        displayData.location && typeof displayData.location === "object"
+          ? displayData.location.address
+          : displayData.location ?? "N/A";
+
       await Share.share({
-        message: `PetGuard Non-Emergency Request\nRequest ID: ${requestId}\nEstimated Response Time: 1hrs 11mins\nContact: ${formData.yourName} | ${formData.phoneNumber}\nEmail: ${formData.emailAddress}\nDescription: ${formData.additionalDetails}\nLocation: ${formData.location.LocationData}`,
+        message: `PetGuard ${requestTypeLabel} Request\nRequest ID: ${requestId}\nEstimated Response Time: 0hrs 59mins\nContact: ${displayData.yourName} | ${displayData.phoneNumber}\nEmail: ${displayData.emailAddress}\nDescription: ${displayData.additionalDetails}\nLocation: ${location}`,
         title: "PetGuard Request Details",
       });
     } catch (error) {
@@ -143,11 +180,29 @@ export default function ConfirmationScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {isQueuedRequest && !synced && (
+          <View style={styles.offlineBanner}>
+            <Ionicons name="cloud-offline-outline" size={20} color="#FBBF24" />
+            <Text style={styles.offlineBannerText}>
+              This request has not been sent to the server yet. It will be uploaded when you are back online.
+            </Text>
+          </View>
+        )}
+
+        {isQueuedRequest && synced && (
+          <View style={styles.syncedBanner}>
+            <Ionicons name="checkmark-circle-outline" size={20} color="#34D399" />
+            <Text style={styles.syncedBannerText}>
+              This request has been successfully uploaded to the server.
+            </Text>
+          </View>
+        )}
+
         <View style={styles.topSection}>
           <View style={styles.topTextArea}>
             <Text style={styles.heading}>Request Confirmed</Text>
             <Text style={styles.subHeading}>
-              This is a Non-Emergency request{"\n"}for service.
+              This is a <Text style={{ color: requestTypeColor, fontWeight: '700' }}>{requestTypeLabel}</Text> request{"\n"}for service.
             </Text>
           </View>
 
@@ -158,7 +213,7 @@ export default function ConfirmationScreen() {
                 <Ionicons
                   name="checkmark-circle"
                   size={34}
-                  color="#3B82F6"
+                  color={requestTypeColor}
                   style={styles.checkIcon}
                 />
               </>
@@ -169,7 +224,7 @@ export default function ConfirmationScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Request ID</Text>
+          <Text style={styles.sectionHeading}>Request ID</Text>
 
           <View style={styles.rowBetween}>
             <Text style={styles.requestId}>{requestId}</Text>
@@ -191,17 +246,17 @@ export default function ConfirmationScreen() {
         <View style={styles.divider} />
 
         <View style={styles.section}>
-          <Text style={styles.label}>Estimated Response Time</Text>
+          <Text style={styles.sectionHeading}>Request Tracking</Text>
 
           <View style={styles.timeRow}>
-            <Text style={styles.timeNumber}>1</Text>
+            <Text style={styles.timeNumber}>0</Text>
             <Text style={styles.timeText}>hr</Text>
-            <Text style={styles.timeNumber}> 11</Text>
+            <Text style={styles.timeNumber}> 59</Text>
             <Text style={styles.timeText}>min</Text>
           </View>
 
           <View style={styles.activeReportSection}>
-            <Text style={styles.label}>Active Reports</Text>
+            {/* <Text style={styles.label}>Active Reports</Text> */}
             <Text style={styles.infoText}>
               You have <Text style={styles.blueText}>{activeCount}</Text> active
               report.
@@ -224,7 +279,7 @@ export default function ConfirmationScreen() {
               />
             ) : null}
             <Text style={styles.infoText}>
-              <Text style={styles.bold}>Name:</Text> {formData.yourName}
+              <Text style={styles.bold}>Name:</Text> {displayData.yourName}
             </Text>
           </View>
 
@@ -238,7 +293,7 @@ export default function ConfirmationScreen() {
               />
             ) : null}
             <Text style={styles.infoText}>
-              <Text style={styles.bold}>Email:</Text> {formData.emailAddress}
+              <Text style={styles.bold}>Email:</Text> {displayData.emailAddress}
             </Text>
           </View>
 
@@ -253,7 +308,7 @@ export default function ConfirmationScreen() {
             ) : null}
             <Text style={styles.infoText}>
               <Text style={styles.bold}>Phone number:</Text>{" "}
-              {formData.phoneNumber}
+              {displayData.phoneNumber}
             </Text>
           </View>
 
@@ -268,10 +323,11 @@ export default function ConfirmationScreen() {
             ) : null}
             <Text style={styles.infoText}>
               <Text style={styles.bold}>Location:</Text>{" "}
-              {typeof formData.location === "object" &&
-              formData.location !== null
-                ? formData.location.address
-                : formData.location}
+              {displayData.location &&
+              typeof displayData.location === "object" &&
+              displayData.location !== null
+                ? displayData.location.address
+                : displayData.location ?? "N/A"}
             </Text>
           </View>
         </View>
@@ -280,7 +336,7 @@ export default function ConfirmationScreen() {
 
         <View style={styles.bottomMessageWrapper}>
           <Text style={styles.bottomMessage}>
-            While you wait, please stay calm. We will be with you shortly.{"\n"}
+            While you wait, please stay calm.{"\n"}
             We will be with you shortly.
           </Text>
         </View>
@@ -297,7 +353,7 @@ export default function ConfirmationScreen() {
         <View style={styles.bottomButtonsRow}>
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={() => router.push("/requests")}
+            onPress={handleViewProfileHistory}
           >
             <Text style={styles.cancelButtonText}>View All Requests</Text>
           </TouchableOpacity>
@@ -316,6 +372,7 @@ export default function ConfirmationScreen() {
             <Text style={styles.shareButtonText}>Share Request</Text>
           </TouchableOpacity>
         </View>
+        <DisclaimerText />
       </ScrollView>
     </SafeAreaView>
   );
@@ -391,7 +448,14 @@ const styles = StyleSheet.create({
   label: {
     color: "#E5E7EB",
     fontSize: 15,
+    fontWeight: "700",
     marginBottom: 14,
+  },
+  sectionHeading: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 22,
   },
 
   rowBetween: {
@@ -402,7 +466,7 @@ const styles = StyleSheet.create({
 
   requestId: {
     color: "white",
-    fontSize: 24,
+    fontSize: 14,
     fontWeight: "500",
     letterSpacing: 1,
   },
@@ -438,8 +502,8 @@ const styles = StyleSheet.create({
 
   contactHeading: {
     color: "white",
-    fontSize: 17,
-    fontWeight: "500",
+    fontSize: 18,
+    fontWeight: "700",
     marginBottom: 22,
   },
 
@@ -540,5 +604,37 @@ const styles = StyleSheet.create({
     color: "#60A5FA",
     fontSize: 15,
     fontWeight: "500",
+  },
+
+  offlineBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#78350F",
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
+    gap: 10,
+  },
+  offlineBannerText: {
+    color: "#FDE68A",
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 18,
+  },
+
+  syncedBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#064E3B",
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
+    gap: 10,
+  },
+  syncedBannerText: {
+    color: "#A7F3D0",
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 18,
   },
 });

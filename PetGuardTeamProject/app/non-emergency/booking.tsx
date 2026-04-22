@@ -1,0 +1,292 @@
+import React, { useState, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Pressable,
+  ScrollView,
+  Alert,
+} from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { useColorScheme } from "react-native";
+import * as Location from "expo-location";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import AlertNotificationComponent from "@/components/AlertNotificationComponent";
+
+const BOOKING_QUEUE_KEY = "petguard:bookingQueue:v1";
+
+export default function BookingScreen() {
+  const params = useLocalSearchParams();
+  const service = String(params.service ?? "Service Booking");
+  const colorScheme = useColorScheme();
+
+  const colors = {
+    background: colorScheme === 'dark' ? '#121212' : '#f8f9fa',
+    text: colorScheme === 'dark' ? '#ffffff' : '#111',
+    label: colorScheme === 'dark' ? '#e0e0e0' : '#222',
+    inputBackground: colorScheme === 'dark' ? '#1F2937' : '#fff',
+    inputBorder: colorScheme === 'dark' ? '#374151' : '#ddd',
+    inputText: colorScheme === 'dark' ? '#ffffff' : '#000',
+    locationInput: colorScheme === 'dark' ? '#9ca3af' : '#444',
+    subtitle: colorScheme === 'dark' ? '#4ade80' : '#2e7d32',
+    backText: colorScheme === 'dark' ? '#60a5fa' : '#007bff',
+  };
+
+  const [ownerName, setOwnerName] = useState("");
+  const [petName, setPetName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [date, setDate] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const [gpsLocation, setGpsLocation] = useState("");
+  const [fetchingLocation, setFetchingLocation] = useState(false);
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const getCurrentLocation = async () => {
+    try {
+      setFetchingLocation(true);
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "Location permission is required to fetch GPS details."
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const latitude = location.coords.latitude.toFixed(6);
+      const longitude = location.coords.longitude.toFixed(6);
+
+      setGpsLocation(`Latitude: ${latitude}, Longitude: ${longitude}`);
+    } catch (error) {
+      console.error("Error fetching location:", error);
+      Alert.alert("Location Error", "Unable to fetch GPS location right now.");
+    } finally {
+      setFetchingLocation(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleBooking = async () => {
+    if (!ownerName.trim() || !petName.trim() || !phone.trim() || !date.trim()) {
+      Alert.alert("Missing Information", "Please fill all required fields.");
+      return;
+    }
+
+    const bookingData = {
+      service,
+      ownerName,
+      petName,
+      phone,
+      date,
+      notes,
+      gpsLocation,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Persist booking to AsyncStorage so it survives app restarts
+    try {
+      const existing = await AsyncStorage.getItem(BOOKING_QUEUE_KEY);
+      const queue = existing ? JSON.parse(existing) : [];
+      queue.push({ ...bookingData, id: `booking_${Date.now()}` });
+      await AsyncStorage.setItem(BOOKING_QUEUE_KEY, JSON.stringify(queue));
+    } catch (e) {
+      console.error("Failed to save booking:", e);
+    }
+
+    setAlertMessage("Booking Successful ✅");
+    setAlertVisible(true);
+
+    timeoutRef.current = setTimeout(() => {
+      router.push({
+        pathname: "/non-emergency/confirmation",
+        params: {
+          service,
+          ownerName,
+          petName,
+          phone,
+          date,
+          notes,
+          gpsLocation,
+        },
+      });
+    }, 1200);
+  };
+
+  return (
+    <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
+      <AlertNotificationComponent
+        message={alertMessage}
+        type="success"
+        visible={alertVisible}
+        onHide={() => setAlertVisible(false)}
+      />
+
+      <ScrollView style={[styles.screen, { backgroundColor: colors.background }]} contentContainerStyle={styles.container}>
+        <Text style={[styles.title, { color: colors.text }]}>Appointment Booking</Text>
+        <Text style={[styles.subtitle, { color: colors.subtitle }]}>{service}</Text>
+
+        <Text style={[styles.label, { color: colors.label }]}>Owner Name *</Text>
+        <TextInput
+          style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.inputText }]}
+          value={ownerName}
+          onChangeText={setOwnerName}
+          placeholder="Enter owner name"
+          placeholderTextColor="#999"
+        />
+
+        <Text style={[styles.label, { color: colors.label }]}>Pet Name *</Text>
+        <TextInput
+          style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.inputText }]}
+          value={petName}
+          onChangeText={setPetName}
+          placeholder="Enter pet name"
+          placeholderTextColor="#999"
+        />
+
+        <Text style={[styles.label, { color: colors.label }]}>Phone Number *</Text>
+        <TextInput
+          style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.inputText }]}
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="Enter phone number"
+          keyboardType="phone-pad"
+          placeholderTextColor="#999"
+        />
+
+        <Text style={[styles.label, { color: colors.label }]}>Preferred Date *</Text>
+        <TextInput
+          style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.inputText }]}
+          value={date}
+          onChangeText={setDate}
+          placeholder="MM/DD/YYYY"
+          placeholderTextColor="#999"
+        />
+
+        <Text style={[styles.label, { color: colors.label }]}>GPS Location</Text>
+        <Pressable style={styles.locationBtn} onPress={getCurrentLocation}>
+          <Text style={styles.locationBtnText}>
+            {fetchingLocation ? "Fetching Location..." : "Use Current GPS Location"}
+          </Text>
+        </Pressable>
+
+        <TextInput
+          style={[styles.input, styles.locationInput, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.locationInput }]}
+          value={gpsLocation}
+          editable={false}
+          placeholder="GPS coordinates will appear here"
+          placeholderTextColor="#999"
+        />
+
+        <Text style={[styles.label, { color: colors.label }]}>Additional Notes</Text>
+        <TextInput
+          style={[styles.input, styles.notesInput, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.inputText }]}
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Any additional details..."
+          placeholderTextColor="#999"
+          multiline
+          textAlignVertical="top"
+        />
+
+        <Pressable style={styles.bookBtn} onPress={handleBooking}>
+          <Text style={styles.bookBtnText}>Confirm Booking</Text>
+        </Pressable>
+
+        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+          <Text style={[styles.backText, { color: colors.backText }]}>← Back</Text>
+        </Pressable>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
+  screen: {
+    flex: 1,
+  },
+  container: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "800",
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 16,
+    fontSize: 15,
+  },
+  notesInput: {
+    minHeight: 100,
+    paddingTop: 12,
+  },
+  locationInput: {},
+  locationBtn: {
+    backgroundColor: "#1f5ea8",
+    paddingVertical: 13,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  locationBtnText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  bookBtn: {
+    backgroundColor: "#2e7d32",
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  bookBtnText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  backBtn: {
+    marginTop: 18,
+    alignItems: "center",
+  },
+  backText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+});
