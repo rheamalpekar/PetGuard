@@ -53,6 +53,7 @@ export type InfoFormData = {
   emergencyContext?: EmergencyContext;
   serviceType: string;
   severity: string;
+  requestType?: ServiceCategory;
 };
 
 export type ConfirmationDisplayData = InfoFormData | {
