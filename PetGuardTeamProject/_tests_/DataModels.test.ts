@@ -28,6 +28,8 @@ describe("DataModels", () => {
       phoneNumber: "1234567890",
       emailAddress: "test@petguard.app",
       additionalDetails: "Needs help",
+      serviceType: "",
+      severity: "",
     };
 
     const queued = {

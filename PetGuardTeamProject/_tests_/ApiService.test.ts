@@ -103,6 +103,8 @@ const formData = {
   phoneNumber: "1234567890",
   emailAddress: "taylor@test.com",
   additionalDetails: "Needs help",
+  serviceType: "",
+  severity: "",
 };
 
 describe("ApiService", () => {

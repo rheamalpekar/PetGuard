@@ -114,6 +114,8 @@ describe("basic performance checks", () => {
         phoneNumber: "1234567890",
         emailAddress: "perf@test.com",
         additionalDetails: "Quick benchmark",
+        serviceType: "",
+        severity: "",
       },
       [new Blob(["image"])],
       { skipRateLimit: true },
