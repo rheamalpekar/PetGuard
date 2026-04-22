@@ -86,17 +86,16 @@ describe("EmergencyHome", () => {
 
   it("navigates with selected non-emergency service when tile pressed", () => {
     const { getByText } = render(<EmergencyHome />);
+    const { router } = require("expo-router");
 
     fireEvent.press(getByText("Vaccination"));
 
-    expect(mockProtectedNavigate).toHaveBeenCalledWith({
-      pathname: "/emergency/report",
-      params: { prefillType: "Vaccination" },
-    });
+    expect(router.push).toHaveBeenCalledWith("/non-emergency/vaccination");
   });
 
   it("routes the remaining service buttons through protected navigation", () => {
     const { getByText } = render(<EmergencyHome />);
+    const { router } = require("expo-router");
 
     fireEvent.press(getByText("EMERGENCY SERVICES"));
     fireEvent.press(getByText("Car Accident"));
@@ -116,14 +115,8 @@ describe("EmergencyHome", () => {
       pathname: "/emergency/report",
       params: { prefillType: "Animal Cruelty" },
     });
-    expect(mockProtectedNavigate).toHaveBeenCalledWith({
-      pathname: "/emergency/report",
-      params: { prefillType: "Adopt / Surrender" },
-    });
-    expect(mockProtectedNavigate).toHaveBeenCalledWith({
-      pathname: "/emergency/report",
-      params: { prefillType: "Spay / Neuter" },
-    });
+    expect(router.push).toHaveBeenCalledWith("/non-emergency/adopt");
+    expect(router.push).toHaveBeenCalledWith("/non-emergency/spay");
   });
 
   it("navigates to profile screen", () => {
@@ -163,21 +156,17 @@ describe("EmergencyHome", () => {
     });
   });
 
-  it("pressing dev navigation triggers navigation", () => {
+  it("pressing non-emergency tiles triggers correct router navigation", () => {
     const { getByText } = render(<EmergencyHome />);
     const { router } = require("expo-router");
 
-    fireEvent.press(getByText("Go to Login Screen"));
-    fireEvent.press(getByText("Go to Profile Screen"));
-    fireEvent.press(getByText("Go to Firebase test screen"));
-    fireEvent.press(getByText("Go to Info Form Screen"));
-    fireEvent.press(getByText("Go to Confirmation screen"));
+    fireEvent.press(getByText("Vaccination"));
+    fireEvent.press(getByText("Adopt / Surrender"));
+    fireEvent.press(getByText("Spay / Neuter"));
 
-    expect(router.push).toHaveBeenCalledWith("/auth/LoginScreen");
-    expect(router.push).toHaveBeenCalledWith("/screens/UserProfileScreen");
-    expect(mockProtectedNavigate).toHaveBeenCalledWith("/formscreens/FirebaseTestScreen");
-    expect(mockProtectedNavigate).toHaveBeenCalledWith("/formscreens/info-form");
-    expect(mockProtectedNavigate).toHaveBeenCalledWith("/formscreens/ConfirmationPage");
+    expect(router.push).toHaveBeenCalledWith("/non-emergency/vaccination");
+    expect(router.push).toHaveBeenCalledWith("/non-emergency/adopt");
+    expect(router.push).toHaveBeenCalledWith("/non-emergency/spay");
   });
 
   it("shows a web alert when logout fails on web", async () => {

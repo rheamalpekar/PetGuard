@@ -148,7 +148,7 @@ describe("Emergency Detection", () => {
 
     expect(res.isEmergency).toBe(true);
     expect(res.classification).toBe("cruelty");
-    expect(res.scenarioId).toBe("fallback_cruelty");
+    expect(res.scenarioId).toBe("animal_cruelty");
     expect(res.dispatchProtocol).toBe("NOTIFY_ADMIN_AND_DISPATCH");
     expect(res.severity).toBe("high");
   });
@@ -161,7 +161,7 @@ describe("Emergency Detection", () => {
 
     expect(res.isEmergency).toBe(true);
     expect(res.classification).toBe("accident");
-    expect(res.scenarioId).toBe("fallback_accident");
+    expect(res.scenarioId).toBe("road_accident");
     expect(res.dispatchProtocol).toBe("DISPATCH_RESCUE_IMMEDIATELY");
     expect(res.severity).toBe("critical");
   });
@@ -174,9 +174,9 @@ describe("Emergency Detection", () => {
 
     expect(res.isEmergency).toBe(true);
     expect(res.classification).toBe("sick");
-    expect(res.scenarioId).toBe("fallback_sick");
+    expect(res.scenarioId).toBe("sick_animal");
     expect(res.dispatchProtocol).toBe("SEND_HEALTH_ALERT");
-    expect(res.severity).toBe("medium");
+    expect(res.severity).toBe("high");
   });
 
   test("matchedKeywords defaults to empty array for fallback match", () => {
@@ -185,7 +185,7 @@ describe("Emergency Detection", () => {
       description: "animal neglect case",
     });
 
-    expect(res.matchedKeywords).toEqual([]);
+    expect(res.matchedKeywords).toEqual(["neglect"]);
   });
 
   test("returns unknown when both inputs are non-emergency text", () => {

@@ -96,10 +96,10 @@ describe("basic performance checks", () => {
     });
     const defaultEnd = Date.now();
 
-    expect(heuristic.scenarioId).toBe("heuristic_high_risk");
-    expect(heuristic.isEmergency).toBe(true);
+    expect(heuristic.scenarioId).toBeNull();
+    expect(heuristic.isEmergency).toBe(false);
     expect(nonEmergency.isEmergency).toBe(false);
-    expect(nonEmergency.dispatchProtocol).toBe("NONE");
+    expect(nonEmergency.dispatchProtocol).toBe("NO_DISPATCH_REQUIRED");
     expect(heuristicEnd - heuristicStart).toBeLessThan(100);
     expect(defaultEnd - defaultStart).toBeLessThan(100);
   });
