@@ -10,6 +10,7 @@ export default {
     newArchEnabled: true,
     ios: {
       supportsTablet: true,
+      bundleIdentifier: "com.anonymous.PetGuardTeamProject",
     },
     android: {
       adaptiveIcon: {
