@@ -174,51 +174,51 @@ jobs:
           retention-days: 30
 
   # Job 5: Build iOS (if needed)
-  build-ios:
-    name: Build iOS IPA
-    runs-on: ubuntu-latest
-    needs: [lint, test, performance]
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    defaults:
-      run:
-        working-directory: ./PetGuardTeamProject
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: ./PetGuardTeamProject/package-lock.json
-
-      - name: Setup Expo
-        uses: expo/expo-github-action@v8
-        with:
-          expo-version: latest
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install EAS CLI
-        run: npm install -g eas-cli
-
-      - name: Build iOS IPA
-        run: eas build --platform ios --profile production --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: petguard-ios-ipa
-          path: |
-            *.ipa
-          retention-days: 30
+  # build-ios:
+  #   name: Build iOS IPA
+  #   runs-on: ubuntu-latest
+  #   needs: [lint, test, performance]
+  #   if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+  #   defaults:
+  #     run:
+  #       working-directory: ./PetGuardTeamProject
+  #   
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+  #         cache: 'npm'
+  #         cache-dependency-path: ./PetGuardTeamProject/package-lock.json
+  #
+  #     - name: Setup Expo
+  #       uses: expo/expo-github-action@v8
+  #       with:
+  #         expo-version: latest
+  #         eas-version: latest
+  #         token: ${{ secrets.EXPO_TOKEN }}
+  #
+  #     - name: Install dependencies
+  #       run: npm ci
+  #
+  #     - name: Install EAS CLI
+  #       run: npm install -g eas-cli
+  #
+  #     - name: Build iOS IPA
+  #       run: eas build --platform ios --profile production --non-interactive
+  #       env:
+  #         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+  #
+  #     - name: Upload IPA artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: petguard-ios-ipa
+  #         path: |
+  #           *.ipa
+  #         retention-days: 30
 
   # Job 6: Security Scanning
   security-scan:
@@ -289,12 +289,12 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [build-android, build-ios]
+    needs: [build-android]
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     defaults:
       run:
         working-directory: ./PetGuardTeamProject
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -304,10 +304,10 @@ jobs:
         with:
           name: petguard-android-apk
 
-      - name: Download iOS IPA
-        uses: actions/download-artifact@v4
-        with:
-          name: petguard-ios-ipa
+      # - name: Download iOS IPA
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: petguard-ios-ipa
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -315,7 +315,6 @@ jobs:
         with:
           files: |
             *.apk
-            *.ipa
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -329,7 +328,7 @@ jobs:
           echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment:** Production" >> $GITHUB_STEP_SUMMARY
-          echo "- **Builds:** Android APK & iOS IPA" >> $GITHUB_STEP_SUMMARY
+          echo "- **Builds:** Android APK" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Build artifacts are available in the workflow artifacts." >> $GITHUB_STEP_SUMMARY
 
