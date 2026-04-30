@@ -3,6 +3,12 @@
 ## Note
 Check presentation slide for demo video and other links like apk.
 
+## AI Usage Notice
+This project utilized AI assistance for:
+- **Screen Layout Design**: AI was used to help design and implement user interface layouts and screen designs
+- **Code Review and Fixes**: AI assisted in reviewing the codebase and implementing fixes to improve code quality and functionality
+- **Test Implementation**: AI was used to help implement and enhance test coverage across various modules
+
 ## Tech stack:
 React Native (expo), TypeScript, Firebase
 
